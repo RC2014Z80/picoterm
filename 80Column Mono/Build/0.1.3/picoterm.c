@@ -430,7 +430,7 @@ void prepare_text_buffer(){
 
     reset_escape_sequence();
 
-    for(int c=0;c<ROWS;c++){
+    for(int c=0;c<=ROWS;c++){
         struct row_of_text *newRow;
         /* Create structure in memory */
         newRow=(struct row_of_text *)malloc(sizeof(struct row_of_text));
