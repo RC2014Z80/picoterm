@@ -42,6 +42,7 @@ target_link_libraries(picoterm
                       hardware_adc
                       hardware_uart
                       hardware_irq
+                      hardware_flash
 
                       tinyusb_device
                       tinyusb_board

@@ -52,7 +52,14 @@ static int esc_parameter_count;
 static unsigned char esc_c1;
 static unsigned char esc_final_byte;
 
+// pixel data
+#define ARBITRARY 0
+#define BITMAPDATA 1
+#define UDCHAR 2
 
+static int data_purpose;
+static int current_udchar;
+static uint32_t data_bytes_expected;
 
 
 static uint16_t palette[] = {
@@ -74,15 +81,14 @@ static uint16_t palette[] = {
                 PICO_SCANVIDEO_PIXEL_FROM_RGB8(0xFF, 0xFF, 0xFF),//white
 };
 
-static uint8_t special_characters[] = {
-    			0b11111000,
+static uint8_t custom_bitmap[768] = {    			
+                0b11111000,
 				0b10001100,
 				0b10001100,
 				0b10001100,
 				0b11111100,
 				0b01111100
-
-};
+                };
 
 static uint16_t foreground_colour;
 static uint16_t background_colour;
@@ -95,6 +101,9 @@ static bool rvs = false;
 
 void make_cursor_visible(bool v){
     cursor_visible=v;
+    if(v){
+        print_cursor(); // should store what's under
+    }
 }
 
 void clear_escape_parameters(){
@@ -138,8 +147,12 @@ void constrain_cursor_values(){
 
 
 
-void slip_character( char ch,int x,int y){
+void slip_character(unsigned char ch,int x,int y){
     // basically put character at chr position x,y
+
+    // ch is 'screen code, or asc-32
+    // so starts at 0, our space.
+    // therefore, custom chars start at 96
 
     // ignore requests where character is out of range
     if(x>=COLUMNS || y>=TEXTROWS || x<0 || y<0) return;
@@ -155,7 +168,12 @@ void slip_character( char ch,int x,int y){
             scanlineNumber = (y*8)+r;
             characterPosition = (x*8);
 
-            rawdata = speccy_bitmap[(ch*8)+r];
+            if(ch<96){
+                rawdata = speccy_bitmap[(ch*8)+r];
+            }
+            else{
+                rawdata = custom_bitmap[((ch-96)*8)+r];
+            }
 
             for(int bit=0;bit<8;bit++){
                 if(characterPosition+bit<(COLUMNS*8)){
@@ -295,6 +313,8 @@ void shuffle(){
 void print_cursor(){
     // these are the same
 
+        if(cursor_visible==false) return;
+
         int scanlineNumber;
         int characterPosition;
         int cursor_buffer_counter = 0;
@@ -310,6 +330,8 @@ void print_cursor(){
         }
 }
 void clear_cursor(){
+
+        if(cursor_visible==false) return;
 
         // put back what's in the cursor_buffer
 
@@ -591,6 +613,21 @@ if(esc_c1=='['){
 
  
 
+
+     case 'U':
+        if(parameter_q){
+            // user-defined character data follows
+            // first parameter is the character number, which must be 128-255 inclusive
+            // follow with 8 bytes which will be inserted into the UD character space
+
+            data_purpose=UDCHAR;
+            current_udchar = esc_parameters[0];
+            data_bytes_expected = 8;
+        }   
+    break;
+
+
+
     }
 
 
@@ -615,7 +652,7 @@ reset_escape_sequence();
 void print_logo_element(int x,int scanlineNumber){
     uint8_t rawdata;
     for (int r=0;r<6;r++){
-        rawdata = special_characters[r];
+        rawdata = custom_bitmap[r];  // at startup, first char in custom bitmaps is the block
         for(int bit=0;bit<6;bit++){
             if(rawdata & ( 0b10000000 >> bit)){
                 ptr[scanlineNumber+r]->pixels[x+bit] = foreground_colour;
@@ -684,7 +721,7 @@ void prepare_text_buffer(){
     print_logo();
 
     csr.y=9;
-    print_string("PicoTerm Colour 0.1.1  S. Dixon\r\n");
+    print_string("PicoTerm Colour 1.0  S. Dixon\r\n");
 
     // print cursor
     make_cursor_visible(true);
@@ -698,7 +735,18 @@ void print_string(char str[]){
 }
 
 
+void handle_udchar_data(uint8_t d){
+    
+    data_bytes_expected--;
+    // doing this first makes it 7 - 0
+    static int bytenum;
+    bytenum = 7-data_bytes_expected;
+    //to make 0-7
+    bytenum+=((current_udchar-128)*8);
+    
+    custom_bitmap[bytenum] = d;
 
+}
 
 
 void handle_new_character(unsigned char asc){
@@ -765,63 +813,78 @@ void handle_new_character(unsigned char asc){
 
     }
     else{
-        // regular characters - 
-        if(asc>=0x20 && asc<0x7f){  
-  
-            slip_character(asc-32,csr.x,csr.y);
-            csr.x++;
-
-
-            // this for disabling / enabling wrapping in terminal
-        #ifndef LINEWRAP
-            constrain_cursor_values();
-        #else
-            // alternatively, use this code for enabling wrapping in terminal
-            if(csr.x>=COLUMNS){
-                csr.x=0;
-                if(csr.y==TEXTROWS-1){
-                    shuffle();
-                }
-                else{
-                    csr.y++;
-                }
+    // data?
+        if(data_bytes_expected>0){
+            if(data_purpose==ARBITRARY){
+                
             }
-        #endif
-
-
-        }
-        //is it esc?
-        else if(asc==0x1B){
-            esc_state=ESC_ESC_RECEIVED;
+            if(data_purpose==BITMAPDATA){
+                
+            }
+            if(data_purpose==UDCHAR){
+                handle_udchar_data((uint8_t)asc);
+            }
         }
         else{
-            // return, backspace etc
-            switch (asc){
-                case BSP:
-                if(csr.x>0){
-                    csr.x--;
-                }
-                break; 
-                case LF:
-                
-                    if(csr.y==TEXTROWS-1){   // visiblerows is the count, csr is zero based
-                        shuffle();
-                    }
-                    else{
-                    csr.y++;
-                    }
-                break; 
-                case CR:
-                    csr.x=0;
+            // regular characters - 
 
-                break; 
-                case FF:
-                    clear_entire_screen(); 
-                    csr.x=0; csr.y=0;
+            if(asc>=0x20 && asc<=0xff){  
+  
+                slip_character(asc-32,csr.x,csr.y);
+                csr.x++;
 
-                break; 
+
+                // this for disabling / enabling wrapping in terminal
+                #ifndef LINEWRAP
+                    constrain_cursor_values();
+                #else
+                    // this code for enabling wrapping in terminal
+                    if(csr.x>=COLUMNS){
+                        csr.x=0;
+                        if(csr.y==TEXTROWS-1){
+                            shuffle();
+                        }
+                        else{
+                            csr.y++;
+                        }
+                    }
+                #endif
+
+
             }
+            //is it esc?
+            else if(asc==0x1B){
+                esc_state=ESC_ESC_RECEIVED;
+            }
+            else{
+                // return, backspace etc
+                switch (asc){
+                    case BSP:
+                    if(csr.x>0){
+                        csr.x--;
+                    }
+                    break; 
+                    case LF:
+                    
+                        if(csr.y==TEXTROWS-1){   // visiblerows is the count, csr is zero based
+                            shuffle();
+                        }
+                        else{
+                        csr.y++;
+                        }
+                    break; 
+                    case CR:
+                        csr.x=0;
 
+                    break; 
+                    case FF:
+                        clear_entire_screen(); 
+                        csr.x=0; csr.y=0;
+
+                    break; 
+                }
+
+            }
         }
 
     } // not esc sequence

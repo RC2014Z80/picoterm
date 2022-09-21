@@ -1,10 +1,35 @@
 /*
  * Terminal software for Pi Pico
- * USB keyboard input, VGA video output, communication with RC2014 via UART on GPIO 20 & 21
+ * USB keyboard input, VGA video output, communication with RC2014 via UART on GPIO20 &21
  * Shiela Dixon, https://peacockmedia.software  
  *
- * much of what's in this main file is taken from the VGA textmode example
- * and the TinyUSB hid_app
+ * much of what's in this main file is taken from the VGA textmode example 
+ * from pico-playground/scanvideo which has the licence as follows:
+ *
+ *
+ * Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ *
+ * ... and the TinyUSB hid_app, which has the following licence: 
+ *
+ *
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2021, Ha Thach (tinyusb.org)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ *
+ *
  * picoterm.c handles the behaviour of the terminal and storing the text
  *
  *
@@ -17,6 +42,7 @@
  * THE SOFTWARE.
  *
  */
+
 
 
 #include "main.h"
@@ -41,6 +67,56 @@ bool led_state = false;
 
 //CU_REGISTER_DEBUG_PINS(frame_gen)
 //CU_SELECT_DEBUG_PINS(frame_gen)
+
+
+#define BTN_A 0
+#define BTN_B 6
+#define BTN_C 11
+
+#define WHITE 0
+#define LIGHTAMBER 1
+#define DARKAMBER 2
+#define GREEN1 3
+#define GREEN2 4
+#define GREEN3 5
+
+uint8_t colour_preference = WHITE;
+
+
+#define FLASH_TARGET_OFFSET (256 * 1024)  // from start of flash
+
+// once written, we can access our data at flash_target_contents
+const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
+
+
+
+
+
+////////////////////////////
+// new TinyUSB stuff
+
+
+enum {
+    SDL_SCANCODE_SPACE = 44,
+    SDL_SCANCODE_LCTRL = 224,
+    SDL_SCANCODE_LSHIFT = 225,
+    SDL_SCANCODE_LALT = 226, /**< alt, option */
+    SDL_SCANCODE_LGUI = 227, /**< windows, command (apple), meta */
+    SDL_SCANCODE_RCTRL = 228,
+    SDL_SCANCODE_RSHIFT = 229,
+    SDL_SCANCODE_RALT = 230, /**< alt gr, option */
+    SDL_SCANCODE_RGUI = 231, /**< windows, command (apple), meta */
+};
+
+#define WITH_SHIFT 0x8000
+#define WITH_ALTGR 0x4000
+#define WITH_CTRL 0x2000
+#define WITH_CAPSLOCK 0x1000
+
+
+
+
+
 
 
 typedef bool (*render_scanline_func)(struct scanvideo_scanline_buffer *dest, int core);
@@ -134,8 +210,22 @@ void init_render_state(int core);
 
 
 void led_blinking_task(void);
-void cdc_task(void);
-void hid_app_task(void);
+
+
+
+void write_data_to_flash(){
+
+    uint8_t data_to_write[FLASH_PAGE_SIZE];
+    data_to_write[0] = colour_preference;
+
+    flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
+    flash_range_program(FLASH_TARGET_OFFSET, data_to_write, FLASH_PAGE_SIZE);
+
+}
+
+void read_data_from_flash(){
+    colour_preference = flash_target_contents[0];
+}
 
 
 
@@ -288,12 +378,95 @@ void build_font() {
               }
 
 
+            // 201121  improved reverse video
+            uint32_t r = 31 - PICO_SCANVIDEO_R5_FROM_PIXEL(pixel);
+            uint32_t g = 31 - PICO_SCANVIDEO_G5_FROM_PIXEL(pixel);              
+            uint32_t b = 31 - PICO_SCANVIDEO_B5_FROM_PIXEL(pixel);
+
+            switch (colour_preference)
+            {
+            case LIGHTAMBER:
+            // light amber
+                b = 0;
+                g=g*0.8;
+                break;
+            case DARKAMBER:
+            // dark amber
+                b = 0;
+                g=g*0.75;
+                break;
+            case GREEN1:
+            // g433n 1 33ff00
+                b = 0;
+                r=r*0.2;
+                break;
+            case GREEN2:
+            // g433n 1 00ff33
+                r = 0;
+                b=b*0.2;
+                break;
+            case GREEN3:
+            // g433n 1 00ff66
+                b = 0.4;
+                r=0;
+                break;
+            default:
+            break;
+            }
+
+            uint32_t rvs_pixel = PICO_SCANVIDEO_PIXEL_FROM_RGB5(r,g,b);
+
+
+              // 090622  adds colour options
+              r = PICO_SCANVIDEO_R5_FROM_PIXEL(pixel);
+              g = PICO_SCANVIDEO_G5_FROM_PIXEL(pixel);              
+              b = PICO_SCANVIDEO_B5_FROM_PIXEL(pixel);
+              
+
+            switch (colour_preference)
+            {
+            case LIGHTAMBER:
+                // light amber
+                b = 0;
+                g=g*0.8;
+                break;
+            case DARKAMBER:
+                // dark amber
+                b = 0;
+                g=g*0.75;
+                break;
+            case GREEN1:
+                // g433n 1 33ff00
+                b = 0;
+                r=r*0.2;
+                break;
+            case GREEN2:
+                // g433n 1 00ff33
+                r = 0;
+                b=b*0.2;
+                break;
+            case GREEN3:
+                // g433n 1 00ff66
+                b = 0.4;
+                r=0;
+                break;
+            default:
+                break;
+            }
+
+
+            uint32_t new_pixel = PICO_SCANVIDEO_PIXEL_FROM_RGB5(r,g,b);
+            
+
+
               if (!(x & 1)) {
-                  *p = pixel;
-                  *pr = ~pixel;
+                  *p = new_pixel;
+                  // *pr = ~pixel;
+                  *pr = rvs_pixel;
               } else {
-                  *p++ |= pixel << 16;
-                  *pr++ |= ~pixel << 16;
+                  *p++ |= new_pixel << 16;
+                  //*pr++ |= ~pixel << 16;
+                  *pr++ |= rvs_pixel << 16;
               }
 
             }
@@ -495,6 +668,12 @@ void go_core1(void (*execute)()) {
 void on_uart_rx() {
   // we can buffer the character here if we turn on interrupts for UART
 
+  // FIFO turned off, we should be here once for each character, 
+  // but the while does no harm and at least acts as an if()
+  while (uart_is_readable (UART_ID)){
+    insert_key_into_buffer(uart_getc (UART_ID));
+  }
+
 }
 
 
@@ -505,12 +684,6 @@ void tih_handler(){
 
 void handle_keyboard_input(){
 
-  uint32_t i = save_and_disable_interrupts(); // helped solve dropped character problem
-
-  while (uart_is_readable (UART_ID)){
-    insert_key_into_buffer(uart_getc (UART_ID));
-  }
-
   if(key_ready()){
     clear_cursor();
 
@@ -518,14 +691,14 @@ void handle_keyboard_input(){
 
         handle_new_character(read_key_from_buffer());
         // or for analysing what comes in
-        // print_ascii_value(cpmInput);
+        //print_ascii_value(read_key_from_buffer());
         
     }while(key_ready());
 
     print_cursor();
   }
 
-  restore_interrupts(i);
+
 
 }
 
@@ -541,9 +714,97 @@ int main(void) {
     gpio_set_dir(LED, GPIO_OUT);
     gpio_put(LED,false);    
 
+
+
+
+    // detect button presses
+/*
+    #define WHITE 0
+#define LIGHTAMBER 1
+#define DARKAMBER 2
+#define GREEN1 3
+#define GREEN2 4
+#define GREEN3 5
+
+uint8_t colour_preference = GREEN1;
+*/
+
+    uint8_t bootchoice = 0;
+
+    gpio_init(BTN_A);
+    gpio_set_dir(BTN_A, GPIO_IN);
+    gpio_pull_down(BTN_A);
+    if(gpio_get (BTN_A)){
+        bootchoice += 1;
+    }
+    gpio_init(BTN_B);
+    gpio_set_dir(BTN_B, GPIO_IN);
+    gpio_pull_down(BTN_B);
+    if(gpio_get (BTN_B)){
+        bootchoice += 2;
+    }
+    gpio_init(BTN_C);
+    gpio_set_dir(BTN_C, GPIO_IN);
+    gpio_pull_down(BTN_C);
+    if(gpio_get (BTN_C)){
+        bootchoice += 4;
+    }
+
+    switch (bootchoice)
+    {
+    case 0:
+        // no button
+        read_data_from_flash();
+        break;
+
+    case 1:
+        colour_preference = GREEN1;     // A
+        write_data_to_flash();
+        break;
+    case 2:
+        colour_preference = DARKAMBER;  // B
+        write_data_to_flash();
+        break;
+    case 4:
+                                        // C
+        break;
+    case 3:
+        colour_preference = GREEN2;     // A+B
+        write_data_to_flash();
+        break;
+    case 5:
+        colour_preference = GREEN3;     // C+A
+        write_data_to_flash();
+        break;
+    case 6:
+        colour_preference = LIGHTAMBER; // C+B
+        write_data_to_flash();
+        break;
+    case 7:
+                                         // A=B=C
+        break;
+
+    default:
+        break;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // AFTER   reading and writing
     stdio_init_all();
 
-    tusb_init(); // initialize tinyusb stack
 
 
     // if need to overclock. Also uncomment the baud rate division near the top.
@@ -565,25 +826,18 @@ int main(void) {
 
 
 
-
-/* This is example code that should enable rx interrupt handling.
-
+// This should enable rx interrupt handling
 // Turn off FIFO's - we want to do this character by character
     uart_set_fifo_enabled(UART_ID, false);
-
-    // Set up a RX interrupt
-    // We need to set up the handler first
-    // Select correct interrupt for the UART we are using
     int UART_IRQ = UART_ID == uart0 ? UART0_IRQ : UART1_IRQ;
 
-    // And set up and enable the interrupt handlers
+    // set up and enable the interrupt handlers
     irq_set_exclusive_handler(UART_IRQ, on_uart_rx);
     irq_set_enabled(UART_IRQ, true);
 
-    // Now enable the UART to send interrupts - RX only
+    // enable the UART
     uart_set_irq_enables(UART_ID, true, false);
 
-*/
 
 
 
@@ -595,7 +849,7 @@ int main(void) {
 
   video_main();
 
-
+    tusb_init(); // initialize tinyusb stack
 
   while(true){
         // do character stuff here on core 0
@@ -619,13 +873,6 @@ int main(void) {
     tuh_task();
     led_blinking_task();
 
-    #if CFG_TUH_CDC
-        cdc_task();
-    #endif
-
-    #if CFG_TUH_HID
-        hid_app_task();
-    #endif
 
     handle_keyboard_input();
 
@@ -636,49 +883,6 @@ int main(void) {
 
 
 
-
-
-
-//--------------------------------------------------------------------+
-// USB CDC
-//--------------------------------------------------------------------+
-#if CFG_TUH_CDC
-CFG_TUSB_MEM_SECTION static char serial_in_buffer[64] = { 0 };
-
-void tuh_mount_cb(uint8_t dev_addr)
-{
-  // application set-up
-  printf("A device with address %d is mounted\r\n", dev_addr);
-  LED_status = 0; // off
-  tuh_cdc_receive(dev_addr, serial_in_buffer, sizeof(serial_in_buffer), true); // schedule first transfer
-}
-
-void tuh_umount_cb(uint8_t dev_addr)
-{
-  // application tear-down
-  printf("A device with address %d is unmounted \r\n", dev_addr);
-  LED_status = 3; // blinking
-}
-
-// invoked ISR context
-void tuh_cdc_xfer_isr(uint8_t dev_addr, xfer_result_t event, cdc_pipeid_t pipe_id, uint32_t xferred_bytes)
-{
-  (void) event;
-  (void) pipe_id;
-  (void) xferred_bytes;
-
-  printf(serial_in_buffer);
-  tu_memclr(serial_in_buffer, sizeof(serial_in_buffer));
-
-  tuh_cdc_receive(dev_addr, serial_in_buffer, sizeof(serial_in_buffer), true); // waiting for next data
-}
-
-void cdc_task(void)
-{
-
-}
-
-#endif
 
 
 
@@ -714,124 +918,195 @@ void led_blinking_task(void)
 }
 
 
+/*
+ 
+
+*/
 
 
 
 
-//--------------------------------------------------------------------+
-// hid_app.c
-//--------------------------------------------------------------------+
 
 
 
+static bool capslock_key_down_in_last_report = false;
+static bool capslock_key_down_in_this_report = false;
+static bool capslock_on = false;
 
-//--------------------------------------------------------------------+
-// MACRO TYPEDEF CONSTANT ENUM DECLARATION
-//--------------------------------------------------------------------+
-
-// If your host terminal support ansi escape code, it can be use to simulate mouse cursor
-#define USE_ANSI_ESCAPE   0
-
-#define MAX_REPORT  4
+static uint8_t const keycode2ascii[128][3] =  { PM_KEYCODE_TO_ASCII };
 
 
-static uint8_t const keycode2ascii[128][2] =  { HID_KEYCODE_TO_ASCII };
-
-// Each HID instance can has multiple reports
-static uint8_t _report_count[CFG_TUH_HID];
-static tuh_hid_report_info_t _report_info_arr[CFG_TUH_HID][MAX_REPORT];
-
-static void process_kbd_report(hid_keyboard_report_t const *report);
-static void process_mouse_report(hid_mouse_report_t const * report);
-
-void hid_app_task(void)
-{
-  // nothing to do
+static bool scancode_is_mod(int scancode) {
+    static const uint8_t mods[] = {
+            SDL_SCANCODE_LCTRL,
+            SDL_SCANCODE_RCTRL,
+            SDL_SCANCODE_LALT,
+            SDL_SCANCODE_RALT,
+            SDL_SCANCODE_LSHIFT,
+            SDL_SCANCODE_RSHIFT,
+    };
+    for(int i=0;i<count_of(mods); i+= 2) {
+        if(scancode== mods[i]){
+          return true;
+        }
+    }
+    // default
+    return false;
 }
 
 //--------------------------------------------------------------------+
-// TinyUSB Callbacks
+// This is the 'glue'
 //--------------------------------------------------------------------+
+
+
+static void pico_key_down(int scancode, int keysym, int modifiers) {
+    printf("Key down, %i, %i, %i \r\n", scancode, keysym, modifiers);
+
+/*
+#define WITH_SHIFT 0x8000
+#define WITH_ALTGR 0x4000
+#define WITH_CTRL 0x2000
+#define WITH_CAPSLOCK 0x1000
+*/
+
+
+        if(false){
+          // any special cases
+        }
+        else{
+          // not a special case.
+          if(scancode_is_mod(scancode)==false){
+            // not a modifier key
+            uint8_t ch = keycode2ascii[scancode][0];
+            
+            if(modifiers & WITH_SHIFT){
+                ch = keycode2ascii[scancode][1];
+            }  
+            else if((modifiers & WITH_CAPSLOCK) && ch>='a' && ch<='z'){
+                ch = keycode2ascii[scancode][1];
+            } 
+            else if(modifiers & WITH_CTRL && ch>95){
+                ch=ch-96;
+            }
+
+            printf("Character: %c\r\n", ch);
+
+                  // special case for de keyboard
+                  #ifdef LOCALISE_DE
+                    if(modifiers & WITH_ALTGR){
+                        ch = keycode2ascii[scancode][2];
+                    }
+                  #endif
+    
+    
+                  uart_putc (UART_ID, ch);
+   
+                  
+        
+          }
+        }
+
+
+}
+
+static void pico_key_up(int scancode, int keysym, int modifiers) {
+   printf("Key up, %i, %i, %i \r\n", scancode, keysym, modifiers);
+}
+
+
+
+
+
+
+
+
+
+
+//--------------------------------------------------------------------+
+// USB stuff
+//--------------------------------------------------------------------+
+
+
+#define MAX_REPORT  4
+#define debug_printf(fmt,...) ((void)0)
+
+// Each HID instance can has multiple reports
+static struct
+{
+    uint8_t report_count;
+    tuh_hid_report_info_t report_info[MAX_REPORT];
+}hid_info[CFG_TUH_HID];
+
+static void process_kbd_report(hid_keyboard_report_t const *report);
+//static void process_mouse_report(hid_mouse_report_t const * report);
+static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
 
 // Invoked when device with hid interface is mounted
 // Report descriptor is also available for use. tuh_hid_parse_report_descriptor()
 // can be used to parse common/simple enough descriptor.
+// Note: if report descriptor length > CFG_TUH_ENUMERATION_BUFSIZE, it will be skipped
+// therefore report_desc = NULL, desc_len = 0
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len)
 {
-  printf("HID device address = %d, instance = %d is mounted\r\n", dev_addr, instance);
+    debug_printf("HID device address = %d, instance = %d is mounted\r\n", dev_addr, instance);
 
-  // Interface protocol
-  const char* protocol_str[] = { "None", "Keyboard", "Mouse" }; // hid_protocol_type_t
-  uint8_t const interface_protocol = tuh_hid_interface_protocol(dev_addr, instance);
+    LED_status = 0;  // off
 
-  // Parse report descriptor with built-in parser
-  _report_count[instance] = tuh_hid_parse_report_descriptor(_report_info_arr[instance], MAX_REPORT, desc_report, desc_len);
-  printf("HID has %u reports and interface protocol = %s\r\n", _report_count[instance], protocol_str[interface_protocol]);
+    // Interface protocol (hid_interface_protocol_enum_t)
+    const char* protocol_str[] = { "None", "Keyboard", "Mouse" };
+    uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
+    debug_printf("HID Interface Protocol = %s\r\n", protocol_str[itf_protocol]);
+//    printf("%d USB: device %d connected, protocol %s\n", time_us_32() - t0 , dev_addr, protocol_str[itf_protocol]);
+
+    // By default host stack will use activate boot protocol on supported interface.
+    // Therefore for this simple example, we only need to parse generic report descriptor (with built-in parser)
+    if ( itf_protocol == HID_ITF_PROTOCOL_NONE )
+    {
+        hid_info[instance].report_count = tuh_hid_parse_report_descriptor(hid_info[instance].report_info, MAX_REPORT, desc_report, desc_len);
+        debug_printf("HID has %u reports \r\n", hid_info[instance].report_count);
+    }
+
+    // request to receive report
+    // tuh_hid_report_received_cb() will be invoked when report is available
+    if ( !tuh_hid_receive_report(dev_addr, instance) )
+    {
+        debug_printf("Error: cannot request to receive report\r\n");
+    }
 }
 
 // Invoked when device with hid interface is un-mounted
 void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t instance)
 {
-  printf("HID device address = %d, instance = %d is unmounted\r\n", dev_addr, instance);
+    debug_printf("HID device address = %d, instance = %d is unmounted\r\n", dev_addr, instance);
+    printf("USB: device %d disconnected\n", dev_addr);
+
+    LED_status = 3;  // blinking
 }
 
 // Invoked when received report from device via interrupt endpoint
 void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len)
 {
-  (void) dev_addr;
+    uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
 
-  uint8_t const rpt_count = _report_count[instance];
-  tuh_hid_report_info_t* rpt_info_arr = _report_info_arr[instance];
-  tuh_hid_report_info_t* rpt_info = NULL;
-
-  if ( rpt_count == 1 && rpt_info_arr[0].report_id == 0)
-  {
-    // Simple report without report ID as 1st byte
-    rpt_info = &rpt_info_arr[0];
-  }else
-  {
-    // Composite report, 1st byte is report ID, data starts from 2nd byte
-    uint8_t const rpt_id = report[0];
-
-    // Find report id in the arrray
-    for(uint8_t i=0; i<rpt_count; i++)
+    switch (itf_protocol)
     {
-      if (rpt_id == rpt_info_arr[i].report_id )
-      {
-        rpt_info = &rpt_info_arr[i];
-        break;
-      }
+        case HID_ITF_PROTOCOL_KEYBOARD:
+            TU_LOG2("HID receive boot keyboard report\r\n");
+            process_kbd_report( (hid_keyboard_report_t const*) report );
+            break;
+
+
+        default:
+            // Generic report requires matching ReportID and contents with previous parsed report info
+            process_generic_report(dev_addr, instance, report, len);
+            break;
     }
 
-    report++;
-    len--;
-  }
-
-  if (!rpt_info)
-  {
-    printf("Couldn't find the report info for this report !\r\n");
-    return;
-  }
-
-  if ( rpt_info->usage_page == HID_USAGE_PAGE_DESKTOP )
-  {
-    switch (rpt_info->usage)
+    // continue to request to receive report
+    if ( !tuh_hid_receive_report(dev_addr, instance) )
     {
-      case HID_USAGE_DESKTOP_KEYBOARD:
-        TU_LOG1("HID receive keyboard report\r\n");
-        // Assume keyboard follow boot report layout
-        process_kbd_report( (hid_keyboard_report_t const*) report );
-      break;
-
-      case HID_USAGE_DESKTOP_MOUSE:
-        TU_LOG1("HID receive mouse report\r\n");
-        // Assume mouse follow boot report layout
-        process_mouse_report( (hid_mouse_report_t const*) report );
-      break;
-
-      default: break;
+        debug_printf("Error: cannot request to receive report\r\n");
     }
-  }
 }
 
 //--------------------------------------------------------------------+
@@ -841,92 +1116,162 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
 // look up new key in previous keys
 static inline bool find_key_in_report(hid_keyboard_report_t const *report, uint8_t keycode)
 {
-  for(uint8_t i=0; i<6; i++)
-  {
-    if (report->keycode[i] == keycode)  return true;
-  }
+    for(uint8_t i=0; i<6; i++)
+    {
+        if (report->keycode[i] == keycode)  return true;
+    }
 
-  return false;
+    return false;
 }
 
 
-static bool capslock_key_down_in_last_report = false;
-static bool capslock_key_down_in_this_report = false;
-static bool capslock_on = false;
 
 static void process_kbd_report(hid_keyboard_report_t const *report)
 {
-  static hid_keyboard_report_t prev_report = { 0, 0, {0} }; // previous report to check key released
+    static hid_keyboard_report_t prev_report = { 0, 0, {0} }; // previous report to check key released
 
-  capslock_key_down_in_this_report = false;
-  for(uint8_t i=0; i<6; i++){
-    if ( find_key_in_report(report, HID_KEY_CAPS_LOCK)){
-      capslock_key_down_in_this_report = true;
-    }
-  }
-
-  if(capslock_key_down_in_this_report==true && capslock_key_down_in_last_report==false){
-      // toggle the value
-      capslock_on = !capslock_on;
-  }
-
-  //------------- example code ignore control (non-printable) key affects -------------//
-  for(uint8_t i=0; i<6; i++)
-  {
-    if ( report->keycode[i] )
+    //------------- example code ignore control (non-printable) key affects -------------//
+    for(uint8_t i=0; i<6; i++)
     {
-      if ( find_key_in_report(&prev_report, report->keycode[i]) )
-      {
-        // exist in previous report means the current key is holding
-      }else
-      {
-        // not existed in previous report means the current key is pressed
+        if ( report->keycode[i] )
+        {
 
-        bool const is_ctrl =  report->modifier & (KEYBOARD_MODIFIER_LEFTCTRL | KEYBOARD_MODIFIER_RIGHTCTRL);
-        bool const is_shift =  report->modifier & (KEYBOARD_MODIFIER_LEFTSHIFT | KEYBOARD_MODIFIER_RIGHTSHIFT);
-        uint8_t ch = keycode2ascii[report->keycode[i]][is_shift ? 1 : 0];
-        
-        if(report->keycode[i]!=HID_KEY_CAPS_LOCK){
-          if(is_ctrl && ch>95){
-              uart_putc (UART_ID, ch-96);
-          }
-          else if(capslock_on && ch>96 && ch<123){
-            uart_putc (UART_ID, ch-32);
-          } 
-          else{
-            uart_putc (UART_ID, ch);
-          }
+
+            capslock_key_down_in_this_report = false;
+            for(uint8_t i=0; i<6; i++){
+                if ( find_key_in_report(report, HID_KEY_CAPS_LOCK)){
+                capslock_key_down_in_this_report = true;
+                }
+            }
+            if(capslock_key_down_in_this_report==true && capslock_key_down_in_last_report==false){
+                // toggle the value
+                capslock_on = !capslock_on;
+            }
+
+
+            if ( find_key_in_report(&prev_report, report->keycode[i]) )
+            {
+                // exist in previous report means the current key is holding
+            }else
+            {
+                // not existed in previous report means the current key is pressed
+                bool const is_shift = report->modifier & (KEYBOARD_MODIFIER_LEFTSHIFT | KEYBOARD_MODIFIER_RIGHTSHIFT);
+                bool const is_altgr = report->modifier & (KEYBOARD_MODIFIER_RIGHTALT);
+                bool const is_ctrl = report->modifier & (KEYBOARD_MODIFIER_LEFTCTRL | KEYBOARD_MODIFIER_RIGHTCTRL);
+                // capslock_on
+
+                int modifier = 0;
+                modifier = modifier | (is_shift ? WITH_SHIFT : 0);
+                modifier = modifier | (is_altgr ? WITH_ALTGR : 0);
+                modifier = modifier | (is_ctrl ? WITH_CTRL : 0);
+                modifier = modifier | (capslock_on ? WITH_CAPSLOCK : 0);
+
+                pico_key_down(report->keycode[i], 0, modifier);
+            }
+        }
+        // Check for key depresses (i.e. was present in prev report but not here)
+        if (prev_report.keycode[i]) {
+            // If not present in the current report then depressed
+            if (!find_key_in_report(report, prev_report.keycode[i]))
+            {
+                bool const is_shift = report->modifier & (KEYBOARD_MODIFIER_LEFTSHIFT | KEYBOARD_MODIFIER_RIGHTSHIFT);
+                bool const is_altgr = report->modifier & (KEYBOARD_MODIFIER_RIGHTALT);
+                bool const is_ctrl = report->modifier & (KEYBOARD_MODIFIER_LEFTCTRL | KEYBOARD_MODIFIER_RIGHTCTRL);
+                // capslock_on
+
+                int modifier = 0;
+                modifier = modifier | (is_shift ? WITH_SHIFT : 0);
+                modifier = modifier | (is_altgr ? WITH_ALTGR : 0);
+                modifier = modifier | (is_ctrl ? WITH_CTRL : 0);
+                modifier = modifier | (capslock_on ? WITH_CAPSLOCK : 0);
+
+                pico_key_up(prev_report.keycode[i], 0, modifier);
+            }
+        }
+    }
+    
+    /*
+    // synthesize events for modifier keys
+    static const uint8_t mods[] = {
+            KEYBOARD_MODIFIER_LEFTCTRL, SDL_SCANCODE_LCTRL,
+            KEYBOARD_MODIFIER_RIGHTCTRL, SDL_SCANCODE_RCTRL,
+            KEYBOARD_MODIFIER_LEFTALT, SDL_SCANCODE_LALT,
+            KEYBOARD_MODIFIER_RIGHTALT, SDL_SCANCODE_RALT,
+            KEYBOARD_MODIFIER_LEFTSHIFT, SDL_SCANCODE_LSHIFT,
+            KEYBOARD_MODIFIER_RIGHTSHIFT, SDL_SCANCODE_RSHIFT,
+    };
+    for(int i=0;i<count_of(mods); i+= 2) {
+        check_mod(report->modifier, prev_report.modifier, mods[i], mods[i+1]);
+    }
+    */
+    
+    prev_report = *report;
+}
+
+
+
+
+
+//--------------------------------------------------------------------+
+// Generic Report
+//--------------------------------------------------------------------+
+static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len)
+{
+    (void) dev_addr;
+
+    uint8_t const rpt_count = hid_info[instance].report_count;
+    tuh_hid_report_info_t* rpt_info_arr = hid_info[instance].report_info;
+    tuh_hid_report_info_t* rpt_info = NULL;
+
+    if ( rpt_count == 1 && rpt_info_arr[0].report_id == 0)
+    {
+        // Simple report without report ID as 1st byte
+        rpt_info = &rpt_info_arr[0];
+    }else
+    {
+        // Composite report, 1st byte is report ID, data starts from 2nd byte
+        uint8_t const rpt_id = report[0];
+
+        // Find report id in the arrray
+        for(uint8_t i=0; i<rpt_count; i++)
+        {
+            if (rpt_id == rpt_info_arr[i].report_id )
+            {
+                rpt_info = &rpt_info_arr[i];
+                break;
+            }
         }
 
-
-        /*
-        putchar(ch);
-        if ( ch == '\r' ) putchar('\n'); // added new line for enter key
-        fflush(stdout); // flush right away, else nanolib will wait for newline
-      */
-      
-      
-      
-      }
+        report++;
+        len--;
     }
-    // TODO example skips key released
-  }
 
-  prev_report = *report;
-  capslock_key_down_in_last_report = capslock_key_down_in_this_report;
+    if (!rpt_info)
+    {
+        debug_printf("Couldn't find the report info for this report !\r\n");
+        return;
+    }
+
+    // For complete list of Usage Page & Usage checkout src/class/hid/hid.h. For examples:
+    // - Keyboard                     : Desktop, Keyboard
+    // - Mouse                        : Desktop, Mouse
+    // - Gamepad                      : Desktop, Gamepad
+    // - Consumer Control (Media Key) : Consumer, Consumer Control
+    // - System Control (Power key)   : Desktop, System Control
+    // - Generic (vendor)             : 0xFFxx, xx
+    if ( rpt_info->usage_page == HID_USAGE_PAGE_DESKTOP )
+    {
+        switch (rpt_info->usage)
+        {
+            case HID_USAGE_DESKTOP_KEYBOARD:
+                TU_LOG1("HID receive keyboard report\r\n");
+                // Assume keyboard follow boot report layout
+                process_kbd_report( (hid_keyboard_report_t const*) report );
+                break;
+
+
+
+            default: break;
+        }
+    }
 }
-
-//--------------------------------------------------------------------+
-// Mouse
-//--------------------------------------------------------------------+
-
-void cursor_movement(int8_t x, int8_t y, int8_t wheel)
-{
-
-}
-
-static void process_mouse_report(hid_mouse_report_t const * report)
-{
-
-}
-

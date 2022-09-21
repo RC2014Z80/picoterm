@@ -32,9 +32,12 @@
 #include "hardware/uart.h"
 #include "hardware/irq.h"
 
+#include "hardware/flash.h"
+
 #include "bsp/board.h"
 #include "tusb.h"
 
+#include "pmhid.h"
 
 
 // #include "tusb_config.h"

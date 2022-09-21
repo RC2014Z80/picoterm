@@ -30,7 +30,7 @@
 
 uint32_t * wordsForRow(int y);
 void prepare_text_buffer();
-void slip_character( char ch,int x,int y);
+void slip_character(unsigned char ch,int x,int y);
 void clear_cursor();
 void print_cursor();
 void handle_new_character(unsigned char ch);

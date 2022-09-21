@@ -51,6 +51,8 @@ bool cursor_visible;
 static bool rvs = false;
 static unsigned char chr_under_csr;
 
+
+
 void make_cursor_visible(bool v){
     cursor_visible=v;
 }
@@ -102,6 +104,11 @@ void constrain_cursor_values(){
 
 
 void slip_character(unsigned char ch,int x,int y){
+
+    if(csr.x>=COLUMNS || csr.y>=VISIBLEROWS){
+        return;
+    }
+
     if(rvs && ch<95){   // 95 is the start of the rvs character set
         ch = ch + 95;
     }
@@ -118,16 +125,79 @@ unsigned char * slotsForRow(int y){
     return &ptr[y]->slot[0];
 }
 
+/*
+    ptr[ROWS-1] = ptr[ROWS-2];
+    ptr[ROWS-2] = ptr[ROWS-3];
+    // ...
+    ptr[csr.y+1] = ptr[csr.y];
+*/
+
+
+
+void insert_line(){
+
+    struct row_of_text *temphandle = ptr[ROWS-1];
+
+    for(int r=ROWS-1;r>csr.y;r--){
+        ptr[r] = ptr[r-1]; 
+    }
+
+    ptr[csr.y] = temphandle;
+
+    // recycled row needs blanking
+    for(int i=0;i<COLUMNS;i++){
+        ptr[csr.y]->slot[i] = 0;
+    }
+
+}
+
+void delete_line(){
+
+    struct row_of_text *temphandle = ptr[csr.y];
+
+    for(int r=csr.y;r<ROWS-1;r++){
+        ptr[r]=ptr[r+1];
+    }
+
+    ptr[ROWS-1] = temphandle;
+
+    // recycled row needs blanking
+    for(int i=0;i<COLUMNS;i++){
+        ptr[ROWS-1]->slot[i] = 0;
+    }
+
+}
+
+void insert_lines(int n){
+    for (int i = 0; i < n; i++)
+    {
+        insert_line();
+    }
+}
+
+void delete_lines(int n){
+    for (int i = 0; i < n; i++)
+    {
+        delete_line();
+    }
+}
+
+
+
+
 void shuffle(){
     // this is our scroll
     // because we're using pointers to rows, we only need to shuffle the array of pointers
 
     // recycle first line. 
-    ptr[ROWS-1]=ptr[0];
+    struct row_of_text *temphandle = ptr[0];
+    //ptr[ROWS-1]=ptr[0];
 
     for(int r=0;r<ROWS-1;r++){
         ptr[r]=ptr[r+1];
     }
+
+    ptr[ROWS-1] = temphandle;
 
     // recycled line needs blanking
     for(int i=0;i<COLUMNS;i++){
@@ -393,6 +463,7 @@ if(esc_c1=='['){
         csr.x -= n;
         constrain_cursor_values();
     break;
+
     case 'S':
     // Scroll whole page up by n (default 1) lines. New lines are added at the bottom. (not ANSI.SYS)
         n = esc_parameters[0];
@@ -403,6 +474,31 @@ if(esc_c1=='['){
     break;
 
     // MORE
+
+
+
+    case 'L':
+    // 'INSERT LINE' - scroll rows down from and including cursor position. (blank the cursor's row??)
+        n = esc_parameters[0];
+        if(n==0)n=1;
+        insert_lines(n);
+    break;
+
+    case 'M':
+    // 'DELETE LINE' - delete row at cursor position, scrolling everything below, up to fill. Leaving blank line at bottom.
+        n = esc_parameters[0];
+        if(n==0)n=1;
+        delete_lines(n);
+    break;
+
+
+
+
+
+
+
+
+
 
  
 
@@ -430,7 +526,7 @@ void prepare_text_buffer(){
 
     reset_escape_sequence();
 
-    for(int c=0;c<ROWS;c++){
+    for(int c=0;c<=ROWS;c++){
         struct row_of_text *newRow;
         /* Create structure in memory */
         newRow=(struct row_of_text *)malloc(sizeof(struct row_of_text));
@@ -462,7 +558,7 @@ print_string("_/_/      _/_/ _/_/      _/_/ _/_/      _/_/ _/_/_/    _/_/   _/_/
 print_string("_/_/      _/_/   _/_/_/_/_/   _/_/_/_/_/_/_/   _/_/_/_/_/ _/_/_/_/_/_/     _/_/\r\n");
 print_string("_/_/      _/_/   _/_/_/_/_/   _/_/_/_/_/_/_/   _/_/_/_/_/ _/_/_/_/_/_/     _/_/\r\n");
 
-    print_string("\r\n\r\nPicoTerm 0.1.3  S. Dixon\r\n");
+    print_string("\r\n\r\nPicoTerm 1.1  S. Dixon\r\n");
 
 
 
@@ -549,14 +645,16 @@ void handle_new_character(unsigned char asc){
             slip_character(asc-32,csr.x,csr.y);
             csr.x++;
 
-
+            
             // this for disabling wrapping in terminal
             constrain_cursor_values();
 
-            /*  // alternatively, use this code for enabling wrapping in terminal
+            // alternatively, use this code for enabling wrapping in terminal
+            // NB the last released source has a bug - add the -1 after VISIBLEROWS to fix, if you really want to turn the wrapping on.
+            /*
             if(csr.x>=COLUMNS){
                 csr.x=0;
-                if(csr.y==VISIBLEROWS){
+                if(csr.y==VISIBLEROWS-1){
                     shuffle();
                 }
                 else{
