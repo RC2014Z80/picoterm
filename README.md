@@ -39,4 +39,4 @@ The Pi Pico uses a UF2 bootloader to appear as a mass storage device so that new
 
 Building firmware from source
 
-it is highly recommended that you follow the Getting Started With Raspberry Pi Pico documentation from the Raspberry Pi Foundation.  In addition to this, you will need to copy pico_sdk_import.cmake, pico_extras_import.cmake and fonts.h from pico-sdk, pico-extras and pico-playground\scanvideo\textmode.
+it is highly recommended that you follow the Getting Started With Raspberry Pi Pico documentation from the Raspberry Pi Foundation.  In addition to this, you will need to copy pico_sdk_import.cmake, pico_extras_import.cmake and font.h from pico-sdk, pico-extras and pico-playground\scanvideo\textmode.
