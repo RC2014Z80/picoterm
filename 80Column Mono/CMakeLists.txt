@@ -2,49 +2,55 @@ cmake_minimum_required(VERSION 3.14)
 
 #set(PICO_BOARD "vgaboard")
 
-include(pico_sdk_import.cmake)       
+include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
-
-
 pico_sdk_init()
 
-project(picoterm VERSION 1.0.0)
-add_executable(picoterm
-               main.c
-               picoterm.c
-               #font6.c
-               font8.c
-               #font10.c
-               #lcd.c
-               )
+project(picoterm VERSION 1.1)
+message("PicoTerm version = ${CMAKE_PROJECT_VERSION}")
+
+# Defines source files to compile
+#    Not included in source: font6.c font10.c lcd.c
+list( APPEND sources main.c picoterm.c font8.c )
+
+# Define the library to includes at compile time
+#
+list( APPEND link_libs pico_scanvideo_dpi pico_multicore pico_stdlib )
+list( APPEND link_libs hardware_gpio hardware_i2c hardware_adc hardware_uart hardware_irq hardware_flash )
+list( APPEND link_libs tinyusb_device tinyusb_board tinyusb_host )
+
+# Defines the executables to build
+# ===> APPEND ENTRY HERE FOR NEW KEYBOARD LAYOUT
+#
+list( APPEND to_build picoterm picoterm_US picoterm_DE picoterm_FR picoterm_BE )
 
 
+# Common definition for all the executables
+foreach( exec ${to_build} )
+  add_executable( ${exec} ${sources} )
+	pico_enable_stdio_usb( ${exec} 0)
+	pico_enable_stdio_uart( ${exec} 0)
 
-pico_enable_stdio_usb(picoterm 0)
-pico_enable_stdio_uart(picoterm 0)
+	# Necessary to include tusb_config.h
+	target_include_directories( ${exec} PRIVATE ${CMAKE_CURRENT_LIST_DIR} )
 
-target_include_directories(picoterm PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-# I think the above is necessary to include tusb_config.h
+	pico_add_extra_outputs( ${exec} )
 
-pico_add_extra_outputs(picoterm)
+	# create the LOCALISE_xx string from the picoterm_xx to build
+	if( ${exec} STREQUAL "picoterm" ) # picoterm  -> LOCALISE_UK (special case)
+    set( localise "LOCALISE_UK" )
+	else() # picoterm_FR -> LOCALISE_FR
+    string(REGEX REPLACE "picoterm_" "LOCALISE_" localise ${exec} )
+	endif()
+	message( "Localise for ${exec} = ${localise}")
 
-target_compile_definitions(picoterm PRIVATE
-PICO_SCANVIDEO_SCANLINE_BUFFER_COUNT=4
-PICO_SCANVIDEO_PLANE1_FIXED_FRAGMENT_DMA=true 
-)
+	# Common DEFINES for all executables
+	target_compile_definitions( ${exec} PRIVATE
+		PICO_SCANVIDEO_SCANLINE_BUFFER_COUNT=4
+		PICO_SCANVIDEO_PLANE1_FIXED_FRAGMENT_DMA=true
+		${localise}=true
+		)
 
-target_link_libraries(picoterm
-                      pico_scanvideo_dpi
-                      pico_multicore
-                      pico_stdlib
-                      hardware_gpio
-                      hardware_i2c
-                      hardware_adc
-                      hardware_uart
-                      hardware_irq
-                      hardware_flash
-
-                      tinyusb_device
-                      tinyusb_board
-                      tinyusb_host
-                      )
+	# Link libraries to use
+	target_link_libraries( ${exec} ${link_libs} )
+endforeach()

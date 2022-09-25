@@ -1,0 +1,24 @@
+# ignore pico_sdk copies
+pico_*_import.cmake
+font.h
+
+# Compiled files
+CMakeCache.txt
+CMakeFiles/
+MakeFile
+elf2uf2/
+cmake_install.cmake
+*.elf
+*.elf.*
+*.dis
+*.bin
+*.hex
+pioasm/
+Makefile
+generated/
+pico-sdk/
+pico_extras/
+
+# Gimp files
+*.xcf
+
