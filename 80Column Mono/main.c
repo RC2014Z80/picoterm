@@ -1,9 +1,9 @@
 /*
  * Terminal software for Pi Pico
  * USB keyboard input, VGA video output, communication with RC2014 via UART on GPIO20 &21
- * Shiela Dixon, https://peacockmedia.software  
+ * Shiela Dixon, https://peacockmedia.software
  *
- * much of what's in this main file is taken from the VGA textmode example 
+ * much of what's in this main file is taken from the VGA textmode example
  * from pico-playground/scanvideo which has the licence as follows:
  *
  *
@@ -11,7 +11,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  *
  *
- * ... and the TinyUSB hid_app, which has the following licence: 
+ * ... and the TinyUSB hid_app, which has the following licence:
  *
  *
  * The MIT License (MIT)
@@ -54,7 +54,7 @@
 #define UART_TX_PIN     20
 #define UART_RX_PIN     21
 #define CLOCK_SPEED     133000
-#define BAUD_RATE       115200 // /(CLOCK_SPEED/133000)   
+#define BAUD_RATE       115200 // /(CLOCK_SPEED/133000)
 #define DATA_BITS       8
 #define STOP_BITS       1
 #define PARITY          UART_PARITY_NONE
@@ -133,7 +133,7 @@ struct KeyboardBuffer {
   char buff[2000];
 };
 
-struct KeyboardBuffer keybuffer1 = {0}; 
+struct KeyboardBuffer keybuffer1 = {0};
 
 void insert_key_into_buffer(unsigned char ch){
   keybuffer1.buff[keybuffer1.insert++]=ch;
@@ -184,11 +184,11 @@ uint32_t block[] = {
                     PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0) << 16 |
                     PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0),
                     PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0) << 16 |
-                    PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0), 
+                    PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0),
                     PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0) << 16 |
-                    PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0), 
+                    PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0),
                     PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0) << 16 |
-                    PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0) 
+                    PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0)
 };
 
 
@@ -257,7 +257,7 @@ void render_loop() {
         // do any frame related logic
         // todo probably a race condition here ... thread dealing with last line of a frame may end
         // todo up waiting on the next frame...
-        
+
         mutex_enter_blocking(&frame_logic_mutex);
         uint32_t frame_num = scanvideo_frame_number(scanline_buffer->scanline_id);
         // note that with multiple cores we may have got here not for the first scanline, however one of the cores will do this logic first before either does the actual generation
@@ -296,7 +296,7 @@ void render_loop() {
         // release the scanline into the wild
         scanvideo_end_scanline_generation(scanline_buffer);
         // do this outside mutex and scanline generation
-    
+
 
     } // end while(true) loop
 }
@@ -350,7 +350,7 @@ void build_font() {
     uint32_t *p = font_raw_pixels;
     // we know range_length is 95
     uint32_t *pr = font_raw_pixels+(font->dsc->cmaps->range_length * FONT_SIZE_WORDS);
-    // pr is the reversed characters, build those in the same loop as the regular ones 
+    // pr is the reversed characters, build those in the same loop as the regular ones
 
     assert(font->line_height == FONT_HEIGHT);
 
@@ -380,7 +380,7 @@ void build_font() {
 
             // 201121  improved reverse video
             uint32_t r = 31 - PICO_SCANVIDEO_R5_FROM_PIXEL(pixel);
-            uint32_t g = 31 - PICO_SCANVIDEO_G5_FROM_PIXEL(pixel);              
+            uint32_t g = 31 - PICO_SCANVIDEO_G5_FROM_PIXEL(pixel);
             uint32_t b = 31 - PICO_SCANVIDEO_B5_FROM_PIXEL(pixel);
 
             switch (colour_preference)
@@ -419,9 +419,9 @@ void build_font() {
 
               // 090622  adds colour options
               r = PICO_SCANVIDEO_R5_FROM_PIXEL(pixel);
-              g = PICO_SCANVIDEO_G5_FROM_PIXEL(pixel);              
+              g = PICO_SCANVIDEO_G5_FROM_PIXEL(pixel);
               b = PICO_SCANVIDEO_B5_FROM_PIXEL(pixel);
-              
+
 
             switch (colour_preference)
             {
@@ -456,7 +456,7 @@ void build_font() {
 
 
             uint32_t new_pixel = PICO_SCANVIDEO_PIXEL_FROM_RGB5(r,g,b);
-            
+
 
 
               if (!(x & 1)) {
@@ -483,7 +483,7 @@ int video_main(void) {
 
 
     mutex_init(&frame_logic_mutex);
-  
+
 
     build_font();
     sem_init(&video_setup_complete, 0, 1);
@@ -498,7 +498,7 @@ int video_main(void) {
     go_core1(core1_func);   // render_loop() on core 1
 #endif
 #ifdef RENDER_ON_CORE0
-    render_loop();          
+    render_loop();
 #endif
 
 }
@@ -568,7 +568,7 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
     *output32++ = host_safe_hw_ptr(beginning_of_line);
     uint32_t *dbase = font_raw_pixels + FONT_WIDTH_WORDS * (y % FONT_HEIGHT);
     int cmax = font->dsc->cmaps[0].range_length;
-    
+
 
 
     char ch = 0;
@@ -582,13 +582,13 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
       rowslots++;
 
       if(ch==0){
-          *output32++ = host_safe_hw_ptr(&block); 
+          *output32++ = host_safe_hw_ptr(&block);
           // shortcut
           // there's likely to be a lot of spaces on the screen.
           // if this character is a space, just use this predefined zero block rather than the calculation below
       }
       else{
-        *output32++ = host_safe_hw_ptr(dbase + ch * FONT_HEIGHT * FONT_WIDTH_WORDS); 
+        *output32++ = host_safe_hw_ptr(dbase + ch * FONT_HEIGHT * FONT_WIDTH_WORDS);
       }
 
     }
@@ -655,7 +655,7 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
 #endif
     dest->status = SCANLINE_OK;
 
-  
+
 
     return true;
 }
@@ -668,7 +668,7 @@ void go_core1(void (*execute)()) {
 void on_uart_rx() {
   // we can buffer the character here if we turn on interrupts for UART
 
-  // FIFO turned off, we should be here once for each character, 
+  // FIFO turned off, we should be here once for each character,
   // but the while does no harm and at least acts as an if()
   while (uart_is_readable (UART_ID)){
     insert_key_into_buffer(uart_getc (UART_ID));
@@ -678,7 +678,7 @@ void on_uart_rx() {
 
 
 void tih_handler(){
-    gpio_put(LED,true); 
+    gpio_put(LED,true);
 }
 
 
@@ -692,7 +692,7 @@ void handle_keyboard_input(){
         handle_new_character(read_key_from_buffer());
         // or for analysing what comes in
         //print_ascii_value(read_key_from_buffer());
-        
+
     }while(key_ready());
 
     print_cursor();
@@ -702,7 +702,26 @@ void handle_keyboard_input(){
 
 }
 
-
+// Wire a LED on GPIO 5 (01x10 extra connector) to help debugging
+// the source code by calling set_debug_set() which blink the LED count's time 
+#define LED_DEBUG 5
+void set_debug_led( int count ){
+	gpio_init( LED_DEBUG );
+	gpio_set_dir(LED_DEBUG, GPIO_OUT);
+	for( int i=0; i<10; i++){
+			gpio_put(LED_DEBUG,true);
+			sleep_ms( 20 );
+			gpio_put(LED_DEBUG,false);
+			sleep_ms( 20 );
+	}
+	sleep_ms( 500 );
+	for( int i=0; i<count; i++){
+		gpio_put(LED_DEBUG,true);
+		sleep_ms( 300 );
+		gpio_put(LED_DEBUG,false);
+		sleep_ms( 300 );
+	}
+}
 
 int main(void) {
 
@@ -712,8 +731,7 @@ int main(void) {
 
     gpio_init(LED);
     gpio_set_dir(LED, GPIO_OUT);
-    gpio_put(LED,false);    
-
+    gpio_put(LED,false);
 
 
 
@@ -749,6 +767,9 @@ uint8_t colour_preference = GREEN1;
     if(gpio_get (BTN_C)){
         bootchoice += 4;
     }
+
+
+
 
     switch (bootchoice)
     {
@@ -790,17 +811,7 @@ uint8_t colour_preference = GREEN1;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+		//set_debug_led(4);
 
     // AFTER   reading and writing
     stdio_init_all();
@@ -809,7 +820,7 @@ uint8_t colour_preference = GREEN1;
 
     // if need to overclock. Also uncomment the baud rate division near the top.
     //if(set_sys_clock_khz(CLOCK_SPEED, true)){
-    //    
+    //
     //}
 
 
@@ -824,6 +835,7 @@ uint8_t colour_preference = GREEN1;
     gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
 
 
+		//set_debug_led(5);
 
 
 // This should enable rx interrupt handling
@@ -839,17 +851,15 @@ uint8_t colour_preference = GREEN1;
     uart_set_irq_enables(UART_ID, true, false);
 
 
-
-
   keybuffer1.length=2000;
   keybuffer1.take=0;
-  keybuffer1.insert=0;  
+  keybuffer1.insert=0;
 
   prepare_text_buffer();
 
   video_main();
 
-    tusb_init(); // initialize tinyusb stack
+  tusb_init(); // initialize tinyusb stack
 
   while(true){
         // do character stuff here on core 0
@@ -863,10 +873,10 @@ uint8_t colour_preference = GREEN1;
         if (uart_is_writable(UART_ID)) {
             uart_putc (UART_ID, userInput);
 
-        }     
+        }
         else{
 
-        }           
+        }
     }
     */
 
@@ -903,7 +913,7 @@ void led_blinking_task(void)
      board_led_write(true);
      break;
     case 3:
-      
+
       // Blink every interval ms
       if ( board_millis() - start_ms > interval_ms) {
         start_ms += interval_ms;
@@ -919,7 +929,7 @@ void led_blinking_task(void)
 
 
 /*
- 
+
 
 */
 
@@ -978,13 +988,13 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
           if(scancode_is_mod(scancode)==false){
             // not a modifier key
             uint8_t ch = keycode2ascii[scancode][0];
-            
+
             if(modifiers & WITH_SHIFT){
                 ch = keycode2ascii[scancode][1];
-            }  
+            }
             else if((modifiers & WITH_CAPSLOCK) && ch>='a' && ch<='z'){
                 ch = keycode2ascii[scancode][1];
-            } 
+            }
             else if(modifiers & WITH_CTRL && ch>95){
                 ch=ch-96;
             }
@@ -997,12 +1007,12 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
                         ch = keycode2ascii[scancode][2];
                     }
                   #endif
-    
-    
+
+
                   uart_putc (UART_ID, ch);
-   
-                  
-        
+
+
+
           }
         }
 
@@ -1189,7 +1199,7 @@ static void process_kbd_report(hid_keyboard_report_t const *report)
             }
         }
     }
-    
+
     /*
     // synthesize events for modifier keys
     static const uint8_t mods[] = {
@@ -1204,7 +1214,7 @@ static void process_kbd_report(hid_keyboard_report_t const *report)
         check_mod(report->modifier, prev_report.modifier, mods[i], mods[i+1]);
     }
     */
-    
+
     prev_report = *report;
 }
 

@@ -1,7 +1,7 @@
 /*
  * Terminal software for Pi Pico
  * USB keyboard input, VGA video output, communication with RC2014 via UART on GPIO20 &21
- * Shiela Dixon, https://peacockmedia.software  
+ * Shiela Dixon, https://peacockmedia.software
  *
  * main.c handles the ins and outs
  * picoterm.c handles the behaviour of the terminal and storing the text
@@ -19,18 +19,21 @@
 
 
 #include "picoterm.h"
+#include "pmhid.h"
+#include "tusb_option.h"
+#include <stdio.h>
 
 #define COLUMNS     80
 #define ROWS        34
 #define VISIBLEROWS 30
-#define CSRCHAR     128 
+#define CSRCHAR     128
 
 #define SPC         0x20
 #define ESC         0x1b
 #define DEL         0x7f
 #define BSP         0x08
 #define LF          0x0a
-#define CR          0x0d 
+#define CR          0x0d
 #define FF          0x0c
 
 
@@ -97,9 +100,9 @@ struct point saved_csr = {0,0};
 
 void constrain_cursor_values(){
     if(csr.x<0) csr.x=0;
-    if(csr.x>=COLUMNS) csr.x=COLUMNS-1;    
+    if(csr.x>=COLUMNS) csr.x=COLUMNS-1;
     if(csr.y<0) csr.y=0;
-    if(csr.y>=VISIBLEROWS) csr.y=VISIBLEROWS-1;    
+    if(csr.y>=VISIBLEROWS) csr.y=VISIBLEROWS-1;
 }
 
 
@@ -139,7 +142,7 @@ void insert_line(){
     struct row_of_text *temphandle = ptr[ROWS-1];
 
     for(int r=ROWS-1;r>csr.y;r--){
-        ptr[r] = ptr[r-1]; 
+        ptr[r] = ptr[r-1];
     }
 
     ptr[csr.y] = temphandle;
@@ -189,7 +192,7 @@ void shuffle(){
     // this is our scroll
     // because we're using pointers to rows, we only need to shuffle the array of pointers
 
-    // recycle first line. 
+    // recycle first line.
     struct row_of_text *temphandle = ptr[0];
     //ptr[ROWS-1]=ptr[0];
 
@@ -214,22 +217,22 @@ void print_cursor(){
         rvs_chr -= 95;
     }
     else{
-       rvs_chr += 95; 
+       rvs_chr += 95;
     }
     //slip_character(rvs_chr,csr.x,csr.y); // fix 191121
-    // can't use slip, because it applies reverse 
+    // can't use slip, because it applies reverse
     ptr[csr.y]->slot[csr.x] = rvs_chr;
 }
 void clear_cursor(){
     //slip_character(chr_under_csr,csr.x,csr.y); // fix 191121
-    // can't use slip, because it applies reverse 
+    // can't use slip, because it applies reverse
     ptr[csr.y]->slot[csr.x] = chr_under_csr;
 }
 
 
 void clear_line_from_cursor(){
     //for(int c=csr.x;c<COLUMNS;c++){
-    //    slip_character(0,c,csr.y);   
+    //    slip_character(0,c,csr.y);
     //}
     // new faster method
     void *sl = &ptr[csr.y]->slot[csr.x];
@@ -239,7 +242,7 @@ void clear_line_from_cursor(){
 }
 void clear_line_to_cursor(){
     //for(int c=csr.x;c>=0;c--){
-    //    slip_character(0,c,csr.y);   
+    //    slip_character(0,c,csr.y);
     //}
     // new faster method
     void *sl = &ptr[csr.y]->slot[0];
@@ -248,7 +251,7 @@ void clear_line_to_cursor(){
 }
 void clear_entire_line(){
     //for(int c=0;c<COLUMNS;c++){
-    //    slip_character(0,c,csr.y);      
+    //    slip_character(0,c,csr.y);
     //}
     // new faster method
     void *sl = &ptr[csr.y]->slot[0];
@@ -260,7 +263,7 @@ void clear_entire_line(){
 void clear_entire_screen(){
 
     for(int r=0;r<ROWS;r++){
-        //slip_character(0,c,r);  
+        //slip_character(0,c,r);
         // tighter method, as too much of a delay here can cause dropped characters
         void *sl = &ptr[r]->slot[0];
         memset(sl, 0, COLUMNS);
@@ -272,7 +275,7 @@ void clear_screen_from_csr(){
     clear_line_from_cursor();
     for(int r=csr.y;r<ROWS;r++){
         for(int c=0;c<COLUMNS;c++){
-            slip_character(0,c,r);    // todo: should use the new method in clear_entire_screen  
+            slip_character(0,c,r);    // todo: should use the new method in clear_entire_screen
         }
     }
 }
@@ -281,7 +284,7 @@ void clear_screen_to_csr(){
     clear_line_to_cursor();
     for(int r=0;r<csr.y;r++){
         for(int c=0;c<COLUMNS;c++){
-            slip_character(0,c,r);  // todo: should use the new method in clear_entire_screen    
+            slip_character(0,c,r);  // todo: should use the new method in clear_entire_screen
         }
     }
 }
@@ -315,21 +318,21 @@ void esc_sequence_received(){
     static int esc_parameters[MAX_ESC_PARAMS];
     static int esc_parameter_count;
     static unsigned char esc_c1;
-    static unsigned char esc_final_byte;       
+    static unsigned char esc_final_byte;
 */
 
 
-int n,m; 
+int n,m;
 if(esc_c1=='['){
     // CSI
     switch(esc_final_byte){
     case 'H':
         // Moves the cursor to row n, column m
         // The values are 1-based, and default to 1
-        
+
         n = esc_parameters[0];
         m = esc_parameters[1];
-        n--; 
+        n--;
         m--;
 
         // these are zero based
@@ -379,10 +382,10 @@ if(esc_c1=='['){
     break;
 
     case 'J':
-    // Clears part of the screen. If n is 0 (or missing), clear from cursor to end of screen. 
-    // If n is 1, clear from cursor to beginning of the screen. If n is 2, clear entire screen 
-    // (and moves cursor to upper left on DOS ANSI.SYS). 
-    // If n is 3, clear entire screen and delete all lines saved in the scrollback buffer 
+    // Clears part of the screen. If n is 0 (or missing), clear from cursor to end of screen.
+    // If n is 1, clear from cursor to beginning of the screen. If n is 2, clear entire screen
+    // (and moves cursor to upper left on DOS ANSI.SYS).
+    // If n is 3, clear entire screen and delete all lines saved in the scrollback buffer
     // (this feature was added for xterm and is supported by other terminal applications).
         switch(esc_parameters[0]){
             case 0:
@@ -411,8 +414,8 @@ if(esc_c1=='['){
 
 
     case 'K':
-    // Erases part of the line. If n is 0 (or missing), clear from cursor to the end of the line. 
-    // If n is 1, clear from cursor to beginning of the line. If n is 2, clear entire line. 
+    // Erases part of the line. If n is 0 (or missing), clear from cursor to the end of the line.
+    // If n is 1, clear from cursor to beginning of the line. If n is 2, clear entire line.
     // Cursor position does not change.
         switch(esc_parameters[0]){
             case 0:
@@ -451,7 +454,7 @@ if(esc_c1=='['){
     // Cursor Forward
     //Moves the cursor n (default 1) cells
         n = esc_parameters[0];
-        if(n==0)n=1;   
+        if(n==0)n=1;
         csr.x += n;
         constrain_cursor_values();
     break;
@@ -459,7 +462,7 @@ if(esc_c1=='['){
     // Cursor Backward
     //Moves the cursor n (default 1) cells
         n = esc_parameters[0];
-        if(n==0)n=1;    
+        if(n==0)n=1;
         csr.x -= n;
         constrain_cursor_values();
     break;
@@ -500,7 +503,7 @@ if(esc_c1=='['){
 
 
 
- 
+
 
     }
 
@@ -523,10 +526,11 @@ reset_escape_sequence();
 
 void prepare_text_buffer(){
     // do we need to blank them, ie fill with 0?
+    char msg[25];
 
     reset_escape_sequence();
 
-    for(int c=0;c<=ROWS;c++){
+    for(int c=0;c<ROWS;c++){
         struct row_of_text *newRow;
         /* Create structure in memory */
         newRow=(struct row_of_text *)malloc(sizeof(struct row_of_text));
@@ -539,26 +543,27 @@ void prepare_text_buffer(){
 
 
 
-    clear_entire_screen();
+		clear_entire_screen();
 
-
-  
-print_string("_/_/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/     _/_/  _/\r\n");
-print_string("_/_/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/     _/_/  _/\r\n");
-print_string("_/_/      _/_/ _/_/      _/_/ _/_/      _/_/ _/_/    _/_/_/ _/_/_/     _/_/  _/\r\n");
-print_string("_/_/      _/_/ _/_/      _/_/ _/_/      _/_/ _/_/    _/_/_/ _/_/_/     _/_/  _/\r\n");
-print_string("_/_/      _/_/ _/_/                   _/_/   _/_/  _/  _/_/   _/_/     _/_/  _/\r\n");
-print_string("_/_/      _/_/ _/_/                   _/_/   _/_/  _/  _/_/   _/_/   _/_/    _/\r\n");
-print_string("_/_/_/_/_/_/   _/_/             _/_/_/_/     _/_/  _/  _/_/   _/_/   _/_/    _/\r\n");
-print_string("_/_/_/_/_/_/   _/_/             _/_/_/_/     _/_/  _/  _/_/   _/_/   _/_/    _/\r\n");
-print_string("_/_/      _/_/ _/_/           _/_/           _/_/  _/  _/_/   _/_/   _/_/_/_/_/\r\n");
-print_string("_/_/      _/_/ _/_/           _/_/           _/_/  _/  _/_/   _/_/   _/_/_/_/_/\r\n");
-print_string("_/_/      _/_/ _/_/      _/_/ _/_/      _/_/ _/_/_/    _/_/   _/_/         _/_/\r\n");
-print_string("_/_/      _/_/ _/_/      _/_/ _/_/      _/_/ _/_/_/    _/_/   _/_/         _/_/\r\n");
-print_string("_/_/      _/_/   _/_/_/_/_/   _/_/_/_/_/_/_/   _/_/_/_/_/ _/_/_/_/_/_/     _/_/\r\n");
-print_string("_/_/      _/_/   _/_/_/_/_/   _/_/_/_/_/_/_/   _/_/_/_/_/ _/_/_/_/_/_/     _/_/\r\n");
-
-    print_string("\r\n\r\nPicoTerm 1.1  S. Dixon\r\n");
+		print_string("_/_/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/     _/_/  _/\r\n");
+		print_string("_/_/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/     _/_/  _/\r\n");
+		print_string("_/_/      _/_/ _/_/      _/_/ _/_/      _/_/ _/_/    _/_/_/ _/_/_/     _/_/  _/\r\n");
+		print_string("_/_/      _/_/ _/_/      _/_/ _/_/      _/_/ _/_/    _/_/_/ _/_/_/     _/_/  _/\r\n");
+		print_string("_/_/      _/_/ _/_/                   _/_/   _/_/  _/  _/_/   _/_/     _/_/  _/\r\n");
+		print_string("_/_/      _/_/ _/_/                   _/_/   _/_/  _/  _/_/   _/_/   _/_/    _/\r\n");
+		print_string("_/_/_/_/_/_/   _/_/             _/_/_/_/     _/_/  _/  _/_/   _/_/   _/_/    _/\r\n");
+		print_string("_/_/_/_/_/_/   _/_/             _/_/_/_/     _/_/  _/  _/_/   _/_/   _/_/    _/\r\n");
+		print_string("_/_/      _/_/ _/_/           _/_/           _/_/  _/  _/_/   _/_/   _/_/_/_/_/\r\n");
+		print_string("_/_/      _/_/ _/_/           _/_/           _/_/  _/  _/_/   _/_/   _/_/_/_/_/\r\n");
+		print_string("_/_/      _/_/ _/_/      _/_/ _/_/      _/_/ _/_/_/    _/_/   _/_/         _/_/\r\n");
+		print_string("_/_/      _/_/ _/_/      _/_/ _/_/      _/_/ _/_/_/    _/_/   _/_/         _/_/\r\n");
+		print_string("_/_/      _/_/   _/_/_/_/_/   _/_/_/_/_/_/_/   _/_/_/_/_/ _/_/_/_/_/_/     _/_/\r\n");
+		print_string("_/_/      _/_/   _/_/_/_/_/   _/_/_/_/_/_/_/   _/_/_/_/_/ _/_/_/_/_/_/     _/_/\r\n");
+		sprintf(msg, "\r\n\r\nTinyUSB=%d.%d.%d, ", TUSB_VERSION_MAJOR, TUSB_VERSION_MINOR,TUSB_VERSION_REVISION);
+		print_string(msg);
+		sprintf(msg, "Keymap=%s rev %d\r\n", KEYMAP, KEYMAP_REV );
+		print_string(msg);
+		print_string("PicoTerm 1.1  S. Dixon\r\n");
 
 
 
@@ -582,10 +587,10 @@ void handle_new_character(unsigned char asc){
         switch(esc_state){
             case ESC_ESC_RECEIVED:
                 // waiting on c1 character
-                if(asc>='N' && asc<'_'){ 
+                if(asc>='N' && asc<'_'){
                     // 0x9B = CSI, that's the only one we're interested in atm
                     // the others are 'Fe Escape sequences'
-                    // usually two bytes, ie we have them already. 
+                    // usually two bytes, ie we have them already.
                     if(asc=='['){    // ESC+[ =  0x9B){
                         // move forward
 
@@ -600,30 +605,30 @@ void handle_new_character(unsigned char asc){
                     }
                 }
                 else{
-                    // unrecognised character after escape. 
+                    // unrecognised character after escape.
                     reset_escape_sequence();
                 }
-                break; 
+                break;
             case ESC_PARAMETER_READY:
                 // waiting on parameter character, semicolon or final byte
-                if(asc>='0' && asc<='9'){ 
+                if(asc>='0' && asc<='9'){
                     // parameter value
                     if(esc_parameter_count<MAX_ESC_PARAMS){
                         unsigned char digit_value = asc - 0x30; // '0'
                         esc_parameters[esc_parameter_count] *= 10;
                         esc_parameters[esc_parameter_count] += digit_value;
                     }
-                    
+
                 }
-                else if(asc==';'){ 
+                else if(asc==';'){
                     // move to next param
                     esc_parameter_count++;
                     if(esc_parameter_count>MAX_ESC_PARAMS) esc_parameter_count=MAX_ESC_PARAMS;
                 }
-                else if(asc=='?'){ 
+                else if(asc=='?'){
                     parameter_q=true;
                 }
-                else if(asc>=0x40 && asc<0x7E){ 
+                else if(asc>=0x40 && asc<0x7E){
                     // final byte. Log and handle
                     esc_final_byte = asc;
                     esc_sequence_received();
@@ -631,7 +636,7 @@ void handle_new_character(unsigned char asc){
                 else{
                     // unexpected value, undefined
                 }
-                break; 
+                break;
         }
 
 
@@ -639,13 +644,13 @@ void handle_new_character(unsigned char asc){
 
     }
     else{
-        // regular characters - 
-        if(asc>=0x20 && asc<0x7f){  
-  
+        // regular characters -
+        if(asc>=0x20 && asc<0x7f){
+
             slip_character(asc-32,csr.x,csr.y);
             csr.x++;
 
-            
+
             // this for disabling wrapping in terminal
             constrain_cursor_values();
 
@@ -676,25 +681,25 @@ void handle_new_character(unsigned char asc){
                 if(csr.x>0){
                     csr.x--;
                 }
-                break; 
+                break;
                 case LF:
-                
+
                     if(csr.y==VISIBLEROWS-1){   // visiblerows is the count, csr is zero based
                         shuffle();
                     }
                     else{
                     csr.y++;
                     }
-                break; 
+                break;
                 case CR:
                     csr.x=0;
 
-                break; 
+                break;
                 case FF:
-                    clear_entire_screen(); 
+                    clear_entire_screen();
                     csr.x=0; csr.y=0;
 
-                break; 
+                break;
             }
 
         }
