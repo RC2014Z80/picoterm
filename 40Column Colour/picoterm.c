@@ -1,7 +1,7 @@
 /*
  * Terminal software for Pi Pico
  * USB keyboard input, VGA video output, communication with RC2014 via UART on GPIO20 &21
- * Shiela Dixon, https://peacockmedia.software  
+ * Shiela Dixon, https://peacockmedia.software
  *
  * main.c handles the ins and outs
  * picoterm.c handles the behaviour of the terminal and storing the text
@@ -19,6 +19,8 @@
 
 
 #include "picoterm.h"
+#include "tusb_option.h"
+#include "../common/pmhid.h"
 
 #define LINEWRAP        // comment out to disable line wrapping
 
@@ -26,14 +28,14 @@
 #define ROWS        256 // yes this is 16 more than the number of scanlines we have
                         // for scrolling to work we need 8 spare pointers
 #define TEXTROWS    29 // ROWS/8  // must be 2 text rows less than the max number of scanlines
-#define CSRCHAR     128 
+#define CSRCHAR     128
 
 #define SPC         0x20
 #define ESC         0x1b
 #define DEL         0x7f
 #define BSP         0x08
 #define LF          0x0a
-#define CR          0x0d 
+#define CR          0x0d
 #define FF          0x0c
 
 
@@ -81,7 +83,7 @@ static uint16_t palette[] = {
                 PICO_SCANVIDEO_PIXEL_FROM_RGB8(0xFF, 0xFF, 0xFF),//white
 };
 
-static uint8_t custom_bitmap[768] = {    			
+static uint8_t custom_bitmap[768] = {
                 0b11111000,
 				0b10001100,
 				0b10001100,
@@ -138,9 +140,9 @@ struct point saved_csr = {0,0};
 
 void constrain_cursor_values(){
     if(csr.x<0) csr.x=0;
-    if(csr.x>=COLUMNS) csr.x=COLUMNS-1;    
+    if(csr.x>=COLUMNS) csr.x=COLUMNS-1;
     if(csr.y<0) csr.y=0;
-    if(csr.y>=TEXTROWS) csr.y=TEXTROWS-1;    
+    if(csr.y>=TEXTROWS) csr.y=TEXTROWS-1;
 }
 
 
@@ -181,24 +183,24 @@ void slip_character(unsigned char ch,int x,int y){
                     //    || ((rawdata & (0b10000000 >> bit)==0) && rvs)
                     //)
                     if(rawdata & (0b10000000 >> bit))
-                    { 
+                    {
                         if(!rvs){
-                            ptr[scanlineNumber]->pixels[characterPosition+bit] 
+                            ptr[scanlineNumber]->pixels[characterPosition+bit]
                                 = foreground_colour;
                         }
                         else{
-                            ptr[scanlineNumber]->pixels[characterPosition+bit] 
+                            ptr[scanlineNumber]->pixels[characterPosition+bit]
                             = background_colour;
                         }
-    
+
                     }
                     else{
                         if(rvs){
-                            ptr[scanlineNumber]->pixels[characterPosition+bit] 
+                            ptr[scanlineNumber]->pixels[characterPosition+bit]
                                 = foreground_colour;
                         }
                         else{
-                            ptr[scanlineNumber]->pixels[characterPosition+bit] 
+                            ptr[scanlineNumber]->pixels[characterPosition+bit]
                             = background_colour;
                         }
                     }
@@ -221,7 +223,7 @@ uint32_t * wordsForRow(int y){
 
 void clear_scanline_from_cursor(int r){
 
-    uint16_t *sl = &ptr[r]->pixels[csr.x*8];  
+    uint16_t *sl = &ptr[r]->pixels[csr.x*8];
     for(int i=csr.x*8;i<COLUMNS*8;i++){
         *sl++ = background_colour;
     }
@@ -229,7 +231,7 @@ void clear_scanline_from_cursor(int r){
 }
 void clear_scanline_to_cursor(int r){
 
-    uint16_t *sl = &ptr[r]->pixels[0];  
+    uint16_t *sl = &ptr[r]->pixels[0];
     for(int i=0;i<csr.x*8;i++){
         *sl++ = background_colour;
     }
@@ -238,7 +240,7 @@ void clear_scanline_to_cursor(int r){
 }
 void clear_entire_scanline(int r){
     // can't use the fast memset method here because we want to fill with 16 bit values
-    uint16_t *sl = &ptr[r]->pixels[0];  
+    uint16_t *sl = &ptr[r]->pixels[0];
     for(int i=0;i<COLUMNS*8;i++){
         *sl++ = background_colour;
     }
@@ -289,7 +291,7 @@ void shuffle(){
     // this is our scroll
     // because we're using pointers to rows, we only need to shuffle the array of pointers
     // with textmode it's just ~30 pointers. Colourmode it's every scanline (~240)
-    // recycle first line, and clear it. 
+    // recycle first line, and clear it.
 
 
 
@@ -297,7 +299,7 @@ void shuffle(){
         ptr[(ROWS-8)+r]=ptr[r];
         clear_entire_scanline(r);
     }
-    
+
     for(int r=0;r<ROWS-8;r++){
         ptr[r]=ptr[r+8];
     }
@@ -322,7 +324,7 @@ void print_cursor(){
             scanlineNumber = (csr.y*8)+r;
             characterPosition = (csr.x*8);
             for(int bit=0;bit<8;bit++){
-                uint16_t pixel = ptr[scanlineNumber]->pixels[characterPosition+bit];  
+                uint16_t pixel = ptr[scanlineNumber]->pixels[characterPosition+bit];
                 uint16_t newPixel = pixel==background_colour ? foreground_colour : background_colour;
                 cursor_buffer[cursor_buffer_counter++]=pixel;
                 ptr[scanlineNumber]->pixels[characterPosition+bit] = newPixel;
@@ -341,7 +343,7 @@ void clear_cursor(){
         for(int r=0;r<8;r++){   // r is a row offset
             scanlineNumber = (csr.y*8)+r;
             characterPosition = (csr.x*8);
-            for(int bit=0;bit<8;bit++){  
+            for(int bit=0;bit<8;bit++){
                 uint16_t newPixel = cursor_buffer[cursor_buffer_counter++];
                 ptr[scanlineNumber]->pixels[characterPosition+bit] = newPixel;
 
@@ -381,21 +383,21 @@ void esc_sequence_received(){
     static int esc_parameters[MAX_ESC_PARAMS];
     static int esc_parameter_count;
     static unsigned char esc_c1;
-    static unsigned char esc_final_byte;       
+    static unsigned char esc_final_byte;
 */
 
 
-int n,m; 
+int n,m;
 if(esc_c1=='['){
     // CSI
     switch(esc_final_byte){
     case 'H':
         // Moves the cursor to row n, column m
         // The values are 1-based, and default to 1
-        
+
         n = esc_parameters[0];
         m = esc_parameters[1];
-        n--; 
+        n--;
         m--;
 
         // these are zero based
@@ -433,13 +435,13 @@ if(esc_c1=='['){
         }
         if(esc_parameters[0]>=40 && esc_parameters[0]<=47){
             foreground_colour = palette[esc_parameters[0]-40];
-        }  
+        }
         if(esc_parameters[0]>=90 && esc_parameters[0]<=97){
             foreground_colour = palette[esc_parameters[0]-82]; // 90 is palette[8]
         }
         if(esc_parameters[0]>=100 && esc_parameters[0]<=107){
             foreground_colour = palette[esc_parameters[0]-92];  // 100 is palette[8]
-        }  
+        }
 
         //case 38:
         //Next arguments are 5;n or 2;r;g;b
@@ -458,7 +460,7 @@ if(esc_c1=='['){
                 int b = cube;
 
                 foreground_colour = PICO_SCANVIDEO_PIXEL_FROM_RGB8(r*42,g*42,b*42);
-                
+
             }
             if(esc_parameters[2]>=232 && esc_parameters[2]<=255){
                 // grayscale from black to white in 24 steps
@@ -482,7 +484,7 @@ if(esc_c1=='['){
                 int g = cube/6;
                 cube -= (g*36);
                 int b = cube;
-                
+
                 background_colour = PICO_SCANVIDEO_PIXEL_FROM_RGB8(r*42,g*42,b*42);
             }
             if(esc_parameters[2]>=232 && esc_parameters[2]<=255){
@@ -516,10 +518,10 @@ if(esc_c1=='['){
     break;
 
     case 'J':
-    // Clears part of the screen. If n is 0 (or missing), clear from cursor to end of screen. 
-    // If n is 1, clear from cursor to beginning of the screen. If n is 2, clear entire screen 
-    // (and moves cursor to upper left on DOS ANSI.SYS). 
-    // If n is 3, clear entire screen and delete all lines saved in the scrollback buffer 
+    // Clears part of the screen. If n is 0 (or missing), clear from cursor to end of screen.
+    // If n is 1, clear from cursor to beginning of the screen. If n is 2, clear entire screen
+    // (and moves cursor to upper left on DOS ANSI.SYS).
+    // If n is 3, clear entire screen and delete all lines saved in the scrollback buffer
     // (this feature was added for xterm and is supported by other terminal applications).
         switch(esc_parameters[0]){
             case 0:
@@ -548,8 +550,8 @@ if(esc_c1=='['){
 
 
     case 'K':
-    // Erases part of the line. If n is 0 (or missing), clear from cursor to the end of the line. 
-    // If n is 1, clear from cursor to beginning of the line. If n is 2, clear entire line. 
+    // Erases part of the line. If n is 0 (or missing), clear from cursor to the end of the line.
+    // If n is 1, clear from cursor to beginning of the line. If n is 2, clear entire line.
     // Cursor position does not change.
         switch(esc_parameters[0]){
             case 0:
@@ -588,7 +590,7 @@ if(esc_c1=='['){
     // Cursor Forward
     //Moves the cursor n (default 1) cells
         n = esc_parameters[0];
-        if(n==0)n=1;   
+        if(n==0)n=1;
         csr.x += n;
         constrain_cursor_values();
     break;
@@ -596,7 +598,7 @@ if(esc_c1=='['){
     // Cursor Backward
     //Moves the cursor n (default 1) cells
         n = esc_parameters[0];
-        if(n==0)n=1;    
+        if(n==0)n=1;
         csr.x -= n;
         constrain_cursor_values();
     break;
@@ -611,7 +613,7 @@ if(esc_c1=='['){
 
     // MORE
 
- 
+
 
 
      case 'U':
@@ -623,7 +625,7 @@ if(esc_c1=='['){
             data_purpose=UDCHAR;
             current_udchar = esc_parameters[0];
             data_bytes_expected = 8;
-        }   
+        }
     break;
 
 
@@ -691,10 +693,10 @@ void print_logo(){
 
 void prepare_text_buffer(){
     // do we need to blank them, ie fill with 0?
-
+    char msg[40];
     //foreground_colour = palette[9];
-    
-    
+
+
     foreground_colour = PICO_SCANVIDEO_PIXEL_FROM_RGB8(68,77,142);
     background_colour = palette[15];
 
@@ -721,7 +723,13 @@ void prepare_text_buffer(){
     print_logo();
 
     csr.y=9;
-    print_string("PicoTerm Colour 1.0  S. Dixon\r\n");
+		sprintf(msg, "\r\nTinyUSB=%d.%d.%d, ", TUSB_VERSION_MAJOR, TUSB_VERSION_MINOR,TUSB_VERSION_REVISION);
+		print_string(msg);
+		sprintf(msg, "Keymap=%s rev %d\r\n", KEYMAP, KEYMAP_REV );
+		print_string(msg);
+		// Update "project(picoterm VERSION 1.0)" in CMakeList
+		sprintf(msg, "PicoTerm Colour %s  S. Dixon\r\n", CMAKE_PROJECT_VERSION );
+		print_string(msg);
 
     // print cursor
     make_cursor_visible(true);
@@ -736,14 +744,14 @@ void print_string(char str[]){
 
 
 void handle_udchar_data(uint8_t d){
-    
+
     data_bytes_expected--;
     // doing this first makes it 7 - 0
     static int bytenum;
     bytenum = 7-data_bytes_expected;
     //to make 0-7
     bytenum+=((current_udchar-128)*8);
-    
+
     custom_bitmap[bytenum] = d;
 
 }
@@ -756,10 +764,10 @@ void handle_new_character(unsigned char asc){
         switch(esc_state){
             case ESC_ESC_RECEIVED:
                 // waiting on c1 character
-                if(asc>='N' && asc<'_'){ 
+                if(asc>='N' && asc<'_'){
                     // 0x9B = CSI, that's the only one we're interested in atm
                     // the others are 'Fe Escape sequences'
-                    // usually two bytes, ie we have them already. 
+                    // usually two bytes, ie we have them already.
                     if(asc=='['){    // ESC+[ =  0x9B){
                         // move forward
 
@@ -774,30 +782,30 @@ void handle_new_character(unsigned char asc){
                     }
                 }
                 else{
-                    // unrecognised character after escape. 
+                    // unrecognised character after escape.
                     reset_escape_sequence();
                 }
-                break; 
+                break;
             case ESC_PARAMETER_READY:
                 // waiting on parameter character, semicolon or final byte
-                if(asc>='0' && asc<='9'){ 
+                if(asc>='0' && asc<='9'){
                     // parameter value
                     if(esc_parameter_count<MAX_ESC_PARAMS){
                         unsigned char digit_value = asc - 0x30; // '0'
                         esc_parameters[esc_parameter_count] *= 10;
                         esc_parameters[esc_parameter_count] += digit_value;
                     }
-                    
+
                 }
-                else if(asc==';'){ 
+                else if(asc==';'){
                     // move to next param
                     esc_parameter_count++;
                     if(esc_parameter_count>MAX_ESC_PARAMS) esc_parameter_count=MAX_ESC_PARAMS;
                 }
-                else if(asc=='?'){ 
+                else if(asc=='?'){
                     parameter_q=true;
                 }
-                else if(asc>=0x40 && asc<0x7E){ 
+                else if(asc>=0x40 && asc<0x7E){
                     // final byte. Log and handle
                     esc_final_byte = asc;
                     esc_sequence_received();
@@ -805,7 +813,7 @@ void handle_new_character(unsigned char asc){
                 else{
                     // unexpected value, undefined
                 }
-                break; 
+                break;
         }
 
 
@@ -816,20 +824,20 @@ void handle_new_character(unsigned char asc){
     // data?
         if(data_bytes_expected>0){
             if(data_purpose==ARBITRARY){
-                
+
             }
             if(data_purpose==BITMAPDATA){
-                
+
             }
             if(data_purpose==UDCHAR){
                 handle_udchar_data((uint8_t)asc);
             }
         }
         else{
-            // regular characters - 
+            // regular characters -
 
-            if(asc>=0x20 && asc<=0xff){  
-  
+            if(asc>=0x20 && asc<=0xff){
+
                 slip_character(asc-32,csr.x,csr.y);
                 csr.x++;
 
@@ -863,25 +871,25 @@ void handle_new_character(unsigned char asc){
                     if(csr.x>0){
                         csr.x--;
                     }
-                    break; 
+                    break;
                     case LF:
-                    
+
                         if(csr.y==TEXTROWS-1){   // visiblerows is the count, csr is zero based
                             shuffle();
                         }
                         else{
                         csr.y++;
                         }
-                    break; 
+                    break;
                     case CR:
                         csr.x=0;
 
-                    break; 
+                    break;
                     case FF:
-                        clear_entire_screen(); 
+                        clear_entire_screen();
                         csr.x=0; csr.y=0;
 
-                    break; 
+                    break;
                 }
 
             }

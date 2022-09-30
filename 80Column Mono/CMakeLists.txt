@@ -7,7 +7,7 @@ include(pico_extras_import.cmake)
 pico_sdk_init()
 
 project(picoterm VERSION 1.1)
-message("PicoTerm version = ${CMAKE_PROJECT_VERSION}")
+message("PicoTerm 80Col version = ${CMAKE_PROJECT_VERSION}")
 
 # Defines source files to compile
 #    Not included in source: font6.c font10.c lcd.c
@@ -49,6 +49,7 @@ foreach( exec ${to_build} )
 		PICO_SCANVIDEO_SCANLINE_BUFFER_COUNT=4
 		PICO_SCANVIDEO_PLANE1_FIXED_FRAGMENT_DMA=true
 		${localise}=true
+		CMAKE_PROJECT_VERSION="${CMAKE_PROJECT_VERSION}"
 		)
 
 	# Link libraries to use
