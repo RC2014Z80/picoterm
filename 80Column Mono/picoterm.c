@@ -19,7 +19,7 @@
 
 
 #include "picoterm.h"
-#include "pmhid.h"
+#include "../common/pmhid.h"
 #include "tusb_option.h"
 #include <stdio.h>
 
@@ -526,7 +526,7 @@ reset_escape_sequence();
 
 void prepare_text_buffer(){
     // do we need to blank them, ie fill with 0?
-    char msg[25];
+    char msg[40];
 
     reset_escape_sequence();
 
@@ -563,8 +563,9 @@ void prepare_text_buffer(){
 		print_string(msg);
 		sprintf(msg, "Keymap=%s rev %d\r\n", KEYMAP, KEYMAP_REV );
 		print_string(msg);
-		print_string("PicoTerm 1.1  S. Dixon\r\n");
-
+		// Update "project(picoterm VERSION 1.1)" in CMakeList
+		sprintf(msg, "PicoTerm %s  S. Dixon\r\n", CMAKE_PROJECT_VERSION );
+		print_string(msg);
 
 
     // print cursor

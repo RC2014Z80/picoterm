@@ -1,7 +1,7 @@
 /*
  * Terminal software for Pi Pico
  * USB keyboard input, VGA video output, communication with RC2014 via UART on GPIO 20 & 21
- * Shiela Dixon, https://peacockmedia.software  
+ * Shiela Dixon, https://peacockmedia.software
  *
  * much of what's in this main file is taken from the VGA textmode example
  * and the TinyUSB hid_app
@@ -35,6 +35,6 @@
 #include "bsp/board.h"
 #include "tusb.h"
 
-#include "pmhid.h"
+#include "../common/pmhid.h"
 
 #include "tusb_config.h"
