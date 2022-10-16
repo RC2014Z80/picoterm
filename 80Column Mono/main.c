@@ -702,29 +702,42 @@ void handle_keyboard_input(){
 
 }
 
-// Wire a LED on GPIO 5 (01x10 extra connector) to help debugging
-// the source code by calling set_debug_set() which blink the LED count's time 
-#define LED_DEBUG 5
-void set_debug_led( int count ){
-	gpio_init( LED_DEBUG );
-	gpio_set_dir(LED_DEBUG, GPIO_OUT);
-	for( int i=0; i<10; i++){
-			gpio_put(LED_DEBUG,true);
-			sleep_ms( 20 );
-			gpio_put(LED_DEBUG,false);
-			sleep_ms( 20 );
-	}
-	sleep_ms( 500 );
-	for( int i=0; i<count; i++){
-		gpio_put(LED_DEBUG,true);
-		sleep_ms( 300 );
-		gpio_put(LED_DEBUG,false);
-		sleep_ms( 300 );
-	}
+void usb_serial_task(){
+  // Fill keyboard input buffer with char coming over the serial buffer
+  //  (don't forget to make pico_enable_stdio_usb(picoterm 1)
+  volatile int userInput = getchar_timeout_us (0);
+  // 0xff if no character
+  if(userInput!=PICO_ERROR_TIMEOUT){
+    if (uart_is_writable(UART_ID)) {
+      uart_putc (UART_ID, userInput);
+    }
+  }
 }
 
-int main(void) {
 
+// Wire a LED on GPIO 5 (01x10 extra connector) to help debugging
+// the source code by calling set_debug_set() which blink the LED count's time
+#define LED_DEBUG 5
+void set_debug_led( int count ){
+  gpio_init( LED_DEBUG );
+  gpio_set_dir(LED_DEBUG, GPIO_OUT);
+  for( int i=0; i<10; i++){
+      gpio_put(LED_DEBUG,true);
+      sleep_ms( 20 );
+      gpio_put(LED_DEBUG,false);
+      sleep_ms( 20 );
+  }
+  sleep_ms( 500 );
+  for( int i=0; i<count; i++){
+    gpio_put(LED_DEBUG,true);
+    sleep_ms( 300 );
+    gpio_put(LED_DEBUG,false);
+    sleep_ms( 300 );
+  }
+}
+
+
+int main(void) {
     //gpio_put(27, 0);
 
     LED_status = 3;  // blinking
@@ -734,21 +747,7 @@ int main(void) {
     gpio_put(LED,false);
 
 
-
-    // detect button presses
-/*
-    #define WHITE 0
-#define LIGHTAMBER 1
-#define DARKAMBER 2
-#define GREEN1 3
-#define GREEN2 4
-#define GREEN3 5
-
-uint8_t colour_preference = GREEN1;
-*/
-
     uint8_t bootchoice = 0;
-
     gpio_init(BTN_A);
     gpio_set_dir(BTN_A, GPIO_IN);
     gpio_pull_down(BTN_A);
@@ -768,78 +767,59 @@ uint8_t colour_preference = GREEN1;
         bootchoice += 4;
     }
 
+    switch (bootchoice) {
+        case 0:
+            // no button
+            read_data_from_flash();
+            break;
 
+        case 1:
+            colour_preference = GREEN1;     // A
+            write_data_to_flash();
+            break;
+        case 2:
+            colour_preference = DARKAMBER;  // B
+            write_data_to_flash();
+            break;
+        case 4:
+                                            // C
+            break;
+        case 3:
+            colour_preference = GREEN2;     // A+B
+            write_data_to_flash();
+            break;
+        case 5:
+            colour_preference = GREEN3;     // C+A
+            write_data_to_flash();
+            break;
+        case 6:
+            colour_preference = LIGHTAMBER; // C+B
+            write_data_to_flash();
+            break;
+        case 7:
+                                             // A=B=C
+            break;
 
-
-    switch (bootchoice)
-    {
-    case 0:
-        // no button
-        read_data_from_flash();
-        break;
-
-    case 1:
-        colour_preference = GREEN1;     // A
-        write_data_to_flash();
-        break;
-    case 2:
-        colour_preference = DARKAMBER;  // B
-        write_data_to_flash();
-        break;
-    case 4:
-                                        // C
-        break;
-    case 3:
-        colour_preference = GREEN2;     // A+B
-        write_data_to_flash();
-        break;
-    case 5:
-        colour_preference = GREEN3;     // C+A
-        write_data_to_flash();
-        break;
-    case 6:
-        colour_preference = LIGHTAMBER; // C+B
-        write_data_to_flash();
-        break;
-    case 7:
-                                         // A=B=C
-        break;
-
-    default:
-        break;
-    }
-
-
-
-		//set_debug_led(4);
+        default:
+            break;
+        }
 
     // AFTER   reading and writing
     stdio_init_all();
-
-
-
-    // if need to overclock. Also uncomment the baud rate division near the top.
-    //if(set_sys_clock_khz(CLOCK_SPEED, true)){
-    //
-    //}
-
 
     uart_init(UART_ID, BAUD_RATE);
     uart_set_hw_flow(UART_ID,false,false);
     uart_set_format(UART_ID, DATA_BITS, STOP_BITS, PARITY);
 
 
-// Set the TX and RX pins by using the function select on the GPIO
-// Set datasheet for more information on function select
+    // Set the TX and RX pins by using the function select on the GPIO
+    // Set datasheet for more information on function select
     gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
     gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
 
 
-		//set_debug_led(5);
-
-
-// This should enable rx interrupt handling
-// Turn off FIFO's - we want to do this character by character
+    // This should enable rx interrupt handling
+    // Turn off FIFO's - we want to do this character by character
     uart_set_fifo_enabled(UART_ID, false);
     int UART_IRQ = UART_ID == uart0 ? UART0_IRQ : UART1_IRQ;
 
@@ -851,49 +831,29 @@ uint8_t colour_preference = GREEN1;
     uart_set_irq_enables(UART_ID, true, false);
 
 
-  keybuffer1.length=2000;
-  keybuffer1.take=0;
-  keybuffer1.insert=0;
+    keybuffer1.length=2000;
+    keybuffer1.take=0;
+    keybuffer1.insert=0;
 
-  prepare_text_buffer();
+    prepare_text_buffer();
+    video_main();
+    tusb_init(); // initialize tinyusb stack
 
-  video_main();
-
-  tusb_init(); // initialize tinyusb stack
-
-  while(true){
+    while(true){
         // do character stuff here on core 0
 
-    // for serial over USB  (don't forget to make pico_enable_stdio_usb(picoterm 1))
-    /*
-    volatile int userInput = getchar_timeout_us (0);
-        // 0xff if no character
-    if(userInput!=PICO_ERROR_TIMEOUT){
+        // for serial over USB  (don't forget to make pico_enable_stdio_usb(picoterm 1))
+        // usb_serial_task();
 
-        if (uart_is_writable(UART_ID)) {
-            uart_putc (UART_ID, userInput);
+        // TinyUsb Host Task
+        //   (see process_kdb_report() callback and pico_key_down() here below)
+        tuh_task();
+        led_blinking_task();
 
-        }
-        else{
-
-        }
+        handle_keyboard_input();
     }
-    */
-
-    tuh_task();
-    led_blinking_task();
-
-
-    handle_keyboard_input();
-
-    }
-
     return 0;
 }
-
-
-
-
 
 
 //--------------------------------------------------------------------+
@@ -927,17 +887,9 @@ void led_blinking_task(void)
 
 }
 
-
-/*
-
-
-*/
-
-
-
-
-
-
+//--------------------------------------------------------------------+
+// USB Keyboard clue
+//--------------------------------------------------------------------+
 
 static bool capslock_key_down_in_last_report = false;
 static bool capslock_key_down_in_this_report = false;
@@ -972,64 +924,30 @@ static bool scancode_is_mod(int scancode) {
 static void pico_key_down(int scancode, int keysym, int modifiers) {
     printf("Key down, %i, %i, %i \r\n", scancode, keysym, modifiers);
 
-/*
-#define WITH_SHIFT 0x8000
-#define WITH_ALTGR 0x4000
-#define WITH_CTRL 0x2000
-#define WITH_CAPSLOCK 0x1000
-*/
-
-
-        if(false){
-          // any special cases
-        }
-        else{
-          // not a special case.
-          if(scancode_is_mod(scancode)==false){
-            // not a modifier key
-            uint8_t ch = keycode2ascii[scancode][0];
-
-            if(modifiers & WITH_SHIFT){
-                ch = keycode2ascii[scancode][1];
-            }
-            else if((modifiers & WITH_CAPSLOCK) && ch>='a' && ch<='z'){
-                ch = keycode2ascii[scancode][1];
-            }
-            else if(modifiers & WITH_CTRL && ch>95){
-                ch=ch-96;
-            }
-
-            printf("Character: %c\r\n", ch);
-
-                  // special case for de keyboard
-                  #ifdef LOCALISE_DE
-                    if(modifiers & WITH_ALTGR){
-                        ch = keycode2ascii[scancode][2];
-                    }
-                  #endif
-
-
-                  uart_putc (UART_ID, ch);
-
-
-
-          }
-        }
-
-
+    if( scancode_is_mod(scancode)==false ){
+      // which char at that key?
+      uint8_t ch = keycode2ascii[scancode][0];
+      // Is there a modifier key under use while pressing the key?
+      if(modifiers & WITH_SHIFT){
+          ch = keycode2ascii[scancode][1];
+      }
+      else if((modifiers & WITH_CAPSLOCK) && ch>='a' && ch<='z'){
+          ch = keycode2ascii[scancode][1];
+      }
+      else if(modifiers & WITH_CTRL && ch>95){
+          ch=ch-96;
+      }
+      else if(modifiers & WITH_ALTGR){
+          ch = keycode2ascii[scancode][2];
+      }
+      printf("Character: %c\r\n", ch);
+      uart_putc (UART_ID, ch);
+    }
 }
 
 static void pico_key_up(int scancode, int keysym, int modifiers) {
    printf("Key up, %i, %i, %i \r\n", scancode, keysym, modifiers);
 }
-
-
-
-
-
-
-
-
 
 
 //--------------------------------------------------------------------+
