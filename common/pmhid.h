@@ -38,11 +38,6 @@
 // Copy and paste an existing mapping to make a new one, see the
 
 
-//#define LOCALISE_UK
-//#define LOCALISE_US
-//#define LOCALISE_DE
-
-
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -421,12 +416,13 @@
  //
  // third column is ALT GR modification
  //--------------------------------------------------------------------/
+ // 18 nov  2022: FR layout fix for "[" + AltGr fixed.
  // 25 sept 2022: FR layout doen't capture AltGR combination.
  //              characters [,],{,},|,@,\ are temporarily duplicated from F1 to F7.
 
  #ifdef LOCALISE_FR
  #define KEYMAP "FR"
- #define KEYMAP_REV 1
+ #define KEYMAP_REV 2
  #define PM_KEYCODE_TO_ASCII    \
      {0     , 0     ,0 }, /* 0x00 */ \
      {0     , 0     ,0 }, /* 0x01 */ \
