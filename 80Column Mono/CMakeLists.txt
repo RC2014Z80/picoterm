@@ -2,11 +2,12 @@ cmake_minimum_required(VERSION 3.14)
 
 #set(PICO_BOARD "vgaboard")
 
+#set(PICO_TINYUSB_PATH "/home/domeu/Bureau/RC2014/picoterm/80Column\ Mono/tinyusb" )
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
 pico_sdk_init()
 
-project(picoterm VERSION 1.1)
+project(picoterm VERSION 1.1.1)
 message("PicoTerm 80Col version = ${CMAKE_PROJECT_VERSION}")
 
 # Defines source files to compile

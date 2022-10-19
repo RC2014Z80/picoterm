@@ -22,19 +22,13 @@
 #include "../common/pmhid.h"
 #include "tusb_option.h"
 #include <stdio.h>
+#include "main.h"
+#include "hardware/watchdog.h"
 
 #define COLUMNS     80
 #define ROWS        34
 #define VISIBLEROWS 30
 #define CSRCHAR     128
-
-#define SPC         0x20
-#define ESC         0x1b
-#define DEL         0x7f
-#define BSP         0x08
-#define LF          0x0a
-#define CR          0x0d
-#define FF          0x0c
 
 
 // escape sequence state
@@ -495,21 +489,7 @@ if(esc_c1=='['){
     break;
 
 
-
-
-
-
-
-
-
-
-
-
     }
-
-
-
-
 
 }
 else{
@@ -523,10 +503,7 @@ reset_escape_sequence();
 }
 
 
-
 void prepare_text_buffer(){
-    // do we need to blank them, ie fill with 0?
-    char msg[40];
 
     reset_escape_sequence();
 
@@ -541,9 +518,18 @@ void prepare_text_buffer(){
         ptr[c] = newRow;
     }
 
+    // print cursor
+    make_cursor_visible(true);
+    clear_cursor();  // so we have the character
+    print_cursor();  // turns on
+}
 
+void display_terminal(){
+		// do we need to blank them, ie fill with 0?
+    char msg[80];
 
 		clear_entire_screen();
+		csr.x = 0; csr.y = 0;
 
 		print_string("_/_/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/     _/_/  _/\r\n");
 		print_string("_/_/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/     _/_/  _/\r\n");
@@ -559,9 +545,10 @@ void prepare_text_buffer(){
 		print_string("_/_/      _/_/ _/_/      _/_/ _/_/      _/_/ _/_/_/    _/_/   _/_/         _/_/\r\n");
 		print_string("_/_/      _/_/   _/_/_/_/_/   _/_/_/_/_/_/_/   _/_/_/_/_/ _/_/_/_/_/_/     _/_/\r\n");
 		print_string("_/_/      _/_/   _/_/_/_/_/   _/_/_/_/_/_/_/   _/_/_/_/_/ _/_/_/_/_/_/     _/_/\r\n");
-		sprintf(msg, "\r\n\r\nTinyUSB=%d.%d.%d, ", TUSB_VERSION_MAJOR, TUSB_VERSION_MINOR,TUSB_VERSION_REVISION);
+		print_string("                                                        Menu : CTRL+SHIF+M\r\n");
+		sprintf(msg, "\r\nTinyUSB=%d.%d.%d, ", TUSB_VERSION_MAJOR, TUSB_VERSION_MINOR,TUSB_VERSION_REVISION);
 		print_string(msg);
-		sprintf(msg, "Keymap=%s rev %d\r\n", KEYMAP, KEYMAP_REV );
+		sprintf(msg, "Keymap=%s rev %d\r\n", KEYMAP, KEYMAP_REV ); // , Menu toggle: CTRL+SHIFT+M
 		print_string(msg);
 		// Update "project(picoterm VERSION 1.1)" in CMakeList
 		sprintf(msg, "PicoTerm %s  S. Dixon\r\n", CMAKE_PROJECT_VERSION );
@@ -574,12 +561,76 @@ void prepare_text_buffer(){
     print_cursor();  // turns on
 }
 
+
+void display_menu(){
+    // do we need to blank them, ie fill with 0?
+    char msg[40];
+
+    reset_escape_sequence();
+    clear_entire_screen();
+    csr.x = 0; csr.y = 0;
+
+    //print_string("================================================================================\r\n");
+    print_string("                          >>>>  PicoTerm Menu <<<<\r\n");
+		print_string("\r\n");
+		print_string("+- Terminal Colors (reboot) -+\r\n");
+		print_string("|   0 WHITE        3 GREEN1  |\r\n" );
+		print_string("|   1 LIGHT_AMBER  4 GREEN2  |\r\n" );
+		print_string("|   2 DARK_AMBER   5 GREEN3  |\r\n" );
+		print_string("+----------------------------+\r\n" );
+		print_string("\r\nSelect an option: ");
+
+
+    make_cursor_visible(true);
+    clear_cursor();  // so we have the character
+    print_cursor();  // turns on
+}
+
+
 void print_string(char str[]){
     for(int i=0;i<strlen(str);i++){
         handle_new_character(str[i]);
     }
 }
 
+char read_key(){
+  // read a key from input buffer (the keyboard or serial line). This is used
+  // for menu handling. Return 0 if no char available
+  if( key_ready()==false )
+    return 0;
+  return read_key_from_buffer();
+}
+
+char handle_menu_input(){
+  // check if user selected an option THEN execute the appropriate action
+  // return the pressed key if any.
+  char _ch = read_key();
+  if( (_ch==0) || (_ch==ESC) )
+    return _ch;
+
+  // display char on terminal
+  clear_cursor();
+  handle_new_character(_ch);
+  print_cursor();
+
+  if( (_ch >= '0') && (_ch <= '5') ) {
+		uint8_t _color = _ch - 48; // 48->53 to 0->5 (WHITE->GREEN3)
+		stop_core1(); // suspend rendering for race condition
+		sleep_ms(10);
+		colour_preference = _color;
+    write_data_to_flash();
+		render_on_core1();
+		print_string( "\r\nWrite to flash! Will reboot in 2 seconds.");
+		watchdog_enable( 2000, 0 );
+    /*print_string( "Yo! MAN!\r\n");
+		read_data_from_flash();
+		char msg[40];
+		sprintf( msg, "pref: %i\r\n", colour_preference );
+		print_string( msg );*/
+	}
+
+  return _ch;
+}
 
 void handle_new_character(unsigned char asc){
 

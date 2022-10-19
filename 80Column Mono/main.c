@@ -43,6 +43,9 @@
  *
  */
 
+/* MCHobby notes:
+   - render on core 1. see #define RENDER_ON_CORE1
+*/
 
 
 #include "main.h"
@@ -64,6 +67,7 @@
 
 int LED_status;  // 0 off, 1 on, 2 flashing
 bool led_state = false;
+static bool is_menu = false; // toggle with CTRL+SHIFT+M
 
 //CU_REGISTER_DEBUG_PINS(frame_gen)
 //CU_SELECT_DEBUG_PINS(frame_gen)
@@ -73,14 +77,6 @@ bool led_state = false;
 #define BTN_B 6
 #define BTN_C 11
 
-#define WHITE 0
-#define LIGHTAMBER 1
-#define DARKAMBER 2
-#define GREEN1 3
-#define GREEN2 4
-#define GREEN3 5
-
-uint8_t colour_preference = WHITE;
 
 
 #define FLASH_TARGET_OFFSET (256 * 1024)  // from start of flash
@@ -112,10 +108,6 @@ enum {
 #define WITH_ALTGR 0x4000
 #define WITH_CTRL 0x2000
 #define WITH_CAPSLOCK 0x1000
-
-
-
-
 
 
 
@@ -205,7 +197,6 @@ static int left = 0;
 static int top = 0;
 static int x_sprites = 1;
 
-void go_core1(void (*execute)());
 void init_render_state(int core);
 
 
@@ -214,6 +205,9 @@ void led_blinking_task(void);
 
 
 void write_data_to_flash(){
+  /* unsafe if you have two cores concurrently executing from flash
+     https://raspberrypi.github.io/pico-sdk-doxygen/group__hardware__flash.html
+  */
 
     uint8_t data_to_write[FLASH_PAGE_SIZE];
     data_to_write[0] = colour_preference;
@@ -230,18 +224,12 @@ void read_data_from_flash(){
 
 
 
-
-
-
-
-
-
-
 // ok this is going to be the beginning of retained mode
 //
 
 
 void render_loop() {
+  /* Multithreaded execution */
     static uint8_t last_input = 0;
     static uint32_t last_frame_num = 0;
     int core_num = get_core_num();
@@ -307,10 +295,6 @@ void setup_video() {
     scanvideo_setup(&vga_mode);
     scanvideo_timing_enable(true);
     sem_release(&video_setup_complete);
-}
-
-void core1_func() {
-    render_loop();
 }
 
 #define TEST_WAIT_FOR_SCANLINE
@@ -495,7 +479,7 @@ int video_main(void) {
 
 
 #ifdef RENDER_ON_CORE1
-    go_core1(core1_func);   // render_loop() on core 1
+    render_on_core1();   // render_loop() on core 1
 #endif
 #ifdef RENDER_ON_CORE0
     render_loop();
@@ -660,10 +644,13 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
     return true;
 }
 
-void go_core1(void (*execute)()) {
-    multicore_launch_core1(execute);
+void render_on_core1(){
+	multicore_launch_core1(render_loop);
 }
 
+void stop_core1(){
+	multicore_reset_core1();
+}
 
 void on_uart_rx() {
   // we can buffer the character here if we turn on interrupts for UART
@@ -683,7 +670,7 @@ void tih_handler(){
 
 
 void handle_keyboard_input(){
-
+  // normal terminal operation: if key received -> display it on term
   if(key_ready()){
     clear_cursor();
 
@@ -697,34 +684,44 @@ void handle_keyboard_input(){
 
     print_cursor();
   }
-
-
-
 }
+
+void usb_serial_task(){
+  // Fill keyboard input buffer with char coming over the serial buffer
+  //  (don't forget to make pico_enable_stdio_usb(picoterm 1)
+  volatile int userInput = getchar_timeout_us (0);
+  // 0xff if no character
+  if(userInput!=PICO_ERROR_TIMEOUT){
+    if (uart_is_writable(UART_ID)) {
+      uart_putc (UART_ID, userInput);
+    }
+  }
+}
+
 
 // Wire a LED on GPIO 5 (01x10 extra connector) to help debugging
-// the source code by calling set_debug_set() which blink the LED count's time 
+// the source code by calling set_debug_set() which blink the LED count's time
 #define LED_DEBUG 5
 void set_debug_led( int count ){
-	gpio_init( LED_DEBUG );
-	gpio_set_dir(LED_DEBUG, GPIO_OUT);
-	for( int i=0; i<10; i++){
-			gpio_put(LED_DEBUG,true);
-			sleep_ms( 20 );
-			gpio_put(LED_DEBUG,false);
-			sleep_ms( 20 );
-	}
-	sleep_ms( 500 );
-	for( int i=0; i<count; i++){
-		gpio_put(LED_DEBUG,true);
-		sleep_ms( 300 );
-		gpio_put(LED_DEBUG,false);
-		sleep_ms( 300 );
-	}
+  gpio_init( LED_DEBUG );
+  gpio_set_dir(LED_DEBUG, GPIO_OUT);
+  for( int i=0; i<10; i++){
+      gpio_put(LED_DEBUG,true);
+      sleep_ms( 20 );
+      gpio_put(LED_DEBUG,false);
+      sleep_ms( 20 );
+  }
+  sleep_ms( 500 );
+  for( int i=0; i<count; i++){
+    gpio_put(LED_DEBUG,true);
+    sleep_ms( 300 );
+    gpio_put(LED_DEBUG,false);
+    sleep_ms( 300 );
+  }
 }
 
-int main(void) {
 
+int main(void) {
     //gpio_put(27, 0);
 
     LED_status = 3;  // blinking
@@ -734,21 +731,7 @@ int main(void) {
     gpio_put(LED,false);
 
 
-
-    // detect button presses
-/*
-    #define WHITE 0
-#define LIGHTAMBER 1
-#define DARKAMBER 2
-#define GREEN1 3
-#define GREEN2 4
-#define GREEN3 5
-
-uint8_t colour_preference = GREEN1;
-*/
-
     uint8_t bootchoice = 0;
-
     gpio_init(BTN_A);
     gpio_set_dir(BTN_A, GPIO_IN);
     gpio_pull_down(BTN_A);
@@ -768,78 +751,59 @@ uint8_t colour_preference = GREEN1;
         bootchoice += 4;
     }
 
+    switch (bootchoice) {
+        case 0:
+            // no button
+            read_data_from_flash();
+            break;
 
+        case 1:
+            colour_preference = GREEN1;     // A
+            write_data_to_flash();
+            break;
+        case 2:
+            colour_preference = DARKAMBER;  // B
+            write_data_to_flash();
+            break;
+        case 4:
+                                            // C
+            break;
+        case 3:
+            colour_preference = GREEN2;     // A+B
+            write_data_to_flash();
+            break;
+        case 5:
+            colour_preference = GREEN3;     // C+A
+            write_data_to_flash();
+            break;
+        case 6:
+            colour_preference = LIGHTAMBER; // C+B
+            write_data_to_flash();
+            break;
+        case 7:
+                                             // A=B=C
+            break;
 
-
-    switch (bootchoice)
-    {
-    case 0:
-        // no button
-        read_data_from_flash();
-        break;
-
-    case 1:
-        colour_preference = GREEN1;     // A
-        write_data_to_flash();
-        break;
-    case 2:
-        colour_preference = DARKAMBER;  // B
-        write_data_to_flash();
-        break;
-    case 4:
-                                        // C
-        break;
-    case 3:
-        colour_preference = GREEN2;     // A+B
-        write_data_to_flash();
-        break;
-    case 5:
-        colour_preference = GREEN3;     // C+A
-        write_data_to_flash();
-        break;
-    case 6:
-        colour_preference = LIGHTAMBER; // C+B
-        write_data_to_flash();
-        break;
-    case 7:
-                                         // A=B=C
-        break;
-
-    default:
-        break;
-    }
-
-
-
-		//set_debug_led(4);
+        default:
+            break;
+        }
 
     // AFTER   reading and writing
     stdio_init_all();
-
-
-
-    // if need to overclock. Also uncomment the baud rate division near the top.
-    //if(set_sys_clock_khz(CLOCK_SPEED, true)){
-    //
-    //}
-
 
     uart_init(UART_ID, BAUD_RATE);
     uart_set_hw_flow(UART_ID,false,false);
     uart_set_format(UART_ID, DATA_BITS, STOP_BITS, PARITY);
 
 
-// Set the TX and RX pins by using the function select on the GPIO
-// Set datasheet for more information on function select
+    // Set the TX and RX pins by using the function select on the GPIO
+    // Set datasheet for more information on function select
     gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
     gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
 
 
-		//set_debug_led(5);
-
-
-// This should enable rx interrupt handling
-// Turn off FIFO's - we want to do this character by character
+    // This should enable rx interrupt handling
+    // Turn off FIFO's - we want to do this character by character
     uart_set_fifo_enabled(UART_ID, false);
     int UART_IRQ = UART_ID == uart0 ? UART0_IRQ : UART1_IRQ;
 
@@ -851,49 +815,51 @@ uint8_t colour_preference = GREEN1;
     uart_set_irq_enables(UART_ID, true, false);
 
 
-  keybuffer1.length=2000;
-  keybuffer1.take=0;
-  keybuffer1.insert=0;
+    keybuffer1.length=2000;
+    keybuffer1.take=0;
+    keybuffer1.insert=0;
 
-  prepare_text_buffer();
+    prepare_text_buffer();
+    display_terminal(); // display terminal entry screen
+    video_main();
+    tusb_init(); // initialize tinyusb stack
 
-  video_main();
+    char _ch = 0;
+    bool old_menu = false; // used to trigger when is_menu is changed
 
-  tusb_init(); // initialize tinyusb stack
-
-  while(true){
+    while(true){
         // do character stuff here on core 0
 
-    // for serial over USB  (don't forget to make pico_enable_stdio_usb(picoterm 1))
-    /*
-    volatile int userInput = getchar_timeout_us (0);
-        // 0xff if no character
-    if(userInput!=PICO_ERROR_TIMEOUT){
+        // for serial over USB  (don't forget to make pico_enable_stdio_usb(picoterm 1))
+        // usb_serial_task();
 
-        if (uart_is_writable(UART_ID)) {
-            uart_putc (UART_ID, userInput);
+        // TinyUsb Host Task
+        //   (see process_kdb_report() callback and pico_key_down() here below)
+        tuh_task();
+        led_blinking_task();
 
+        if( is_menu && !(old_menu) ){ // CRL+M : menu activated ?
+          // empty the keyboard buffer
+          while( key_ready() )
+            read_key_from_buffer();
+          display_menu();
+          old_menu = is_menu;
         }
-        else{
-
+        else if( !(is_menu) && old_menu ){ // CRL+M : menu de-activated ?
+          display_terminal();
+          old_menu = is_menu;
         }
+
+        if( is_menu ){ // Under menu display
+          _ch = handle_menu_input(); // manage keyboard input for menu
+          if( _ch==ESC ) // ESC will also close the menu
+              is_menu = false;
+        }
+        else
+          handle_keyboard_input(); // normal terminal management
     }
-    */
-
-    tuh_task();
-    led_blinking_task();
-
-
-    handle_keyboard_input();
-
-    }
-
     return 0;
 }
-
-
-
-
 
 
 //--------------------------------------------------------------------+
@@ -927,17 +893,9 @@ void led_blinking_task(void)
 
 }
 
-
-/*
-
-
-*/
-
-
-
-
-
-
+//--------------------------------------------------------------------+
+// USB Keyboard clue
+//--------------------------------------------------------------------+
 
 static bool capslock_key_down_in_last_report = false;
 static bool capslock_key_down_in_this_report = false;
@@ -970,66 +928,41 @@ static bool scancode_is_mod(int scancode) {
 
 
 static void pico_key_down(int scancode, int keysym, int modifiers) {
-    printf("Key down, %i, %i, %i \r\n", scancode, keysym, modifiers);
+    //printf("Key down, %i, %i, %i \r\n", scancode, keysym, modifiers);
 
-/*
-#define WITH_SHIFT 0x8000
-#define WITH_ALTGR 0x4000
-#define WITH_CTRL 0x2000
-#define WITH_CAPSLOCK 0x1000
-*/
-
-
-        if(false){
-          // any special cases
-        }
-        else{
-          // not a special case.
-          if(scancode_is_mod(scancode)==false){
-            // not a modifier key
-            uint8_t ch = keycode2ascii[scancode][0];
-
-            if(modifiers & WITH_SHIFT){
-                ch = keycode2ascii[scancode][1];
-            }
-            else if((modifiers & WITH_CAPSLOCK) && ch>='a' && ch<='z'){
-                ch = keycode2ascii[scancode][1];
-            }
-            else if(modifiers & WITH_CTRL && ch>95){
-                ch=ch-96;
-            }
-
-            printf("Character: %c\r\n", ch);
-
-                  // special case for de keyboard
-                  #ifdef LOCALISE_DE
-                    if(modifiers & WITH_ALTGR){
-                        ch = keycode2ascii[scancode][2];
-                    }
-                  #endif
-
-
-                  uart_putc (UART_ID, ch);
-
-
-
-          }
-        }
-
-
+    if( scancode_is_mod(scancode)==false ){
+      // which char at that key?
+      uint8_t ch = keycode2ascii[scancode][0];
+      // Is there a modifier key under use while pressing the key?
+      if( (ch=='m') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
+        is_menu = !(is_menu);
+        return; // do not add key to "Keyboard buffer"
+      }
+      if( modifiers & WITH_SHIFT ){
+          ch = keycode2ascii[scancode][1];
+      }
+      else if((modifiers & WITH_CAPSLOCK) && ch>='a' && ch<='z'){
+          ch = keycode2ascii[scancode][1];
+      }
+      else if(modifiers & WITH_CTRL && ch>95){
+          ch=ch-96;
+      }
+      else if(modifiers & WITH_ALTGR){
+          ch = keycode2ascii[scancode][2];
+      }
+      //printf("Character: %c\r\n", ch);
+      // foward key-pressed to UART (only when typing in the terminal)
+      // otherwise, send it directly to the keyboard buffer
+      if( is_menu )
+        insert_key_into_buffer( ch );
+      else
+         uart_putc (UART_ID, ch);
+    }
 }
 
 static void pico_key_up(int scancode, int keysym, int modifiers) {
    printf("Key up, %i, %i, %i \r\n", scancode, keysym, modifiers);
 }
-
-
-
-
-
-
-
-
 
 
 //--------------------------------------------------------------------+
