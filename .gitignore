@@ -22,3 +22,5 @@ pico_extras/
 # Gimp files
 *.xcf
 
+# Maintenance
+pushgit.sh
