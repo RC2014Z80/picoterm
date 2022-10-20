@@ -1,9 +1,9 @@
 /*
  * Terminal software for Pi Pico
  * USB keyboard input, VGA video output, communication with RC2014 via UART on GPIO20 &21
- * Shiela Dixon, https://peacockmedia.software  
+ * Shiela Dixon, https://peacockmedia.software
  *
- * much of what's in this main file is taken from the VGA textmode example 
+ * much of what's in this main file is taken from the VGA textmode example
  * from pico-playground/scanvideo which has the licence as follows:
  *
  *
@@ -11,7 +11,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  *
  *
- * ... and the TinyUSB hid_app, which has the following licence: 
+ * ... and the TinyUSB hid_app, which has the following licence:
  *
  *
  * The MIT License (MIT)
@@ -42,7 +42,9 @@
  * THE SOFTWARE.
  *
  */
-
+ /* MCHobby notes:
+    - render on core 1. see #define RENDER_ON_CORE1
+ */
 
 #include "main.h"
 #include "picoterm.h"
@@ -53,7 +55,7 @@
 #define UART_TX_PIN     20
 #define UART_RX_PIN     21
 #define CLOCK_SPEED     133000
-#define BAUD_RATE       115200 // /(CLOCK_SPEED/133000)   
+#define BAUD_RATE       115200 // /(CLOCK_SPEED/133000)
 #define DATA_BITS       8
 #define STOP_BITS       1
 #define PARITY          UART_PARITY_NONE
@@ -63,11 +65,15 @@
 
 int LED_status;  // 0 off, 1 on, 2 flashing
 bool led_state = false;
+static bool is_menu = false; // toggle with CTRL+SHIFT+M
 
 //CU_REGISTER_DEBUG_PINS(frame_gen)
 //CU_SELECT_DEBUG_PINS(frame_gen)
 
+#define FLASH_TARGET_OFFSET (256 * 1024)  // from start of flash
 
+// once written, we can access our data at flash_target_contents
+const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 
 ////////////////////////////
 // new TinyUSB stuff
@@ -107,7 +113,7 @@ struct KeyboardBuffer {
   char buff[2000];
 };
 
-struct KeyboardBuffer keybuffer1 = {0}; 
+struct KeyboardBuffer keybuffer1 = {0};
 
 void insert_key_into_buffer(unsigned char ch){
   keybuffer1.buff[keybuffer1.insert++]=ch;
@@ -160,11 +166,11 @@ uint32_t block[] = {
                     PICO_SCANVIDEO_PIXEL_FROM_RGB5(31,0,0) << 16 |
                     PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0),
                     PICO_SCANVIDEO_PIXEL_FROM_RGB5(31,0,0) << 16 |
-                    PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0), 
+                    PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0),
                     PICO_SCANVIDEO_PIXEL_FROM_RGB5(31,0,0) << 16 |
-                    PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0), 
+                    PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0),
                     PICO_SCANVIDEO_PIXEL_FROM_RGB5(31,0,0) << 16 |
-                    PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0) 
+                    PICO_SCANVIDEO_PIXEL_FROM_RGB5(0,0,0)
 };
 
 
@@ -181,11 +187,26 @@ static int left = 0;
 static int top = 0;
 static int x_sprites = 1;
 
-void go_core1(void (*execute)());
 void init_render_state(int core);
 
-
 void led_blinking_task(void);
+
+void write_data_to_flash(){
+  /* unsafe if you have two cores concurrently executing from flash
+     https://raspberrypi.github.io/pico-sdk-doxygen/group__hardware__flash.html
+  */
+    uint8_t data_to_write[FLASH_PAGE_SIZE];
+    data_to_write[0] = 0; // colour_preference;
+
+    flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
+    flash_range_program(FLASH_TARGET_OFFSET, data_to_write, FLASH_PAGE_SIZE);
+}
+
+void read_data_from_flash(){
+    // colour_preference = flash_target_contents[0];
+}
+
+
 void cdc_task(void);
 void hid_app_task(void);
 
@@ -209,6 +230,7 @@ void hid_app_task(void);
 
 
 void render_loop() {
+    /* Multithreaded execution */
     static uint8_t last_input = 0;
     static uint32_t last_frame_num = 0;
     int core_num = get_core_num();
@@ -224,7 +246,7 @@ void render_loop() {
         // do any frame related logic
         // todo probably a race condition here ... thread dealing with last line of a frame may end
         // todo up waiting on the next frame...
-        
+
         mutex_enter_blocking(&frame_logic_mutex);
         uint32_t frame_num = scanvideo_frame_number(scanline_buffer->scanline_id);
         // note that with multiple cores we may have got here not for the first scanline, however one of the cores will do this logic first before either does the actual generation
@@ -263,7 +285,7 @@ void render_loop() {
         // release the scanline into the wild
         scanvideo_end_scanline_generation(scanline_buffer);
         // do this outside mutex and scanline generation
-    
+
 
     } // end while(true) loop
 }
@@ -311,7 +333,7 @@ int video_main(void) {
 
 
     mutex_init(&frame_logic_mutex);
-  
+
     sem_init(&video_setup_complete, 0, 1);
 
     setup_video();
@@ -321,14 +343,21 @@ int video_main(void) {
 
 
 #ifdef RENDER_ON_CORE1
-    go_core1(core1_func);   // render_loop() on core 1
+    render_on_core1();  // render_loop() on core 1
 #endif
 #ifdef RENDER_ON_CORE0
-    render_loop();          
+    render_loop();
 #endif
 
 }
 
+void render_on_core1(){
+	multicore_launch_core1(render_loop);
+}
+
+void stop_core1(){
+	multicore_reset_core1();
+}
 
 // must not be called concurrently
 void init_render_state(int core) {
@@ -398,11 +427,11 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
     char ch = 0;
 
     int tr = y; // (y/FONT_HEIGHT);
-    uint32_t *rowwords = wordsForRow(tr); 
+    uint32_t *rowwords = wordsForRow(tr);
 
     for (int i = 0; i < COUNT; i++) {
 
-          *output32++ = host_safe_hw_ptr(rowwords); 
+          *output32++ = host_safe_hw_ptr(rowwords);
 
           rowwords+=4;      // basically every output32 assignment is a pointer to 4 words / 8 pixels
 
@@ -471,7 +500,7 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
 #endif
     dest->status = SCANLINE_OK;
 
-  
+
 
     return true;
 }
@@ -484,7 +513,7 @@ void go_core1(void (*execute)()) {
 void on_uart_rx() {
   // we can buffer the character here if we turn on interrupts for UART
 
-  // FIFO turned off, we should be here once for each character, 
+  // FIFO turned off, we should be here once for each character,
   // but the while does no harm and at least acts as an if()
   while (uart_is_readable (UART_ID)){
     insert_key_into_buffer(uart_getc (UART_ID));
@@ -494,15 +523,12 @@ void on_uart_rx() {
 
 
 void tih_handler(){
-    gpio_put(LED,true); 
+    gpio_put(LED,true);
 }
 
 
 void handle_keyboard_input(){
-
-  // buffer is populated by UART interrupt 
-  // here we're reading from that buffer
-
+  // normal terminal operation: if key received -> display it on term
   if(key_ready()){
     clear_cursor();
 
@@ -511,7 +537,7 @@ void handle_keyboard_input(){
         handle_new_character(read_key_from_buffer());
         // or for analysing what comes in
         // print_ascii_value(cpmInput);
-        
+
     }while(key_ready());
 
     print_cursor();
@@ -529,7 +555,7 @@ int main(void) {
 
     gpio_init(LED);
     gpio_set_dir(LED, GPIO_OUT);
-    gpio_put(LED,false);    
+    gpio_put(LED,false);
 
     stdio_init_all();
 
@@ -538,7 +564,7 @@ int main(void) {
 
     // if need to overclock. Also uncomment the baud rate division near the top.
     //if(set_sys_clock_khz(CLOCK_SPEED, true)){
-    //    
+    //
     //}
 
 
@@ -572,33 +598,60 @@ int main(void) {
 
   keybuffer1.length=2000; // a bit OTT
   keybuffer1.take=0;
-  keybuffer1.insert=0;  
+  keybuffer1.insert=0;
 
+	prepare_text_buffer();
+	display_terminal(); // display terminal entry screen
+	video_main();
+	tusb_init(); // initialize tinyusb stack
+
+	char _ch = 0;
+	bool old_menu = false; // used to trigger when is_menu is changed
+
+	while(true){
+			// do character stuff here on core 0
+
+			// for serial over USB  (don't forget to make pico_enable_stdio_usb(picoterm 1))
+			// usb_serial_task();
+
+			// TinyUsb Host Task
+			//   (see process_kdb_report() callback and pico_key_down() here below)
+			tuh_task();
+			led_blinking_task();
+
+			if( is_menu && !(old_menu) ){ // CRL+M : menu activated ?
+				// empty the keyboard buffer
+				while( key_ready() )
+					read_key_from_buffer();
+				display_menu();
+				old_menu = is_menu;
+			}
+			else if( !(is_menu) && old_menu ){ // CRL+M : menu de-activated ?
+				display_terminal();
+				old_menu = is_menu;
+			}
+
+			if( is_menu ){ // Under menu display
+				_ch = handle_menu_input(); // manage keyboard input for menu
+				if( _ch==ESC ) // ESC will also close the menu
+						is_menu = false;
+			}
+			else
+				handle_keyboard_input(); // normal terminal management
+	}
+	return 0;
+}
+
+/*
   prepare_text_buffer();
 
   video_main();
-  
-
-
 
   while(true){
         // do character stuff here on core 0
 
     // for serial over USB  (don't forget to make pico_enable_stdio_usb(picoterm 1))
-    /*
-    volatile int userInput = getchar_timeout_us (0);
-        // 0xff if no character
-    if(userInput!=PICO_ERROR_TIMEOUT){
 
-        if (uart_is_writable(UART_ID)) {
-            uart_putc (UART_ID, userInput);
-
-        }     
-        else{
-
-        }           
-    }
-    */
 
     tuh_task();
     led_blinking_task();
@@ -612,7 +665,7 @@ int main(void) {
 
   return 0;
 }
-
+*/
 
 
 
@@ -635,7 +688,7 @@ void led_blinking_task(void)
      board_led_write(true);
      break;
     case 3:
-      
+
       // Blink every interval ms
       if ( board_millis() - start_ms > interval_ms) {
         start_ms += interval_ms;
@@ -686,16 +739,9 @@ static bool scancode_is_mod(int scancode) {
 // This is the 'glue'
 //--------------------------------------------------------------------+
 
-
+/*
 static void pico_key_down(int scancode, int keysym, int modifiers) {
     printf("Key down, %i, %i, %i \r\n", scancode, keysym, modifiers);
-
-/*
-#define WITH_SHIFT 0x8000
-#define WITH_ALTGR 0x4000
-#define WITH_CTRL 0x2000
-#define WITH_CAPSLOCK 0x1000
-*/
 
 
         if(false){
@@ -706,13 +752,13 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
           if(scancode_is_mod(scancode)==false){
             // not a modifier key
             uint8_t ch = keycode2ascii[scancode][0];
-            
+
             if(modifiers & WITH_SHIFT){
                 ch = keycode2ascii[scancode][1];
-            }  
+            }
             else if((modifiers & WITH_CAPSLOCK) && ch>='a' && ch<='z'){
                 ch = keycode2ascii[scancode][1];
-            } 
+            }
             else if(modifiers & WITH_CTRL && ch>95){
                 ch=ch-96;
             }
@@ -725,16 +771,49 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
                         ch = keycode2ascii[scancode][2];
                     }
                   #endif
-    
-    
+
+
                   uart_putc (UART_ID, ch);
-   
-                  
-        
+
+
+
           }
         }
 
 
+} */
+
+static void pico_key_down(int scancode, int keysym, int modifiers) {
+    //printf("Key down, %i, %i, %i \r\n", scancode, keysym, modifiers);
+
+    if( scancode_is_mod(scancode)==false ){
+      // which char at that key?
+      uint8_t ch = keycode2ascii[scancode][0];
+      // Is there a modifier key under use while pressing the key?
+      if( (ch=='m') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
+        is_menu = !(is_menu);
+        return; // do not add key to "Keyboard buffer"
+      }
+      if( modifiers & WITH_SHIFT ){
+          ch = keycode2ascii[scancode][1];
+      }
+      else if((modifiers & WITH_CAPSLOCK) && ch>='a' && ch<='z'){
+          ch = keycode2ascii[scancode][1];
+      }
+      else if(modifiers & WITH_CTRL && ch>95){
+          ch=ch-96;
+      }
+      else if(modifiers & WITH_ALTGR){
+          ch = keycode2ascii[scancode][2];
+      }
+      //printf("Character: %c\r\n", ch);
+      // foward key-pressed to UART (only when typing in the terminal)
+      // otherwise, send it directly to the keyboard buffer
+      if( is_menu )
+        insert_key_into_buffer( ch );
+      else
+         uart_putc (UART_ID, ch);
+    }
 }
 
 static void pico_key_up(int scancode, int keysym, int modifiers) {
@@ -917,7 +996,7 @@ static void process_kbd_report(hid_keyboard_report_t const *report)
             }
         }
     }
-    
+
     /*
     // synthesize events for modifier keys
     static const uint8_t mods[] = {
@@ -932,7 +1011,7 @@ static void process_kbd_report(hid_keyboard_report_t const *report)
         check_mod(report->modifier, prev_report.modifier, mods[i], mods[i+1]);
     }
     */
-    
+
     prev_report = *report;
 }
 

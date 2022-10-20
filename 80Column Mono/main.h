@@ -28,7 +28,7 @@
 #include "pico/scanvideo/composable_scanline.h"
 #include "pico/multicore.h"
 #include "pico/sync.h"
-#include "font.h"
+#include "font.h" // Looks in under comment for 40 columns version
 #include "hardware/uart.h"
 #include "hardware/irq.h"
 
@@ -38,6 +38,24 @@
 #include "tusb.h"
 
 #include "../common/pmhid.h"
+
+#ifndef _MAIN_H
+#define _MAIN_H
+
+ #define WHITE 0
+ #define LIGHTAMBER 1
+ #define DARKAMBER 2
+ #define GREEN1 3
+ #define GREEN2 4
+ #define GREEN3 5
+
+ uint8_t colour_preference;
+
+ void read_data_from_flash();
+ void write_data_to_flash();
+ void render_on_core1();
+ void stop_core1();
+#endif // _MAIN_H
 
 
 // #include "tusb_config.h"
@@ -67,23 +85,7 @@
  * THE SOFTWARE.
  *
  */
- #ifndef _MAIN_H
- #define _MAIN_H
 
-  #define WHITE 0
-  #define LIGHTAMBER 1
-  #define DARKAMBER 2
-  #define GREEN1 3
-  #define GREEN2 4
-  #define GREEN3 5
-
-  uint8_t colour_preference;
-
-  void read_data_from_flash();
-  void write_data_to_flash();
-	void render_on_core1();
-	void stop_core1();
-#endif // _MAIN_H
 
 
 

@@ -21,6 +21,8 @@
 #include "picoterm.h"
 #include "tusb_option.h"
 #include "../common/pmhid.h"
+#include "main.h"
+#include "hardware/watchdog.h"
 
 #define LINEWRAP        // comment out to disable line wrapping
 
@@ -693,7 +695,6 @@ void print_logo(){
 
 void prepare_text_buffer(){
     // do we need to blank them, ie fill with 0?
-    char msg[40];
     //foreground_colour = palette[9];
 
 
@@ -717,12 +718,21 @@ void prepare_text_buffer(){
         ptr[c] = newRow;
     }
 
+		// print cursor
+    make_cursor_visible(true);
+		clear_cursor(); // make as 80 columns²
+    print_cursor();  // turns on
+}
 
+void display_terminal(){
+		// do we need to blank them, ie fill with 0?
+    char msg[80];
 
     clear_entire_screen();
     print_logo();
 
     csr.y=9;
+		print_string("Menu : CTRL+SHIF+M\r\n");
 		sprintf(msg, "\r\nTinyUSB=%d.%d.%d, ", TUSB_VERSION_MAJOR, TUSB_VERSION_MINOR,TUSB_VERSION_REVISION);
 		print_string(msg);
 		sprintf(msg, "Keymap=%s rev %d\r\n", KEYMAP, KEYMAP_REV );
@@ -731,8 +741,26 @@ void prepare_text_buffer(){
 		sprintf(msg, "PicoTerm Colour %s  S. Dixon\r\n", CMAKE_PROJECT_VERSION );
 		print_string(msg);
 
-    // print cursor
+
+}
+
+void display_menu(){
+    reset_escape_sequence();
+    clear_entire_screen();
+    csr.x = 0; csr.y = 0;
+
+    print_string("       >>>>  PicoTerm Menu <<<<\r\n");
+		print_string("\r\n");
+		print_string("+- Terminal test   (reboot) -+\r\n");
+		print_string("|   0 option    3 option     |\r\n" );
+		print_string("|   1 option    4 option     |\r\n" );
+		print_string("|   2 option    5 option     |\r\n" );
+		print_string("+----------------------------+\r\n" );
+		print_string("\r\nSelect an option: ");
+
+
     make_cursor_visible(true);
+    clear_cursor();  // so we have the character
     print_cursor();  // turns on
 }
 
@@ -756,6 +784,44 @@ void handle_udchar_data(uint8_t d){
 
 }
 
+char read_key(){
+  // read a key from input buffer (the keyboard or serial line). This is used
+  // for menu handling. Return 0 if no char available
+  if( key_ready()==false )
+    return 0;
+  return read_key_from_buffer();
+}
+
+char handle_menu_input(){
+  // check if user selected an option THEN execute the appropriate action
+  // return the pressed key if any.
+  char _ch = read_key();
+  if( (_ch==0) || (_ch==ESC) )
+    return _ch;
+
+  // display char on terminal
+  clear_cursor();
+  handle_new_character(_ch);
+  print_cursor();
+
+  if( (_ch >= '0') && (_ch <= '5') ) {
+		uint8_t _color = _ch - 48; // 48->53 to 0->5 (WHITE->GREEN3)
+		stop_core1(); // suspend rendering for race condition
+		sleep_ms(10);
+		// colour_preference = _color; We do not use it in 40 column version
+    write_data_to_flash();
+		render_on_core1();
+		print_string( "\r\nWrite to flash! Will reboot in 2 seconds.");
+		watchdog_enable( 2000, 0 );
+    /*print_string( "Yo! MAN!\r\n");
+		read_data_from_flash();
+		char msg[40];
+		sprintf( msg, "pref: %i\r\n", colour_preference );
+		print_string( msg );*/
+	}
+
+  return _ch;
+}
 
 void handle_new_character(unsigned char asc){
 

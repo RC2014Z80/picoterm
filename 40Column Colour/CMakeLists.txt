@@ -6,7 +6,7 @@ include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
 pico_sdk_init()
 
-project(picoterm VERSION 1.0)
+project(picoterm VERSION 1.1.1)
 message("PicoTerm 40Col version = ${CMAKE_PROJECT_VERSION}")
 
 # Defines source files to compile
@@ -17,7 +17,7 @@ list( APPEND sources main.c picoterm.c  )
 # Define the library to includes at compile time
 #
 list( APPEND link_libs pico_scanvideo_dpi pico_multicore pico_stdlib )
-list( APPEND link_libs hardware_gpio hardware_i2c hardware_adc hardware_uart hardware_irq ) # hardware_flash
+list( APPEND link_libs hardware_gpio hardware_i2c hardware_adc hardware_uart hardware_irq hardware_flash )
 list( APPEND link_libs tinyusb_device tinyusb_board tinyusb_host )
 
 # Defines the executables to build

@@ -563,9 +563,6 @@ void display_terminal(){
 
 
 void display_menu(){
-    // do we need to blank them, ie fill with 0?
-    char msg[40];
-
     reset_escape_sequence();
     clear_entire_screen();
     csr.x = 0; csr.y = 0;
