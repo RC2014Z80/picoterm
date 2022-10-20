@@ -47,10 +47,8 @@ USB keyboards are supported via a USB OTG adapter – however, not all keyboards
 * Pico LED blinks --> no USB device attached
 * Pico LED off --> USB device connected
 
-## Layout BE & FR
-Some AltGr keys cannot be captured for unknown reason.
-
-Because of this F1 to F8 has been temporarily assigned to following keys [,],{,},|,@,\,# .
+## Release notes
+See the file [releases.md](releases.md) .
 
 # Uploading firmware
 
