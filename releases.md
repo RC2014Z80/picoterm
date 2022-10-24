@@ -1,4 +1,4 @@
-# Release Notes
+µ # Release Notes
 
 ```
  ____  _         _____                   
@@ -16,6 +16,15 @@
 From version 1.2 any publication will includes all U2F firmware files for 40 & 80 Columns.
 
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
+
+## Version 1.2.1 - (on going)
+
+### Features
+n/a
+
+### Fix & Improvement
+* Single __tusb_config.h__ definition: move `tusb_config.h` to /common (make tusb_config.h symbolic link from /40col and /80col to ../common/tusb_config.h)
+* Remove `_TUSB_CONFIG_H_` definition from `main.h` (they are not compliled, `tusb_config.h` takes priority).
 
 ## Version 1.2 - Oct 24 2022
 
