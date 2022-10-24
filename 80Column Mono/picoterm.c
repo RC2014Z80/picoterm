@@ -20,10 +20,12 @@
 
 #include "picoterm.h"
 #include "../common/pmhid.h"
+#include "../common/picoterm_config.h"
 #include "tusb_option.h"
 #include <stdio.h>
 #include "main.h"
 #include "hardware/watchdog.h"
+#include "../common/picoterm_debug.h"
 
 #define COLUMNS     80
 #define ROWS        34
@@ -545,7 +547,7 @@ void display_terminal(){
 		print_string("_/_/      _/_/ _/_/      _/_/ _/_/      _/_/ _/_/_/    _/_/   _/_/         _/_/\r\n");
 		print_string("_/_/      _/_/   _/_/_/_/_/   _/_/_/_/_/_/_/   _/_/_/_/_/ _/_/_/_/_/_/     _/_/\r\n");
 		print_string("_/_/      _/_/   _/_/_/_/_/   _/_/_/_/_/_/_/   _/_/_/_/_/ _/_/_/_/_/_/     _/_/\r\n");
-		print_string("                                                        Menu : CTRL+SHIF+M\r\n");
+		print_string("                                                        Menu : CTRL+SHIFT+M\r\n");
 		sprintf(msg, "\r\nTinyUSB=%d.%d.%d, ", TUSB_VERSION_MAJOR, TUSB_VERSION_MINOR,TUSB_VERSION_REVISION);
 		print_string(msg);
 		sprintf(msg, "Keymap=%s rev %d\r\n", KEYMAP, KEYMAP_REV ); // , Menu toggle: CTRL+SHIFT+M
@@ -604,6 +606,8 @@ char handle_menu_input(){
   char _ch = read_key();
   if( (_ch==0) || (_ch==ESC) )
     return _ch;
+	//sprintf( debug_msg, "readkey %c", _ch ); // Do not work... dont know why
+	//debug_print( debug_msg ); // proceed asap by main loop
 
   // display char on terminal
   clear_cursor();
@@ -612,18 +616,15 @@ char handle_menu_input(){
 
   if( (_ch >= '0') && (_ch <= '5') ) {
 		uint8_t _color = _ch - 48; // 48->53 to 0->5 (WHITE->GREEN3)
+		config.colour_preference = _color;
+		if( ( _color > 5) | (_color < 0) ) // being paranoid with caracter calculation
+		  _color = 0;
+		print_string( "\r\nWrite to flash! Will reboot in 2 seconds.");
 		stop_core1(); // suspend rendering for race condition
 		sleep_ms(10);
-		colour_preference = _color;
-    write_data_to_flash();
+		save_config();
 		render_on_core1();
-		print_string( "\r\nWrite to flash! Will reboot in 2 seconds.");
 		watchdog_enable( 2000, 0 );
-    /*print_string( "Yo! MAN!\r\n");
-		read_data_from_flash();
-		char msg[40];
-		sprintf( msg, "pref: %i\r\n", colour_preference );
-		print_string( msg );*/
 	}
 
   return _ch;

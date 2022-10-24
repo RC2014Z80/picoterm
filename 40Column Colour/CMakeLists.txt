@@ -6,12 +6,14 @@ include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
 pico_sdk_init()
 
-project(picoterm VERSION 1.1.1)
+project(picoterm VERSION 1.2)
 message("PicoTerm 40Col version = ${CMAKE_PROJECT_VERSION}")
 
 # Defines source files to compile
 #    Not included in source: font8.c font6.c font10.c lcd.c
 list( APPEND sources main.c picoterm.c  )
+list( APPEND sources ../common/picoterm_config.c )
+list( APPEND sources ../common/picoterm_debug.c )
 
 
 # Define the library to includes at compile time
@@ -28,6 +30,7 @@ list( APPEND to_build picoterm picoterm_US picoterm_DE picoterm_FR picoterm_BE )
 # Common definition for all the executables
 foreach( exec ${to_build} )
   add_executable( ${exec} ${sources} )
+	pico_generate_pio_header( ${exec} ../../common/uart_tx.pio)
 	pico_enable_stdio_usb( ${exec} 0)
 	pico_enable_stdio_uart( ${exec} 0)
 

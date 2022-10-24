@@ -48,6 +48,8 @@
 
 #include "main.h"
 #include "picoterm.h"
+#include "../common/picoterm_config.h"
+#include "../common/picoterm_debug.h"
 //#include "hardware/structs/bus_ctrl.h"
 
 #define LED             25
@@ -70,10 +72,6 @@ static bool is_menu = false; // toggle with CTRL+SHIFT+M
 //CU_REGISTER_DEBUG_PINS(frame_gen)
 //CU_SELECT_DEBUG_PINS(frame_gen)
 
-#define FLASH_TARGET_OFFSET (256 * 1024)  // from start of flash
-
-// once written, we can access our data at flash_target_contents
-const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 
 ////////////////////////////
 // new TinyUSB stuff
@@ -190,21 +188,6 @@ static int x_sprites = 1;
 void init_render_state(int core);
 
 void led_blinking_task(void);
-
-void write_data_to_flash(){
-  /* unsafe if you have two cores concurrently executing from flash
-     https://raspberrypi.github.io/pico-sdk-doxygen/group__hardware__flash.html
-  */
-    uint8_t data_to_write[FLASH_PAGE_SIZE];
-    data_to_write[0] = 0; // colour_preference;
-
-    flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
-    flash_range_program(FLASH_TARGET_OFFSET, data_to_write, FLASH_PAGE_SIZE);
-}
-
-void read_data_from_flash(){
-    // colour_preference = flash_target_contents[0];
-}
 
 
 void cdc_task(void);
@@ -548,8 +531,8 @@ void handle_keyboard_input(){
 
 
 int main(void) {
-
-    //gpio_put(27, 0);
+    debug_init(); // GPIO 28 as rx @ 115200
+    debug_print( "main() 40 column version" );
 
     LED_status = 3;  // blinking
 
@@ -558,6 +541,8 @@ int main(void) {
     gpio_put(LED,false);
 
     stdio_init_all();
+
+    load_config();
 
     tusb_init(); // initialize tinyusb stack
 

@@ -17,9 +17,10 @@ From version 1.2 any publication will includes all U2F firmware files for 40 & 8
 
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
 
-## Version 1.2 - (ongoing)
+## Version 1.2 - Oct 24 2022
 
 ### Features
+* Debug uart on GP28 (see [debug.md](debug.md) for details).
 * Display/Hide menu with CTRL+SHIFT+M (ESC will also quit).
 * Adding color selection in Menu (80 cols only)
 * Additionnal Keyboard Layouts
@@ -30,6 +31,11 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
  * the Keyboard layout used and its revision number
 
 ### Fix & Improvement
+* Using GP28 as rx uart @ 115200 for `debug_print()`. See common/picoterm_debug.h.
+  A global `debug_msg` buffer is available for sprintf() operation before debug_print() calls.
+* Using `struct PicotermConfig` to hold software configuration parameter.
+  Using `load_config` & `save_config` to load/save from flash.
+	See common/picoterm_config.h
 * Fix AltGR support for all keyboards (including BE & FR)
 * pmhid.h : KEYMAP FR Rev 2 (fix issue on AltGR + 5).
 * CMakeLists.txt : PICO_TINYUSB_PATH definition (to change TinyUSB under comment)
@@ -44,6 +50,7 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
  * `make picoterm_FR` for FR layout
  * `make all` to build all layouts in one single operation.
 * Version number sourced from CMakeLists.txt [See details in Pull Request #9](https://github.com/RC2014Z80/picoterm/pull/9)
+
 
 ## Version 1.1 - Sept 21, 2022
 

@@ -7,12 +7,12 @@ include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
 pico_sdk_init()
 
-project(picoterm VERSION 1.1.1)
+project(picoterm VERSION 1.2)
 message("PicoTerm 80Col version = ${CMAKE_PROJECT_VERSION}")
 
 # Defines source files to compile
 #    Not included in source: font6.c font10.c lcd.c
-list( APPEND sources main.c picoterm.c font8.c )
+list( APPEND sources main.c picoterm.c font8.c ../common/picoterm_config.c ../common/picoterm_debug.c )
 
 # Define the library to includes at compile time
 #
@@ -29,8 +29,9 @@ list( APPEND to_build picoterm picoterm_US picoterm_DE picoterm_FR picoterm_BE )
 # Common definition for all the executables
 foreach( exec ${to_build} )
   add_executable( ${exec} ${sources} )
-	pico_enable_stdio_usb( ${exec} 0)
-	pico_enable_stdio_uart( ${exec} 0)
+	pico_generate_pio_header( ${exec} ../../common/uart_tx.pio)
+	pico_enable_stdio_usb( ${exec} 0 ) # Redirect printf to USB-Serial. Conflict with TinyUSB!
+	pico_enable_stdio_uart( ${exec} 0) # Redirect printf to uart0. But no room to place UART0 on GPIO!
 
 	# Necessary to include tusb_config.h
 	target_include_directories( ${exec} PRIVATE ${CMAKE_CURRENT_LIST_DIR} )

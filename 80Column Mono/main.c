@@ -50,13 +50,16 @@
 
 #include "main.h"
 #include "picoterm.h"
+#include "../common/picoterm_config.h"
+#include "../common/picoterm_debug.h"
 //#include "hardware/structs/bus_ctrl.h"
+
 
 #define LED             25
 #define UART_ID         uart1   // also see hid_app.c
 #define UART_TX_PIN     20
 #define UART_RX_PIN     21
-#define CLOCK_SPEED     133000
+// #define CLOCK_SPEED     133000
 #define BAUD_RATE       115200 // /(CLOCK_SPEED/133000)
 #define DATA_BITS       8
 #define STOP_BITS       1
@@ -76,15 +79,6 @@ static bool is_menu = false; // toggle with CTRL+SHIFT+M
 #define BTN_A 0
 #define BTN_B 6
 #define BTN_C 11
-
-
-
-#define FLASH_TARGET_OFFSET (256 * 1024)  // from start of flash
-
-// once written, we can access our data at flash_target_contents
-const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
-
-
 
 
 
@@ -201,25 +195,6 @@ void init_render_state(int core);
 
 
 void led_blinking_task(void);
-
-
-
-void write_data_to_flash(){
-  /* unsafe if you have two cores concurrently executing from flash
-     https://raspberrypi.github.io/pico-sdk-doxygen/group__hardware__flash.html
-  */
-
-    uint8_t data_to_write[FLASH_PAGE_SIZE];
-    data_to_write[0] = colour_preference;
-
-    flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
-    flash_range_program(FLASH_TARGET_OFFSET, data_to_write, FLASH_PAGE_SIZE);
-
-}
-
-void read_data_from_flash(){
-    colour_preference = flash_target_contents[0];
-}
 
 
 
@@ -367,7 +342,7 @@ void build_font() {
             uint32_t g = 31 - PICO_SCANVIDEO_G5_FROM_PIXEL(pixel);
             uint32_t b = 31 - PICO_SCANVIDEO_B5_FROM_PIXEL(pixel);
 
-            switch (colour_preference)
+            switch (config.colour_preference)
             {
             case LIGHTAMBER:
             // light amber
@@ -407,7 +382,7 @@ void build_font() {
               b = PICO_SCANVIDEO_B5_FROM_PIXEL(pixel);
 
 
-            switch (colour_preference)
+            switch (config.colour_preference)
             {
             case LIGHTAMBER:
                 // light amber
@@ -699,30 +674,9 @@ void usb_serial_task(){
 }
 
 
-// Wire a LED on GPIO 5 (01x10 extra connector) to help debugging
-// the source code by calling set_debug_set() which blink the LED count's time
-#define LED_DEBUG 5
-void set_debug_led( int count ){
-  gpio_init( LED_DEBUG );
-  gpio_set_dir(LED_DEBUG, GPIO_OUT);
-  for( int i=0; i<10; i++){
-      gpio_put(LED_DEBUG,true);
-      sleep_ms( 20 );
-      gpio_put(LED_DEBUG,false);
-      sleep_ms( 20 );
-  }
-  sleep_ms( 500 );
-  for( int i=0; i<count; i++){
-    gpio_put(LED_DEBUG,true);
-    sleep_ms( 300 );
-    gpio_put(LED_DEBUG,false);
-    sleep_ms( 300 );
-  }
-}
-
-
 int main(void) {
-    //gpio_put(27, 0);
+    debug_init(); // GPIO 28 as rx @ 115200
+    debug_print( "main() - 80 column version" );
 
     LED_status = 3;  // blinking
 
@@ -754,31 +708,31 @@ int main(void) {
     switch (bootchoice) {
         case 0:
             // no button
-            read_data_from_flash();
+            load_config();
             break;
 
         case 1:
-            colour_preference = GREEN1;     // A
-            write_data_to_flash();
+            config.colour_preference = GREEN1;     // A
+            save_config();
             break;
         case 2:
-            colour_preference = DARKAMBER;  // B
-            write_data_to_flash();
+            config.colour_preference = DARKAMBER;  // B
+						save_config();
             break;
         case 4:
                                             // C
             break;
         case 3:
-            colour_preference = GREEN2;     // A+B
-            write_data_to_flash();
+            config.colour_preference = GREEN2;     // A+B
+						save_config();
             break;
         case 5:
-            colour_preference = GREEN3;     // C+A
-            write_data_to_flash();
+            config.colour_preference = GREEN3;     // C+A
+						save_config();
             break;
         case 6:
-            colour_preference = LIGHTAMBER; // C+B
-            write_data_to_flash();
+            config.colour_preference = LIGHTAMBER; // C+B
+						save_config();
             break;
         case 7:
                                              // A=B=C
@@ -791,7 +745,7 @@ int main(void) {
     // AFTER   reading and writing
     stdio_init_all();
 
-    uart_init(UART_ID, BAUD_RATE);
+    uart_init(UART_ID, BAUD_RATE); // UART 1
     uart_set_hw_flow(UART_ID,false,false);
     uart_set_format(UART_ID, DATA_BITS, STOP_BITS, PARITY);
 
@@ -971,7 +925,6 @@ static void pico_key_up(int scancode, int keysym, int modifiers) {
 
 
 #define MAX_REPORT  4
-#define debug_printf(fmt,...) ((void)0)
 
 // Each HID instance can has multiple reports
 static struct
@@ -991,37 +944,41 @@ static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t c
 // therefore report_desc = NULL, desc_len = 0
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len)
 {
-    debug_printf("HID device address = %d, instance = %d is mounted\r\n", dev_addr, instance);
+		sprintf( debug_msg, "HID device address = %d, instance = %d is mounted", dev_addr, instance );
+    debug_print( debug_msg );
 
     LED_status = 0;  // off
 
     // Interface protocol (hid_interface_protocol_enum_t)
     const char* protocol_str[] = { "None", "Keyboard", "Mouse" };
     uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
-    debug_printf("HID Interface Protocol = %s\r\n", protocol_str[itf_protocol]);
-//    printf("%d USB: device %d connected, protocol %s\n", time_us_32() - t0 , dev_addr, protocol_str[itf_protocol]);
+		sprintf( debug_msg, "HID Interface Protocol = %s", protocol_str[itf_protocol] );
+    debug_print( debug_msg );
+
+		// printf("%d USB: device %d connected, protocol %s\n", time_us_32() - t0 , dev_addr, protocol_str[itf_protocol]);
 
     // By default host stack will use activate boot protocol on supported interface.
     // Therefore for this simple example, we only need to parse generic report descriptor (with built-in parser)
     if ( itf_protocol == HID_ITF_PROTOCOL_NONE )
     {
         hid_info[instance].report_count = tuh_hid_parse_report_descriptor(hid_info[instance].report_info, MAX_REPORT, desc_report, desc_len);
-        debug_printf("HID has %u reports \r\n", hid_info[instance].report_count);
+        sprintf( debug_msg, "HID has %u reports \r\n", hid_info[instance].report_count );
+				debug_print( debug_msg );
     }
 
     // request to receive report
     // tuh_hid_report_received_cb() will be invoked when report is available
     if ( !tuh_hid_receive_report(dev_addr, instance) )
     {
-        debug_printf("Error: cannot request to receive report\r\n");
+        debug_print("HID Error: cannot request to receive report");
     }
 }
 
 // Invoked when device with hid interface is un-mounted
 void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t instance)
 {
-    debug_printf("HID device address = %d, instance = %d is unmounted\r\n", dev_addr, instance);
-    printf("USB: device %d disconnected\n", dev_addr);
+    sprintf( debug_msg, "HID device address = %d, instance = %d is unmounted", dev_addr, instance);
+    debug_print( debug_msg );
 
     LED_status = 3;  // blinking
 }
@@ -1034,7 +991,7 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
     switch (itf_protocol)
     {
         case HID_ITF_PROTOCOL_KEYBOARD:
-            TU_LOG2("HID receive boot keyboard report\r\n");
+            TU_LOG2("HID receive boot keyboard report");
             process_kbd_report( (hid_keyboard_report_t const*) report );
             break;
 
@@ -1048,7 +1005,7 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
     // continue to request to receive report
     if ( !tuh_hid_receive_report(dev_addr, instance) )
     {
-        debug_printf("Error: cannot request to receive report\r\n");
+        debug_print("Error: cannot request to receive report");
     }
 }
 
@@ -1191,7 +1148,8 @@ static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t c
 
     if (!rpt_info)
     {
-        debug_printf("Couldn't find the report info for this report !\r\n");
+        sprintf( debug_msg, "Couldn't find the report info for this report !");
+				debug_print( debug_msg );
         return;
     }
 

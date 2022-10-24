@@ -20,6 +20,7 @@
 
 #include "picoterm.h"
 #include "tusb_option.h"
+#include "../common/picoterm_config.h"
 #include "../common/pmhid.h"
 #include "main.h"
 #include "hardware/watchdog.h"
@@ -808,8 +809,9 @@ char handle_menu_input(){
 		uint8_t _color = _ch - 48; // 48->53 to 0->5 (WHITE->GREEN3)
 		stop_core1(); // suspend rendering for race condition
 		sleep_ms(10);
-		// colour_preference = _color; We do not use it in 40 column version
-    write_data_to_flash();
+		config.colour_preference = _color;
+    //write_data_to_flash();
+		write_config_to_flash( &config );
 		render_on_core1();
 		print_string( "\r\nWrite to flash! Will reboot in 2 seconds.");
 		watchdog_enable( 2000, 0 );

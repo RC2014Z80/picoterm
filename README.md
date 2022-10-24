@@ -41,15 +41,21 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 
 USB keyboards are supported via a USB OTG adapter – however, not all keyboards currently work. Most cheap generic keyboards seem to work fine, however, the testing sample is still fairly small. Hopefully with more data it will be easier to identify exactly which keyboards are likely to work and which aren’t, or, better still, a simple software fix will get more working.
 
-# Remarks
+## How it works
 * Textmode version (from v1.1) allows choice of green, amber or white on black, by holding button A, B or C on power-up. (choice is remembered).
 * VGA generation starts at power-up
-* Pico LED blinks --> no USB device attached
-* Pico LED off --> USB device connected
+* Pico LED blinks --> no USB device/keyboard attached
+* Pico LED off --> USB device/keyboard connected
+* VGA display is suspended 1 second when plug-in an USB keyboard
 
-## Release notes
+# Release notes
 See the file [releases.md](releases.md) .
 
+## Know issues
+1. USB keyboard is not detected if already connected at power-up. Disconnect and reconnect it!
+2. VGA rendering sometime hangs when connecting a keyboard. Press reset button (on PicoTerm) and try again.
+3. Saving the color selection fails from time to time. Just press reset button (on PicoTerm) and try again.
+ 
 # Uploading firmware
 
 The Pi Pico uses a UF2 bootloader to appear as a mass storage device so that new firmware can be uploaded to it.  To do this, connect a Micro USB lead between the Pico and your PC/Mac/Laptop/Raspberry Pi/Android Phone.  Then push the BOOTSEL button on the Pico. Whilst holding this down, push and release the RUN button on the VGA board.  (Trust me, This is easier to to than to put in to words!). The Pico will then show up as a drive on your computer.  Simply drag and drop the UF2 firmware on to this drive.  The Pico will automatically reboot and disconnect once this is complete.
@@ -59,6 +65,10 @@ The Pi Pico uses a UF2 bootloader to appear as a mass storage device so that new
 It is highly recommended that you follow the Getting Started With Raspberry Pi Pico documentation from the Raspberry Pi Foundation.  In addition to this, you will need to copy pico_sdk_import.cmake, pico_extras_import.cmake and font.h from pico-sdk, pico-extras and pico-playground\scanvideo\textmode.
 
 Please follow the [compiling](compiling.md) for details about setting-up compile chain and build the picoterm for all the keyboard layouts. Issuing a `make all` will build all the layout at once.
+
+## About debugging
+
+Need to debug and troubleshoot? See the [debug.md](debug.md) document which describes the picoterm _debug uart_.
 
 # Adding a keyboard layout
 

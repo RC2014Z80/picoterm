@@ -32,7 +32,6 @@
 #include "hardware/uart.h"
 #include "hardware/irq.h"
 
-#include "hardware/flash.h"
 
 #include "bsp/board.h"
 #include "tusb.h"
@@ -42,17 +41,9 @@
 #ifndef _MAIN_H
 #define _MAIN_H
 
- #define WHITE 0
- #define LIGHTAMBER 1
- #define DARKAMBER 2
- #define GREEN1 3
- #define GREEN2 4
- #define GREEN3 5
 
- uint8_t colour_preference;
-
- void read_data_from_flash();
- void write_data_to_flash();
+ // void read_data_from_flash();
+ // void write_data_to_flash();
  void render_on_core1();
  void stop_core1();
 #endif // _MAIN_H

@@ -3,8 +3,10 @@ pico_*_import.cmake
 font.h
 
 # Compiled files
+uart_tx.pio.h
 CMakeCache.txt
 CMakeFiles/
+tinyusb
 MakeFile
 elf2uf2/
 cmake_install.cmake
