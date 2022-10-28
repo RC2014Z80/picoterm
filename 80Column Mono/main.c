@@ -390,10 +390,7 @@ void build_font() {
 }
 
 int video_main(void) {
-
-
     mutex_init(&frame_logic_mutex);
-
 
     build_font();
     sem_init(&video_setup_complete, 0, 1);
@@ -402,7 +399,6 @@ int video_main(void) {
 
     init_render_state(0);   // does nothing
     init_render_state(1);   // does nothing
-
 
 #ifdef RENDER_ON_CORE1
     render_on_core1();   // render_loop() on core 1
@@ -624,143 +620,138 @@ void usb_serial_task(){
   }
 }
 
+//--------------------------------------------------------------------+
+// MAIN
+//--------------------------------------------------------------------+
 
 int main(void) {
-    debug_init(); // GPIO 28 as rx @ 115200
-    debug_print( "main() - 80 column version" );
+  debug_init(); // GPIO 28 as rx @ 115200
+  debug_print( "main() - 80 column version" );
+
+  gpio_init(LED);
+  gpio_set_dir(LED, GPIO_OUT);
+  gpio_put(LED,false);
+
+  uint8_t bootchoice = 0;
+  gpio_init(BTN_A);
+  gpio_set_dir(BTN_A, GPIO_IN);
+  gpio_pull_down(BTN_A);
+  if(gpio_get (BTN_A)){
+      bootchoice += 1;
+  }
+  gpio_init(BTN_B);
+  gpio_set_dir(BTN_B, GPIO_IN);
+  gpio_pull_down(BTN_B);
+  if(gpio_get (BTN_B)){
+      bootchoice += 2;
+  }
+  gpio_init(BTN_C);
+  gpio_set_dir(BTN_C, GPIO_IN);
+  gpio_pull_down(BTN_C);
+  if(gpio_get (BTN_C)){
+      bootchoice += 4;
+  }
+
+  switch (bootchoice) {
+      case 0:
+          // no button
+          load_config();
+          break;
+
+      case 1:
+          config.colour_preference = GREEN1;     // A
+          save_config();
+          break;
+      case 2:
+          config.colour_preference = DARKAMBER;  // B
+					save_config();
+          break;
+      case 4:
+                                          // C
+          break;
+      case 3:
+          config.colour_preference = GREEN2;     // A+B
+					save_config();
+          break;
+      case 5:
+          config.colour_preference = GREEN3;     // C+A
+					save_config();
+          break;
+      case 6:
+          config.colour_preference = LIGHTAMBER; // C+B
+					save_config();
+          break;
+      case 7:
+                                           // A=B=C
+          break;
+
+      default:
+          break;
+      }
+
+  // AFTER   reading and writing
+  stdio_init_all();
+
+  uart_init(UART_ID, BAUD_RATE); // UART 1
+  uart_set_hw_flow(UART_ID,false,false);
+  uart_set_format(UART_ID, DATA_BITS, STOP_BITS, PARITY);
 
 
-    gpio_init(LED);
-    gpio_set_dir(LED, GPIO_OUT);
-    gpio_put(LED,false);
+  // Set the TX and RX pins by using the function select on the GPIO
+  // Set datasheet for more information on function select
+  gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
+  gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
 
 
-    uint8_t bootchoice = 0;
-    gpio_init(BTN_A);
-    gpio_set_dir(BTN_A, GPIO_IN);
-    gpio_pull_down(BTN_A);
-    if(gpio_get (BTN_A)){
-        bootchoice += 1;
+  // This should enable rx interrupt handling
+  // Turn off FIFO's - we want to do this character by character
+  uart_set_fifo_enabled(UART_ID, false);
+  int UART_IRQ = UART_ID == uart0 ? UART0_IRQ : UART1_IRQ;
+
+  // set up and enable the interrupt handlers
+  irq_set_exclusive_handler(UART_IRQ, on_uart_rx);
+  irq_set_enabled(UART_IRQ, true);
+
+  // enable the UART
+  uart_set_irq_enables(UART_ID, true, false);
+
+	// Initialise keyboard module
+	keybd_init( pico_key_down, pico_key_up );
+
+  prepare_text_buffer();
+  display_terminal(); // display terminal entry screen
+  video_main();
+  tusb_init(); // initialize tinyusb stack
+
+  char _ch = 0;
+  bool old_menu = false; // used to trigger when is_menu is changed
+
+  while(true){
+    // TinyUsb Host Task (see keybd.c::process_kdb_report() callback and pico_key_down() here below)
+    tuh_task();
+    led_blinking_task();
+
+    if( is_menu && !(old_menu) ){ // CRL+M : menu activated ?
+      // empty the keyboard buffer
+      while( key_ready() )
+        read_key_from_buffer();
+      display_menu();
+      old_menu = is_menu;
     }
-    gpio_init(BTN_B);
-    gpio_set_dir(BTN_B, GPIO_IN);
-    gpio_pull_down(BTN_B);
-    if(gpio_get (BTN_B)){
-        bootchoice += 2;
-    }
-    gpio_init(BTN_C);
-    gpio_set_dir(BTN_C, GPIO_IN);
-    gpio_pull_down(BTN_C);
-    if(gpio_get (BTN_C)){
-        bootchoice += 4;
+    else if( !(is_menu) && old_menu ){ // CRL+M : menu de-activated ?
+      display_terminal();
+      old_menu = is_menu;
     }
 
-    switch (bootchoice) {
-        case 0:
-            // no button
-            load_config();
-            break;
-
-        case 1:
-            config.colour_preference = GREEN1;     // A
-            save_config();
-            break;
-        case 2:
-            config.colour_preference = DARKAMBER;  // B
-						save_config();
-            break;
-        case 4:
-                                            // C
-            break;
-        case 3:
-            config.colour_preference = GREEN2;     // A+B
-						save_config();
-            break;
-        case 5:
-            config.colour_preference = GREEN3;     // C+A
-						save_config();
-            break;
-        case 6:
-            config.colour_preference = LIGHTAMBER; // C+B
-						save_config();
-            break;
-        case 7:
-                                             // A=B=C
-            break;
-
-        default:
-            break;
-        }
-
-    // AFTER   reading and writing
-    stdio_init_all();
-
-    uart_init(UART_ID, BAUD_RATE); // UART 1
-    uart_set_hw_flow(UART_ID,false,false);
-    uart_set_format(UART_ID, DATA_BITS, STOP_BITS, PARITY);
-
-
-    // Set the TX and RX pins by using the function select on the GPIO
-    // Set datasheet for more information on function select
-    gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
-    gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
-
-
-    // This should enable rx interrupt handling
-    // Turn off FIFO's - we want to do this character by character
-    uart_set_fifo_enabled(UART_ID, false);
-    int UART_IRQ = UART_ID == uart0 ? UART0_IRQ : UART1_IRQ;
-
-    // set up and enable the interrupt handlers
-    irq_set_exclusive_handler(UART_IRQ, on_uart_rx);
-    irq_set_enabled(UART_IRQ, true);
-
-    // enable the UART
-    uart_set_irq_enables(UART_ID, true, false);
-
-		// Initialise keyboard module
-		keybd_init( pico_key_down, pico_key_up );
-
-    prepare_text_buffer();
-    display_terminal(); // display terminal entry screen
-    video_main();
-    tusb_init(); // initialize tinyusb stack
-
-    char _ch = 0;
-    bool old_menu = false; // used to trigger when is_menu is changed
-
-    while(true){
-        // do character stuff here on core 0
-
-        // for serial over USB  (don't forget to make pico_enable_stdio_usb(picoterm 1))
-        // usb_serial_task();
-
-        // TinyUsb Host Task
-        //   (see process_kdb_report() callback and pico_key_down() here below)
-        tuh_task();
-        led_blinking_task();
-
-        if( is_menu && !(old_menu) ){ // CRL+M : menu activated ?
-          // empty the keyboard buffer
-          while( key_ready() )
-            read_key_from_buffer();
-          display_menu();
-          old_menu = is_menu;
-        }
-        else if( !(is_menu) && old_menu ){ // CRL+M : menu de-activated ?
-          display_terminal();
-          old_menu = is_menu;
-        }
-
-        if( is_menu ){ // Under menu display
-          _ch = handle_menu_input(); // manage keyboard input for menu
-          if( _ch==ESC ) // ESC will also close the menu
-              is_menu = false;
-        }
-        else
-          handle_keyboard_input(); // normal terminal management
+    if( is_menu ){ // Under menu display
+      _ch = handle_menu_input(); // manage keyboard input for menu
+      if( _ch==ESC ) // ESC will also close the menu
+          is_menu = false;
     }
-    return 0;
+    else
+      handle_keyboard_input(); // normal terminal management
+  }
+  return 0;
 }
 
 
