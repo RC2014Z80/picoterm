@@ -43,11 +43,10 @@
 #ifndef _MAIN_H
 #define _MAIN_H
 
- // No color preference in 40 cols mode
- // uint8_t colour_preference;
+static void pico_key_down(int scancode, int keysym, int modifiers);
+static void pico_key_up(int scancode, int keysym, int modifiers);
 
- void read_data_from_flash();
- void write_data_to_flash();
- void render_on_core1();
- void stop_core1();
+void render_on_core1();
+void stop_core1();
+
 #endif // _MAIN_H

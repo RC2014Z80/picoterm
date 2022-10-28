@@ -14,7 +14,7 @@ message("PicoTerm 40Col version = ${CMAKE_PROJECT_VERSION}")
 list( APPEND sources main.c picoterm.c  )
 list( APPEND sources ../common/picoterm_config.c )
 list( APPEND sources ../common/picoterm_debug.c )
-
+list( APPEND sources ../common/keybd.c )
 
 # Define the library to includes at compile time
 #

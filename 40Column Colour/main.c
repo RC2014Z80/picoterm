@@ -50,7 +50,10 @@
 #include "picoterm.h"
 #include "../common/picoterm_config.h"
 #include "../common/picoterm_debug.h"
-//#include "hardware/structs/bus_ctrl.h"
+#include "../common/keybd.h"
+
+#include "bsp/board.h"
+#include "tusb.h"
 
 #define LED             25
 #define UART_ID         uart1   // also see hid_app.c
@@ -65,68 +68,12 @@
 // This is 4 for the font we're using
 #define FRAGMENT_WORDS 4
 
-int LED_status;  // 0 off, 1 on, 2 flashing
-bool led_state = false;
 static bool is_menu = false; // toggle with CTRL+SHIFT+M
-
-//CU_REGISTER_DEBUG_PINS(frame_gen)
-//CU_SELECT_DEBUG_PINS(frame_gen)
-
-
-////////////////////////////
-// new TinyUSB stuff
-
-
-enum {
-    SDL_SCANCODE_SPACE = 44,
-    SDL_SCANCODE_LCTRL = 224,
-    SDL_SCANCODE_LSHIFT = 225,
-    SDL_SCANCODE_LALT = 226, /**< alt, option */
-    SDL_SCANCODE_LGUI = 227, /**< windows, command (apple), meta */
-    SDL_SCANCODE_RCTRL = 228,
-    SDL_SCANCODE_RSHIFT = 229,
-    SDL_SCANCODE_RALT = 230, /**< alt gr, option */
-    SDL_SCANCODE_RGUI = 231, /**< windows, command (apple), meta */
-};
-
-#define WITH_SHIFT 0x8000
-#define WITH_ALTGR 0x4000
-#define WITH_CTRL 0x2000
-#define WITH_CAPSLOCK 0x1000
-
-
 
 
 typedef bool (*render_scanline_func)(struct scanvideo_scanline_buffer *dest, int core);
 bool render_scanline_test_pattern(struct scanvideo_scanline_buffer *dest, int core);
 bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core);
-
-
-// a buffer for characters coming in from UART. It's of limited value as things stand
-// but will come into its own if and when we switch to interrupts for UART
-struct KeyboardBuffer {
-  int length;
-  int take;
-  int insert;
-  char buff[2000];
-};
-
-struct KeyboardBuffer keybuffer1 = {0};
-
-void insert_key_into_buffer(unsigned char ch){
-  keybuffer1.buff[keybuffer1.insert++]=ch;
-  if(keybuffer1.insert==keybuffer1.length)keybuffer1.insert=0;
-}
-
-bool key_ready(){
-    return (keybuffer1.take!=keybuffer1.insert);
-}
-
-unsigned char read_key_from_buffer(){
-    unsigned char ch=keybuffer1.buff[keybuffer1.take++];
-    if(keybuffer1.take==keybuffer1.length)keybuffer1.take=0;
-    return ch;
-}
 
 
 //#define vga_mode vga_mode_640x480_60
@@ -172,10 +119,6 @@ uint32_t block[] = {
 };
 
 
-
-
-
-
 // to make sure only one core updates the state when the frame number changes
 // todo note we should actually make sure here that the other core isn't still rendering (i.e. all must arrive before either can proceed - a la barrier)
 //auto_init_mutex(frame_logic_mutex);
@@ -186,30 +129,7 @@ static int top = 0;
 static int x_sprites = 1;
 
 void init_render_state(int core);
-
 void led_blinking_task(void);
-
-
-void cdc_task(void);
-void hid_app_task(void);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ok this is going to be the beginning of retained mode
-//
 
 
 void render_loop() {
@@ -528,62 +448,46 @@ void handle_keyboard_input(){
 
 }
 
-
+//--------------------------------------------------------------------+
+// MAIN
+//--------------------------------------------------------------------+
 
 int main(void) {
-    debug_init(); // GPIO 28 as rx @ 115200
-    debug_print( "main() 40 column version" );
+  debug_init(); // GPIO 28 as rx @ 115200
+  debug_print( "main() 40 column version" );
 
-    LED_status = 3;  // blinking
+  gpio_init(LED);
+  gpio_set_dir(LED, GPIO_OUT);
+  gpio_put(LED,false);
 
-    gpio_init(LED);
-    gpio_set_dir(LED, GPIO_OUT);
-    gpio_put(LED,false);
-
-    stdio_init_all();
-
-    load_config();
-
-    tusb_init(); // initialize tinyusb stack
+  stdio_init_all();
+  load_config();
+  tusb_init(); // initialize tinyusb stack
 
 
-    // if need to overclock. Also uncomment the baud rate division near the top.
-    //if(set_sys_clock_khz(CLOCK_SPEED, true)){
-    //
-    //}
+  uart_init(UART_ID, BAUD_RATE);
+  uart_set_hw_flow(UART_ID,false,false);
+  uart_set_format(UART_ID, DATA_BITS, STOP_BITS, PARITY);
 
+	// Set the TX and RX pins by using the function select on the GPIO
+	// Set datasheet for more information on function select
+  gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
+  gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
 
-    uart_init(UART_ID, BAUD_RATE);
-    uart_set_hw_flow(UART_ID,false,false);
-    uart_set_format(UART_ID, DATA_BITS, STOP_BITS, PARITY);
+	// This should enable rx interrupt handling
+	// Turn off FIFO's - we want to do this character by character
+  uart_set_fifo_enabled(UART_ID, false);
+  int UART_IRQ = UART_ID == uart0 ? UART0_IRQ : UART1_IRQ;
 
+  // set up and enable the interrupt handlers
+  irq_set_exclusive_handler(UART_IRQ, on_uart_rx);
+  irq_set_enabled(UART_IRQ, true);
 
-// Set the TX and RX pins by using the function select on the GPIO
-// Set datasheet for more information on function select
-    gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
-    gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
+  // enable the UART
+  uart_set_irq_enables(UART_ID, true, false);
 
-
-
-// This should enable rx interrupt handling
-// Turn off FIFO's - we want to do this character by character
-    uart_set_fifo_enabled(UART_ID, false);
-    int UART_IRQ = UART_ID == uart0 ? UART0_IRQ : UART1_IRQ;
-
-    // set up and enable the interrupt handlers
-    irq_set_exclusive_handler(UART_IRQ, on_uart_rx);
-    irq_set_enabled(UART_IRQ, true);
-
-    // enable the UART
-    uart_set_irq_enables(UART_ID, true, false);
-
-
-
-
-
-  keybuffer1.length=2000; // a bit OTT
-  keybuffer1.take=0;
-  keybuffer1.insert=0;
+	// Initialise keyboard module
+	keybd_init( pico_key_down, pico_key_up );
 
 	prepare_text_buffer();
 	display_terminal(); // display terminal entry screen
@@ -594,86 +498,48 @@ int main(void) {
 	bool old_menu = false; // used to trigger when is_menu is changed
 
 	while(true){
-			// do character stuff here on core 0
+		// TinyUsb Host Task (see keybd.c:process_kdb_report() callback and pico_key_down() here below)
+		tuh_task();
+		led_blinking_task();
 
-			// for serial over USB  (don't forget to make pico_enable_stdio_usb(picoterm 1))
-			// usb_serial_task();
+		if( is_menu && !(old_menu) ){ // CRL+M : menu activated ?
+			// empty the keyboard buffer
+			while( key_ready() )
+				read_key_from_buffer();
+			display_menu();
+			old_menu = is_menu;
+		}
+		else if( !(is_menu) && old_menu ){ // CRL+M : menu de-activated ?
+			display_terminal();
+			old_menu = is_menu;
+		}
 
-			// TinyUsb Host Task
-			//   (see process_kdb_report() callback and pico_key_down() here below)
-			tuh_task();
-			led_blinking_task();
-
-			if( is_menu && !(old_menu) ){ // CRL+M : menu activated ?
-				// empty the keyboard buffer
-				while( key_ready() )
-					read_key_from_buffer();
-				display_menu();
-				old_menu = is_menu;
-			}
-			else if( !(is_menu) && old_menu ){ // CRL+M : menu de-activated ?
-				display_terminal();
-				old_menu = is_menu;
-			}
-
-			if( is_menu ){ // Under menu display
-				_ch = handle_menu_input(); // manage keyboard input for menu
-				if( _ch==ESC ) // ESC will also close the menu
-						is_menu = false;
-			}
-			else
-				handle_keyboard_input(); // normal terminal management
-	}
+		if( is_menu ){ // Under menu display
+			_ch = handle_menu_input(); // manage keyboard input for menu
+			if( _ch==ESC ) // ESC will also close the menu
+					is_menu = false;
+		}
+		else
+			handle_keyboard_input(); // normal terminal management
+	} // while(true)
 	return 0;
 }
-
-/*
-  prepare_text_buffer();
-
-  video_main();
-
-  while(true){
-        // do character stuff here on core 0
-
-    // for serial over USB  (don't forget to make pico_enable_stdio_usb(picoterm 1))
-
-
-    tuh_task();
-    led_blinking_task();
-
-
-
-    // handles buffer. Keys are inserted into buffer by interrupt.
-    handle_keyboard_input();
-
-  }
-
-  return 0;
-}
-*/
-
-
-
-
 
 //--------------------------------------------------------------------+
 // Blinking Task
 //--------------------------------------------------------------------+
-void led_blinking_task(void)
-{
+bool led_state = false;
+
+void led_blinking_task(void) {
   const uint32_t interval_ms = 1000;
   static uint32_t start_ms = 0;
 
-
-  switch(LED_status){
-    case 0:
-     board_led_write(false);
-     break;
-    case 1:
-     board_led_write(true);
-     break;
-    case 3:
-
+	// No HID keyboard --> Led blink
+	// HID Keyboard    --> Led off
+	if( keyboard_attached() )
+		board_led_write(false);
+    //board_led_write(true);
+  else {
       // Blink every interval ms
       if ( board_millis() - start_ms > interval_ms) {
         start_ms += interval_ms;
@@ -681,92 +547,12 @@ void led_blinking_task(void)
         board_led_write(led_state);
         led_state = 1 - led_state; // toggle
       }
-    break;
   }
-
-
-}
-
-
-
-
-
-
-
-
-
-static bool capslock_key_down_in_last_report = false;
-static bool capslock_key_down_in_this_report = false;
-static bool capslock_on = false;
-
-static uint8_t const keycode2ascii[128][3] =  { PM_KEYCODE_TO_ASCII };
-
-
-static bool scancode_is_mod(int scancode) {
-    static const uint8_t mods[] = {
-            SDL_SCANCODE_LCTRL,
-            SDL_SCANCODE_RCTRL,
-            SDL_SCANCODE_LALT,
-            SDL_SCANCODE_RALT,
-            SDL_SCANCODE_LSHIFT,
-            SDL_SCANCODE_RSHIFT,
-    };
-    for(int i=0;i<count_of(mods); i+= 2) {
-        if(scancode== mods[i]){
-          return true;
-        }
-    }
-    // default
-    return false;
 }
 
 //--------------------------------------------------------------------+
-// This is the 'glue'
+// keybd - Callback routines
 //--------------------------------------------------------------------+
-
-/*
-static void pico_key_down(int scancode, int keysym, int modifiers) {
-    printf("Key down, %i, %i, %i \r\n", scancode, keysym, modifiers);
-
-
-        if(false){
-          // any special cases
-        }
-        else{
-          // not a special case.
-          if(scancode_is_mod(scancode)==false){
-            // not a modifier key
-            uint8_t ch = keycode2ascii[scancode][0];
-
-            if(modifiers & WITH_SHIFT){
-                ch = keycode2ascii[scancode][1];
-            }
-            else if((modifiers & WITH_CAPSLOCK) && ch>='a' && ch<='z'){
-                ch = keycode2ascii[scancode][1];
-            }
-            else if(modifiers & WITH_CTRL && ch>95){
-                ch=ch-96;
-            }
-
-            printf("Character: %c\r\n", ch);
-
-                  // special case for de keyboard
-                  #ifdef LOCALISE_DE
-                    if(modifiers & WITH_ALTGR){
-                        ch = keycode2ascii[scancode][2];
-                    }
-                  #endif
-
-
-                  uart_putc (UART_ID, ch);
-
-
-
-          }
-        }
-
-
-} */
 
 static void pico_key_down(int scancode, int keysym, int modifiers) {
     //printf("Key down, %i, %i, %i \r\n", scancode, keysym, modifiers);
@@ -803,267 +589,4 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
 
 static void pico_key_up(int scancode, int keysym, int modifiers) {
    printf("Key up, %i, %i, %i \r\n", scancode, keysym, modifiers);
-}
-
-
-
-
-
-
-
-
-
-
-//--------------------------------------------------------------------+
-// USB stuff
-//--------------------------------------------------------------------+
-
-
-#define MAX_REPORT  4
-#define debug_printf(fmt,...) ((void)0)
-
-// Each HID instance can has multiple reports
-static struct
-{
-    uint8_t report_count;
-    tuh_hid_report_info_t report_info[MAX_REPORT];
-}hid_info[CFG_TUH_HID];
-
-static void process_kbd_report(hid_keyboard_report_t const *report);
-//static void process_mouse_report(hid_mouse_report_t const * report);
-static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
-
-// Invoked when device with hid interface is mounted
-// Report descriptor is also available for use. tuh_hid_parse_report_descriptor()
-// can be used to parse common/simple enough descriptor.
-// Note: if report descriptor length > CFG_TUH_ENUMERATION_BUFSIZE, it will be skipped
-// therefore report_desc = NULL, desc_len = 0
-void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len)
-{
-    debug_printf("HID device address = %d, instance = %d is mounted\r\n", dev_addr, instance);
-
-    LED_status = 0;  // off
-
-    // Interface protocol (hid_interface_protocol_enum_t)
-    const char* protocol_str[] = { "None", "Keyboard", "Mouse" };
-    uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
-    debug_printf("HID Interface Protocol = %s\r\n", protocol_str[itf_protocol]);
-//    printf("%d USB: device %d connected, protocol %s\n", time_us_32() - t0 , dev_addr, protocol_str[itf_protocol]);
-
-    // By default host stack will use activate boot protocol on supported interface.
-    // Therefore for this simple example, we only need to parse generic report descriptor (with built-in parser)
-    if ( itf_protocol == HID_ITF_PROTOCOL_NONE )
-    {
-        hid_info[instance].report_count = tuh_hid_parse_report_descriptor(hid_info[instance].report_info, MAX_REPORT, desc_report, desc_len);
-        debug_printf("HID has %u reports \r\n", hid_info[instance].report_count);
-    }
-
-    // request to receive report
-    // tuh_hid_report_received_cb() will be invoked when report is available
-    if ( !tuh_hid_receive_report(dev_addr, instance) )
-    {
-        debug_printf("Error: cannot request to receive report\r\n");
-    }
-}
-
-// Invoked when device with hid interface is un-mounted
-void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t instance)
-{
-    debug_printf("HID device address = %d, instance = %d is unmounted\r\n", dev_addr, instance);
-    printf("USB: device %d disconnected\n", dev_addr);
-
-    LED_status = 3;  // blinking
-}
-
-// Invoked when received report from device via interrupt endpoint
-void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len)
-{
-    uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
-
-    switch (itf_protocol)
-    {
-        case HID_ITF_PROTOCOL_KEYBOARD:
-            TU_LOG2("HID receive boot keyboard report\r\n");
-            process_kbd_report( (hid_keyboard_report_t const*) report );
-            break;
-
-
-        default:
-            // Generic report requires matching ReportID and contents with previous parsed report info
-            process_generic_report(dev_addr, instance, report, len);
-            break;
-    }
-
-    // continue to request to receive report
-    if ( !tuh_hid_receive_report(dev_addr, instance) )
-    {
-        debug_printf("Error: cannot request to receive report\r\n");
-    }
-}
-
-//--------------------------------------------------------------------+
-// Keyboard
-//--------------------------------------------------------------------+
-
-// look up new key in previous keys
-static inline bool find_key_in_report(hid_keyboard_report_t const *report, uint8_t keycode)
-{
-    for(uint8_t i=0; i<6; i++)
-    {
-        if (report->keycode[i] == keycode)  return true;
-    }
-
-    return false;
-}
-
-
-
-static void process_kbd_report(hid_keyboard_report_t const *report)
-{
-    static hid_keyboard_report_t prev_report = { 0, 0, {0} }; // previous report to check key released
-
-    //------------- example code ignore control (non-printable) key affects -------------//
-    for(uint8_t i=0; i<6; i++)
-    {
-        if ( report->keycode[i] )
-        {
-
-
-            capslock_key_down_in_this_report = false;
-            for(uint8_t i=0; i<6; i++){
-                if ( find_key_in_report(report, HID_KEY_CAPS_LOCK)){
-                capslock_key_down_in_this_report = true;
-                }
-            }
-            if(capslock_key_down_in_this_report==true && capslock_key_down_in_last_report==false){
-                // toggle the value
-                capslock_on = !capslock_on;
-            }
-
-
-            if ( find_key_in_report(&prev_report, report->keycode[i]) )
-            {
-                // exist in previous report means the current key is holding
-            }else
-            {
-                // not existed in previous report means the current key is pressed
-                bool const is_shift = report->modifier & (KEYBOARD_MODIFIER_LEFTSHIFT | KEYBOARD_MODIFIER_RIGHTSHIFT);
-                bool const is_altgr = report->modifier & (KEYBOARD_MODIFIER_RIGHTALT);
-                bool const is_ctrl = report->modifier & (KEYBOARD_MODIFIER_LEFTCTRL | KEYBOARD_MODIFIER_RIGHTCTRL);
-                // capslock_on
-
-                int modifier = 0;
-                modifier = modifier | (is_shift ? WITH_SHIFT : 0);
-                modifier = modifier | (is_altgr ? WITH_ALTGR : 0);
-                modifier = modifier | (is_ctrl ? WITH_CTRL : 0);
-                modifier = modifier | (capslock_on ? WITH_CAPSLOCK : 0);
-
-                pico_key_down(report->keycode[i], 0, modifier);
-            }
-        }
-        // Check for key depresses (i.e. was present in prev report but not here)
-        if (prev_report.keycode[i]) {
-            // If not present in the current report then depressed
-            if (!find_key_in_report(report, prev_report.keycode[i]))
-            {
-                bool const is_shift = report->modifier & (KEYBOARD_MODIFIER_LEFTSHIFT | KEYBOARD_MODIFIER_RIGHTSHIFT);
-                bool const is_altgr = report->modifier & (KEYBOARD_MODIFIER_RIGHTALT);
-                bool const is_ctrl = report->modifier & (KEYBOARD_MODIFIER_LEFTCTRL | KEYBOARD_MODIFIER_RIGHTCTRL);
-                // capslock_on
-
-                int modifier = 0;
-                modifier = modifier | (is_shift ? WITH_SHIFT : 0);
-                modifier = modifier | (is_altgr ? WITH_ALTGR : 0);
-                modifier = modifier | (is_ctrl ? WITH_CTRL : 0);
-                modifier = modifier | (capslock_on ? WITH_CAPSLOCK : 0);
-
-                pico_key_up(prev_report.keycode[i], 0, modifier);
-            }
-        }
-    }
-
-    /*
-    // synthesize events for modifier keys
-    static const uint8_t mods[] = {
-            KEYBOARD_MODIFIER_LEFTCTRL, SDL_SCANCODE_LCTRL,
-            KEYBOARD_MODIFIER_RIGHTCTRL, SDL_SCANCODE_RCTRL,
-            KEYBOARD_MODIFIER_LEFTALT, SDL_SCANCODE_LALT,
-            KEYBOARD_MODIFIER_RIGHTALT, SDL_SCANCODE_RALT,
-            KEYBOARD_MODIFIER_LEFTSHIFT, SDL_SCANCODE_LSHIFT,
-            KEYBOARD_MODIFIER_RIGHTSHIFT, SDL_SCANCODE_RSHIFT,
-    };
-    for(int i=0;i<count_of(mods); i+= 2) {
-        check_mod(report->modifier, prev_report.modifier, mods[i], mods[i+1]);
-    }
-    */
-
-    prev_report = *report;
-}
-
-
-
-
-
-//--------------------------------------------------------------------+
-// Generic Report
-//--------------------------------------------------------------------+
-static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len)
-{
-    (void) dev_addr;
-
-    uint8_t const rpt_count = hid_info[instance].report_count;
-    tuh_hid_report_info_t* rpt_info_arr = hid_info[instance].report_info;
-    tuh_hid_report_info_t* rpt_info = NULL;
-
-    if ( rpt_count == 1 && rpt_info_arr[0].report_id == 0)
-    {
-        // Simple report without report ID as 1st byte
-        rpt_info = &rpt_info_arr[0];
-    }else
-    {
-        // Composite report, 1st byte is report ID, data starts from 2nd byte
-        uint8_t const rpt_id = report[0];
-
-        // Find report id in the arrray
-        for(uint8_t i=0; i<rpt_count; i++)
-        {
-            if (rpt_id == rpt_info_arr[i].report_id )
-            {
-                rpt_info = &rpt_info_arr[i];
-                break;
-            }
-        }
-
-        report++;
-        len--;
-    }
-
-    if (!rpt_info)
-    {
-        debug_printf("Couldn't find the report info for this report !\r\n");
-        return;
-    }
-
-    // For complete list of Usage Page & Usage checkout src/class/hid/hid.h. For examples:
-    // - Keyboard                     : Desktop, Keyboard
-    // - Mouse                        : Desktop, Mouse
-    // - Gamepad                      : Desktop, Gamepad
-    // - Consumer Control (Media Key) : Consumer, Consumer Control
-    // - System Control (Power key)   : Desktop, System Control
-    // - Generic (vendor)             : 0xFFxx, xx
-    if ( rpt_info->usage_page == HID_USAGE_PAGE_DESKTOP )
-    {
-        switch (rpt_info->usage)
-        {
-            case HID_USAGE_DESKTOP_KEYBOARD:
-                TU_LOG1("HID receive keyboard report\r\n");
-                // Assume keyboard follow boot report layout
-                process_kbd_report( (hid_keyboard_report_t const*) report );
-                break;
-
-
-
-            default: break;
-        }
-    }
 }
