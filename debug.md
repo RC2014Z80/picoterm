@@ -57,4 +57,16 @@ int main(void) {
 }
 ```
 
+It is also possible to print-out formatted messages. the `picoterm_debug.h` have a `debug_msg`
+buffer (100 char) that can be used with the `sprintf()` to format messages.
+
+```
+sprintf( debug_msg, "  magic_key=%s", c->magic_key );
+debug_print( debug_msg );
+sprintf( debug_msg, "  version=%u", c->version );
+debug_print( debug_msg );
+sprintf( debug_msg, "  colour_preference=%u", c->colour_preference );
+debug_print( debug_msg );
+```
+
 __Remarks:__ debug_print() will send a \r\n after each message.
