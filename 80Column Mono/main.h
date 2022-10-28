@@ -33,14 +33,17 @@
 #include "hardware/irq.h"
 
 
-#include "bsp/board.h"
-#include "tusb.h"
+//#include "bsp/board.h"
+//#include "tusb.h"
 
 #include "../common/pmhid.h"
 
 #ifndef _MAIN_H
 #define _MAIN_H
 
+
+static void pico_key_down(int scancode, int keysym, int modifiers);
+static void pico_key_up(int scancode, int keysym, int modifiers);
 
  // void read_data_from_flash();
  // void write_data_to_flash();

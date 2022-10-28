@@ -12,7 +12,10 @@ message("PicoTerm 80Col version = ${CMAKE_PROJECT_VERSION}")
 
 # Defines source files to compile
 #    Not included in source: font6.c font10.c lcd.c
-list( APPEND sources main.c picoterm.c font8.c ../common/picoterm_config.c ../common/picoterm_debug.c )
+list( APPEND sources main.c picoterm.c font8.c )
+list( APPEND sources ../common/picoterm_config.c )
+list( APPEND sources ../common/picoterm_debug.c )
+list( APPEND sources ../common/keybd.c )
 
 # Define the library to includes at compile time
 #
