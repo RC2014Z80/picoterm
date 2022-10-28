@@ -145,8 +145,6 @@ static int top = 0;
 static int x_sprites = 1;
 
 void init_render_state(int core);
-
-
 void led_blinking_task(void);
 
 
