@@ -23,6 +23,10 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 n/a
 
 ### Fix & Improvement
+* rename "80Column Mono" -> "80col-mono" (removing space & camel-case)<br />
+  __Remove older compilation files:__ Renaming the project folder will requires you to drop the existing compilation files (if any previous compilation task did occured in "80Column Mono" folder). Drop the folder `Build/CMakeFiles/` and files in `Build/` .
+* rename "40Column Colour" -> "40col-coulour"
+* Moving USB keyboard code to `common/keybd.c` (as dquadros does for RPITerm).
 * Single __tusb_config.h__ definition: move `tusb_config.h` to /common (make tusb_config.h symbolic link from /40col and /80col to ../common/tusb_config.h)
 * Remove `_TUSB_CONFIG_H_` definition from `main.h` (they are not compliled, `tusb_config.h` takes priority).
 

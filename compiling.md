@@ -19,8 +19,6 @@ git clone https://github.com/raspberrypi/pico-extras
 git clone https://github.com/raspberrypi/pico-playground
 ```
 
-
-
 ## Copy the PicoTerm sources
 
 ```
@@ -33,8 +31,8 @@ REM git clone https://github.com/mchobby/picoterm.git
 REM or clone the original repos
 git clone https://github.com/RC2014Z80/picoterm.git
 
-REM We will build the "80 Column Mono" version
-cd picoterm/80Column\ Mono/Build
+REM We will build the "80col-mono" version
+cd picoterm/80col-mono/Build
 
 REM Indicates where to find the Pico SDK
 export PICO_SDK_PATH=../../../../../pico/pico-sdk
@@ -66,7 +64,7 @@ CMake Warning at /home/domeu/pico/pico-extras/src/rp2_common/lwip/CMakeLists.txt
 
 -- Configuring done
 -- Generating done
--- Build files have been written to: /home/domeu/Bureau/RC2014/picoterm/80Column Mono/Build
+-- Build files have been written to: /home/domeu/Bureau/RC2014/picoterm/80col-mono/Build
 ```
 
 # Need to upgrade TinyUSB library
@@ -77,20 +75,20 @@ The `tinyusb` library is included within PICO_SDK. If you need a newer version t
 cd ~/
 cd Bureau
 cd RC2014
-cd picoterm/80Column\ Mono/
+cd picoterm/80col-mono/
 mkdir tinyusb
 ```
 
 Follow installation instruction from
 https://github.com/hathach/tinyusb/blob/master/docs/reference/getting_started.rst
 
-I have created the folder ~/Bureau/RC2014/picoterm/80Column Mono/tinyusb
+I have created the folder ~/Bureau/RC2014/picoterm/80col-mono/tinyusb
 In the tinyusb folder copy the following subfolder from the archive : src, hw
 
-In the "80Column Mono" folder edit the file CMakeLists.txt and add the following "set" command
+In the "80col-mono" folder edit the file CMakeLists.txt and add the following "set" command
 
 ```
-set(PICO_TINYUSB_PATH "/home/domeu/Bureau/RC2014/picoterm/80Column\ Mono/tinyusb" )
+set(PICO_TINYUSB_PATH "/home/domeu/Bureau/RC2014/picoterm/80col-mono/tinyusb" )
 include(pico_sdk_import.cmake)       
 include(pico_extras_import.cmake)
 ```
@@ -103,18 +101,20 @@ Now, it is time to make the build
 cd ~/
 cd Bureau
 cd RC2014
-cd picoterm/80Column\ Mono/Build
-rem cp $PICO_SDK_PATH/../pico-playground/scanvideo/textmode/font.h ../
+cd picoterm/80col-mono/Build
+cp $PICO_SDK_PATH/../pico-playground/scanvideo/textmode/font.h ../
 
 REM create with UK Mapping (default)
 make picoterm
+REM create with FR Mapping
+make picoterm_FR
 REM create all the mapping
 make all
 ```
 Notice that make messages will includes the following statement when using another TinyUSB version:
 
 ```
-TinyUSB available at /home/domeu/Bureau/RC2014/picoterm/80Column Mono/tinyusb/src/portable/raspberrypi/rp2040; enabling build support for USB.
+TinyUSB available at /home/domeu/Bureau/RC2014/picoterm/80col-mono/tinyusb/src/portable/raspberrypi/rp2040; enabling build support for USB.
 ```
 
 Voila! the `picoterm.uf2` is available in the current directory.

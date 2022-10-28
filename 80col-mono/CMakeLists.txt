@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 
 #set(PICO_BOARD "vgaboard")
 
-#set(PICO_TINYUSB_PATH "/home/domeu/Bureau/RC2014/picoterm/80Column\ Mono/tinyusb" )
+#set(PICO_TINYUSB_PATH "/home/domeu/Bureau/RC2014/picoterm/80col-mono/tinyusb" )
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
 pico_sdk_init()
