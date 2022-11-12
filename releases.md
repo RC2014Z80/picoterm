@@ -17,10 +17,17 @@ From version 1.2 any publication will includes all U2F firmware files for 40 & 8
 
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
 
-## Version 1.2.1 - (on going)
+## Version 1.3 - Nov 12 2022
 
 ### Features
-n/a
+* Adding Purple color to 80 cols
+* Many improvement in configuration screen for both 40 & 80 columns version
+ * Can be modified on the fly without saving (press ESC).
+ * Saved to Flash by pressing S (Uppercase "S") --> will Reboot.
+ * Change of Baudrate (115200, 57600, 19200, 9600, 4800, 2400, 1200, 300)
+ * Change of data bits (7 or 8)
+ * Change of Stop bits (1 or 2)
+ * Change of parity ( None, Even, Odd )
 
 ### Fix & Improvement
 * rename "80Column Mono" -> "80col-mono" (removing space & camel-case)<br />

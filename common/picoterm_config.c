@@ -14,46 +14,80 @@ void load_config(){
   if( is_config_in_flash() ){
     debug_print("load_config() -> read config from Flash" );
     read_config_from_flash( &config );
-		debug_print_config( &config );
+    debug_print_config( &config );
   }
   else {
     debug_print("load_config() -> Set default Config" );
     set_default_config( &config );
-		debug_print_config( &config );
-	}
+    debug_print_config( &config );
+  }
 }
 
 void save_config(){
-	debug_print("save_config() -> write config to Flash" );
-	debug_print_config( &config );
-	write_config_to_flash( &config );
+  debug_print("save_config() -> write config to Flash" );
+  debug_print_config( &config );
+  write_config_to_flash( &config );
 }
 
 void set_default_config( struct PicotermConfig *c ){
-	//c.magic_key = MAGIC_KEY ,
-	strncpy( c->magic_key, MAGIC_KEY, sizeof(MAGIC_KEY));
-	c->version = CONFIG_VERSION;
-	c->colour_preference = WHITE;
+  //c.magic_key = MAGIC_KEY ,
+  strncpy( c->magic_key, MAGIC_KEY, sizeof(MAGIC_KEY));
+  c->version = CONFIG_VERSION;
+  c->colour_preference = WHITE;
+  // version 2
+  c->baudrate = 115200;
+  c->databits = 8;
+  c->parity = UART_PARITY_NONE;
+  c->stopbits = 1;
+}
+
+void upgrade_config( struct PicotermConfig *c ){
+  // Upgrade a loaded configuration record
+
+  if( c->version == 1 ){ // Upgrade to version 2 with defaults
+    c->baudrate = 115200;
+    c->databits = 8;
+    c->parity   = UART_PARITY_NONE;
+    c->stopbits = 1;
+    // Ok for version 2
+    c->version  = 2;
+  }
+
+  /*
+  if( c->version == 2 ){ // Upgrade to version 3 with defaults
+    // blabla
+    c->version  = 3;
+  }
+  */
 }
 
 bool is_config_in_flash(){
-	/* Check if the magic key is present in flash */
-	struct PicotermConfig _c;
-	read_config_from_flash( &_c );
-	return strncmp( _c.magic_key, MAGIC_KEY, sizeof(MAGIC_KEY) )==0;
+  /* Check if the magic key is present in flash */
+  struct PicotermConfig _c;
+  read_config_from_flash( &_c );
+  return strncmp( _c.magic_key, MAGIC_KEY, sizeof(MAGIC_KEY) )==0;
 }
 
 void read_config_from_flash( struct PicotermConfig *c ){
     memcpy( c, flash_target_contents, sizeof(struct PicotermConfig) );
+    upgrade_config( c );
 }
 
 void debug_print_config( struct PicotermConfig *c ){
-	debug_print( "debug_print_config():");
+  debug_print( "debug_print_config():");
   sprintf( debug_msg, "  magic_key=%s", c->magic_key );
-	debug_print( debug_msg );
-	sprintf( debug_msg, "  version=%u", c->version );
-	debug_print( debug_msg );
-	sprintf( debug_msg, "  colour_preference=%u", c->colour_preference );
+  debug_print( debug_msg );
+  sprintf( debug_msg, "  version=%u", c->version );
+  debug_print( debug_msg );
+  sprintf( debug_msg, "  colour_preference=%u", c->colour_preference );
+  debug_print( debug_msg );
+  sprintf( debug_msg, "  baudrate=%u", c->baudrate );
+  debug_print( debug_msg );
+  sprintf( debug_msg, "  databits=%u", c->databits );
+  debug_print( debug_msg );
+  sprintf( debug_msg, "  parity=%u", c->parity );
+  debug_print( debug_msg );
+  sprintf( debug_msg, "  stopbits=%u", c->stopbits );
   debug_print( debug_msg );
 }
 

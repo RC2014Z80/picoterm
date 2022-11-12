@@ -42,11 +42,19 @@
 #define _MAIN_H
 
 
+#define LED             25
+#define UART_ID         uart1   // also see hid_app.c
+#define UART_TX_PIN     20
+#define UART_RX_PIN     21
+
+
 static void pico_key_down(int scancode, int keysym, int modifiers);
 static void pico_key_up(int scancode, int keysym, int modifiers);
 
- // void read_data_from_flash();
- // void write_data_to_flash();
- void render_on_core1();
- void stop_core1();
+void build_font();
+// void read_data_from_flash();
+// void write_data_to_flash();
+void render_on_core1();
+void stop_core1();
+
 #endif // _MAIN_H

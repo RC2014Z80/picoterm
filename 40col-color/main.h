@@ -32,10 +32,10 @@
 #include "hardware/uart.h"
 #include "hardware/irq.h"
 
-#include "hardware/flash.h"
+//#include "hardware/flash.h"
 
-#include "bsp/board.h"
-#include "tusb.h"
+//#include "bsp/board.h"
+//#include "tusb.h"
 
 #include "../common/pmhid.h"
 
@@ -43,9 +43,15 @@
 #ifndef _MAIN_H
 #define _MAIN_H
 
+#define LED             25
+#define UART_ID         uart1   // also see hid_app.c
+#define UART_TX_PIN     20
+#define UART_RX_PIN     21
+
 static void pico_key_down(int scancode, int keysym, int modifiers);
 static void pico_key_up(int scancode, int keysym, int modifiers);
 
+// void build_font(); not defined in the 40 col version
 void render_on_core1();
 void stop_core1();
 

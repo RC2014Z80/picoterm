@@ -43,6 +43,7 @@ USB keyboards are supported via a USB OTG adapter – however, not all keyboards
 
 ## How it works
 * Textmode version (from v1.1) allows choice of green, amber or white on black, by holding button A, B or C on power-up. (choice is remembered).
+* Configuration menu is available via CTRL+SHIFT+M (configuration can be stored in Flash)
 * VGA generation starts at power-up
 * Pico LED blinks --> no USB device/keyboard attached
 * Pico LED off --> USB device/keyboard connected
@@ -53,9 +54,10 @@ See the file [releases.md](releases.md) .
 
 ## Know issues
 1. USB keyboard is not detected if already connected at power-up. Disconnect and reconnect it!
-2. VGA rendering sometime hangs when connecting a keyboard. Press reset button (on PicoTerm) and try again.
-3. Saving the color selection fails from time to time. Just press reset button (on PicoTerm) and try again.
- 
+2. VGA rendering sometime hangs when connecting a keyboard (rare). Press reset button (on PicoTerm) and try again.
+3. Saving the configuration into Flash fails from time to time (rare). Just press reset button (on PicoTerm) and try again.
+4. Can only change the color 2 times ( it always hang at the third color change. Suspect memory leak in build_font() ). Just press the reset button and try again.
+
 # Uploading firmware
 
 The Pi Pico uses a UF2 bootloader to appear as a mass storage device so that new firmware can be uploaded to it.  To do this, connect a Micro USB lead between the Pico and your PC/Mac/Laptop/Raspberry Pi/Android Phone.  Then push the BOOTSEL button on the Pico. Whilst holding this down, push and release the RUN button on the VGA board.  (Trust me, This is easier to to than to put in to words!). The Pico will then show up as a drive on your computer.  Simply drag and drop the UF2 firmware on to this drive.  The Pico will automatically reboot and disconnect once this is complete.

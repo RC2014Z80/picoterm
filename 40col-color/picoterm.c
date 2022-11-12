@@ -733,31 +733,61 @@ void display_terminal(){
     print_logo();
 
     csr.y=9;
-		print_string("Menu : CTRL+SHIF+M\r\n");
+		print_string("\r\nS.Dixon & D.Meurisse  Menu:CTRL+SHIF+M\r\n");
 		sprintf(msg, "\r\nTinyUSB=%d.%d.%d, ", TUSB_VERSION_MAJOR, TUSB_VERSION_MINOR,TUSB_VERSION_REVISION);
 		print_string(msg);
 		sprintf(msg, "Keymap=%s rev %d\r\n", KEYMAP, KEYMAP_REV );
 		print_string(msg);
+
+		char _parity = '?';
+		switch(config.parity){
+			case UART_PARITY_NONE:
+				_parity = 'N';
+				break;
+			case UART_PARITY_ODD:
+				_parity = 'O';
+				break;
+			case UART_PARITY_EVEN:
+				_parity = 'E';
+				break;
+		}
 		// Update "project(picoterm VERSION 1.0)" in CMakeList
-		sprintf(msg, "PicoTerm Colour %s  S. Dixon\r\n", CMAKE_PROJECT_VERSION );
+		sprintf(msg, "PicoTerm %s @ %i bds %i%c%i\r\n", CMAKE_PROJECT_VERSION, config.baudrate, config.databits, _parity, config.stopbits );
 		print_string(msg);
-
-
 }
 
 void display_menu(){
+    char msg[60];
     reset_escape_sequence();
     clear_entire_screen();
     csr.x = 0; csr.y = 0;
 
     print_string("       >>>>  PicoTerm Menu <<<<\r\n");
 		print_string("\r\n");
-		print_string("+- Terminal test   (reboot) -+\r\n");
-		print_string("|   0 option    3 option     |\r\n" );
-		print_string("|   1 option    4 option     |\r\n" );
-		print_string("|   2 option    5 option     |\r\n" );
-		print_string("+----------------------------+\r\n" );
-		print_string("\r\nSelect an option: ");
+		print_string("+- Term. color (80col only) ---+\r\n");
+		print_string("| 0 reserved  3 reserved       |\r\n" );
+		print_string("| 1 reserved  4 reserved       |\r\n" );
+		print_string("| 2 reserved  5 reserved       |\r\n" );
+		print_string("+- Serial  Baud ---------------+\r\n" );
+		sprintf(msg, "|%s115200 %s57600 %s19200   |\r\n", (config.baudrate==115200)?"<a>":" a " , (config.baudrate==57600)?"<b>":" b ", (config.baudrate==19200)?"<c>":" c " );
+		print_string(msg);
+		sprintf(msg, "|%s9600   %s4800  %s2400    |\r\n", (config.baudrate==9600)?"<d>":" d " , (config.baudrate==4800)?"<e>":" e ", (config.baudrate==2400)?"<f>":" f " );
+		print_string(msg);
+		sprintf(msg, "|%s1200   %s300              |\r\n", (config.baudrate==1200)?"<g>":" g " , (config.baudrate==300)?"<h>":" h " );
+		print_string(msg);
+		print_string("+- Data bits ------------------+\r\n" );
+		sprintf(msg, "|%s 7 bits    %s 8 bits      |\r\n",  (config.databits==7)?"<7>":" 7 ", (config.databits==8)?"<8>":" 8 " );
+		print_string(msg);
+		print_string("+- Parity ---------------------+\r\n" );
+		// "|   n None    o Odd    v Even  |  w: 1 bit   |\r\n"
+		sprintf(msg, "|%sNone   %sOdd   %sEven    |\r\n", (config.parity==UART_PARITY_NONE)?"<n>":" n " , (config.parity==UART_PARITY_ODD)?"<o>":" o ", (config.parity==UART_PARITY_EVEN)?"<v>":" v "  );
+		print_string(msg);
+		print_string("+- Stop bits ------------------+\r\n" );
+		sprintf(msg, "|%s 1 bits  %s 2 bits        |\r\n", (config.stopbits==1)?"<w>":" w ", (config.stopbits==2)?"<x>":" x "  );
+		print_string(msg);
+		print_string("+------------------------------+\r\n" );
+		print_string("\r\n(S upcase=save / ESC=close) ? ");
+
 
 
     make_cursor_visible(true);
@@ -805,21 +835,95 @@ char handle_menu_input(){
   handle_new_character(_ch);
   print_cursor();
 
-  if( (_ch >= '0') && (_ch <= '5') ) {
-		uint8_t _color = _ch - 48; // 48->53 to 0->5 (WHITE->GREEN3)
+	// Store the config
+	if ( _ch == 'S' ){
+		print_string( "\r\nWrite to flash! Will reboot in 2 seconds.");
+		sleep_ms( 1000 );
 		stop_core1(); // suspend rendering for race condition
 		sleep_ms(10);
+		save_config();
+		watchdog_enable( 1000, 0 );
+	}
+
+	// change the color (no effect on the 40 col terminal)
+  if( (_ch >= '0') && (_ch <= '5') ) {
+		uint8_t _color = _ch - 48; // 48->53 to 0->5 (WHITE->GREEN3)
 		config.colour_preference = _color;
-    //write_data_to_flash();
-		write_config_to_flash( &config );
-		render_on_core1();
-		print_string( "\r\nWrite to flash! Will reboot in 2 seconds.");
-		watchdog_enable( 2000, 0 );
-    /*print_string( "Yo! MAN!\r\n");
-		read_data_from_flash();
-		char msg[40];
-		sprintf( msg, "pref: %i\r\n", colour_preference );
-		print_string( msg );*/
+		// build_font(); not available in the 40 column version
+	}
+
+	// Baud rate
+	if( ( _ch >= 'a') && (_ch <= 'h') ) {
+		switch( _ch ){
+			case 'a':
+				config.baudrate = 115200;
+				break;
+			case 'b':
+				config.baudrate = 57600;
+				break;
+			case 'c':
+				config.baudrate = 19200;
+				break;
+			case 'd':
+				config.baudrate = 9600;
+				break;
+			case 'e':
+				config.baudrate = 4800;
+				break;
+			case 'f':
+				config.baudrate = 2400;
+				break;
+			case 'g':
+				config.baudrate = 1200;
+				break;
+			case 'h':
+				config.baudrate = 300;
+				break;
+		}
+		uart_set_baudrate( UART_ID, config.baudrate );
+		display_menu();
+	}
+	// data bit configuration
+	if ( ( _ch >= '7') && (_ch <= '8') ) {
+		switch( _ch ){
+			case '7':
+				config.databits = 7;
+				break;
+			case '8':
+				config.databits = 8;
+				break;
+		}
+		uart_set_format(UART_ID, config.databits, config.stopbits, config.parity );
+		display_menu();
+	}
+	// Stop bit configuration
+	if ( ( _ch >= 'w') && (_ch <= 'x') ) {
+		switch( _ch ){
+			case 'w':
+				config.stopbits = 1;
+				break;
+			case 'x':
+				config.stopbits = 2;
+				break;
+		}
+		uart_set_format(UART_ID, config.databits, config.stopbits, config.parity );
+		display_menu();
+	}
+	// Parity configuration
+	if ( ( _ch >= 'n') || (_ch <= 'o') || (_ch <= 'v')) {
+		switch( _ch ){
+			case 'n':
+				config.parity = UART_PARITY_NONE;
+				break;
+			case 'o':
+				config.parity = UART_PARITY_ODD;
+				break;
+			case 'v':
+				config.parity = UART_PARITY_EVEN;
+				break;
+		}
+		uart_set_format(UART_ID, config.databits, config.stopbits, config.parity );
+		display_menu();
 	}
 
   return _ch;

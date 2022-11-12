@@ -55,21 +55,10 @@
 #include "bsp/board.h"
 #include "tusb.h"
 
-#define LED             25
-#define UART_ID         uart1   // also see hid_app.c
-#define UART_TX_PIN     20
-#define UART_RX_PIN     21
-#define CLOCK_SPEED     133000
-#define BAUD_RATE       115200 // /(CLOCK_SPEED/133000)
-#define DATA_BITS       8
-#define STOP_BITS       1
-#define PARITY          UART_PARITY_NONE
-
 // This is 4 for the font we're using
 #define FRAGMENT_WORDS 4
 
 static bool is_menu = false; // toggle with CTRL+SHIFT+M
-
 
 typedef bool (*render_scanline_func)(struct scanvideo_scanline_buffer *dest, int core);
 bool render_scanline_test_pattern(struct scanvideo_scanline_buffer *dest, int core);
@@ -465,9 +454,9 @@ int main(void) {
   tusb_init(); // initialize tinyusb stack
 
 
-  uart_init(UART_ID, BAUD_RATE);
+  uart_init(UART_ID, config.baudrate);
   uart_set_hw_flow(UART_ID,false,false);
-  uart_set_format(UART_ID, DATA_BITS, STOP_BITS, PARITY);
+  uart_set_format(UART_ID, config.databits, config.stopbits, config.parity);
 
 	// Set the TX and RX pins by using the function select on the GPIO
 	// Set datasheet for more information on function select

@@ -58,15 +58,6 @@
 #include "bsp/board.h"
 #include "tusb.h"
 
-#define LED             25
-#define UART_ID         uart1   // also see hid_app.c
-#define UART_TX_PIN     20
-#define UART_RX_PIN     21
-// #define CLOCK_SPEED     133000
-#define BAUD_RATE       115200 // /(CLOCK_SPEED/133000)
-#define DATA_BITS       8
-#define STOP_BITS       1
-#define PARITY          UART_PARITY_NONE
 
 // This is 4 for the font we're using
 #define FRAGMENT_WORDS 4
@@ -320,6 +311,12 @@ void build_font() {
                 b = 0.4;
                 r=0;
                 break;
+            case PURPLE:
+                // g433n 1 00ff66
+                b = b*0.8;
+                r = r*0.9;
+                g = g*0.4;
+                break;
             default:
             break;
             }
@@ -360,14 +357,16 @@ void build_font() {
                 b = 0.4;
                 r=0;
                 break;
+            case PURPLE:
+                b = b*0.8;
+                r = r*0.9;
+                g = g*0.4;
+                break;
             default:
                 break;
             }
 
-
             uint32_t new_pixel = PICO_SCANVIDEO_PIXEL_FROM_RGB5(r,g,b);
-
-
 
               if (!(x & 1)) {
                   *p = new_pixel;
@@ -567,11 +566,11 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
 }
 
 void render_on_core1(){
-	multicore_launch_core1(render_loop);
+  multicore_launch_core1(render_loop);
 }
 
 void stop_core1(){
-	multicore_reset_core1();
+  multicore_reset_core1();
 }
 
 void on_uart_rx() {
@@ -664,22 +663,22 @@ int main(void) {
           break;
       case 2:
           config.colour_preference = DARKAMBER;  // B
-					save_config();
+          save_config();
           break;
       case 4:
                                           // C
           break;
       case 3:
           config.colour_preference = GREEN2;     // A+B
-					save_config();
+          save_config();
           break;
       case 5:
           config.colour_preference = GREEN3;     // C+A
-					save_config();
+          save_config();
           break;
       case 6:
           config.colour_preference = LIGHTAMBER; // C+B
-					save_config();
+          save_config();
           break;
       case 7:
                                            // A=B=C
@@ -692,9 +691,9 @@ int main(void) {
   // AFTER   reading and writing
   stdio_init_all();
 
-  uart_init(UART_ID, BAUD_RATE); // UART 1
+  uart_init(UART_ID, config.baudrate); // UART 1
   uart_set_hw_flow(UART_ID,false,false);
-  uart_set_format(UART_ID, DATA_BITS, STOP_BITS, PARITY);
+  uart_set_format(UART_ID, config.databits, config.stopbits, config.parity );
 
 
   // Set the TX and RX pins by using the function select on the GPIO
@@ -715,8 +714,8 @@ int main(void) {
   // enable the UART
   uart_set_irq_enables(UART_ID, true, false);
 
-	// Initialise keyboard module
-	keybd_init( pico_key_down, pico_key_up );
+  // Initialise keyboard module
+  keybd_init( pico_key_down, pico_key_up );
 
   prepare_text_buffer();
   display_terminal(); // display terminal entry screen
@@ -764,10 +763,10 @@ void led_blinking_task(void) {
   const uint32_t interval_ms = 1000;
   static uint32_t start_ms = 0;
 
-	// No HID keyboard --> Led blink
-	// HID Keyboard    --> Led off
-	if( keyboard_attached() )
-		board_led_write(false);
+  // No HID keyboard --> Led blink
+  // HID Keyboard    --> Led off
+  if( keyboard_attached() )
+    board_led_write(false);
     //board_led_write(true);
   else {
       // Blink every interval ms
