@@ -7,12 +7,12 @@ include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
 pico_sdk_init()
 
-project(picoterm VERSION 1.3)
+project(picoterm VERSION 1.3.1)
 message("PicoTerm 80Col version = ${CMAKE_PROJECT_VERSION}")
 
 # Defines source files to compile
-#    Not included in source: font6.c font10.c lcd.c
-list( APPEND sources main.c picoterm.c font8.c )
+#    Not included in source: font6.c font10.c lcd.c font8.c
+list( APPEND sources main.c picoterm.c nupetscii.c )
 list( APPEND sources ../common/picoterm_config.c )
 list( APPEND sources ../common/picoterm_debug.c )
 list( APPEND sources ../common/keybd.c )

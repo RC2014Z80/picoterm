@@ -1,4 +1,4 @@
-µ # Release Notes
+# Release Notes
 
 ```
  ____  _         _____                   
@@ -16,6 +16,19 @@
 From version 1.2 any publication will includes all U2F firmware files for 40 & 80 Columns.
 
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
+
+## Version 1.3.1 - (on going)
+
+This realease now support extended characters set (> 127). The [extra charset is based on NuPET ASCII](nupetscii-font/readme.md) (NuPetSCII for short) from Tom Wilson.<br />
+Big thanks to Tom Wilson and its [Character-Editor](https://github.com/tomxp411/Character-Editor) for autorising the NuPET ASCII charset inclusion.
+
+### Features
+* Adding support for [NuPetSCII charset](nupetscii-font/readme.md) (for char >127).
+* CTRL+SHIFT+N : display the Charset on screen.
+
+
+### Fix & Improvement
+* N/A
 
 ## Version 1.3 - Nov 12 2022
 

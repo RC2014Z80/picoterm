@@ -62,7 +62,8 @@
 // This is 4 for the font we're using
 #define FRAGMENT_WORDS 4
 
-static bool is_menu = false; // toggle with CTRL+SHIFT+M
+static bool is_menu = false;   // switch between Terminal mode and Menu mode
+static uint8_t id_menu = 0x00; // toggle with CTRL+SHIFT+M
 
 
 //CU_REGISTER_DEBUG_PINS(frame_gen)
@@ -256,6 +257,9 @@ void build_font() {
     assert(font->line_height == FONT_HEIGHT);
 
     // our range_length is 95
+		//char msg[80];
+		//sprintf( msg, "range_length: %i", (font->dsc->cmaps->range_length) );
+		//debug_print( msg );
     for (int c = 0; c < (font->dsc->cmaps->range_length); c++) {
         // inefficient but simple
 
@@ -734,18 +738,34 @@ int main(void) {
       // empty the keyboard buffer
       while( key_ready() )
         read_key_from_buffer();
-      display_menu();
+			switch( id_menu ){
+				case MENU_CONFIG:
+					display_menu();
+					break;
+				case MENU_NUPETSCII:
+					display_nupetscii();
+					break;
+			};
       old_menu = is_menu;
     }
     else if( !(is_menu) && old_menu ){ // CRL+M : menu de-activated ?
-      display_terminal();
+			display_terminal();
       old_menu = is_menu;
     }
 
     if( is_menu ){ // Under menu display
-      _ch = handle_menu_input(); // manage keyboard input for menu
-      if( _ch==ESC ) // ESC will also close the menu
+			switch( id_menu ){
+				case MENU_CONFIG:
+					// Specialized handler manage keyboard input for menu
+					_ch = handle_menu_input();
+					break;
+				default:
+					_ch = handle_default_input();
+			}
+      if( _ch==ESC ){ // ESC will also close the menu
           is_menu = false;
+					id_menu = 0x00;
+			}
     }
     else
       handle_keyboard_input(); // normal terminal management
@@ -790,6 +810,12 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
       uint8_t ch = keycode2ascii[scancode][0];
       // Is there a modifier key under use while pressing the key?
       if( (ch=='m') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
+				id_menu = MENU_CONFIG;
+        is_menu = !(is_menu);
+        return; // do not add key to "Keyboard buffer"
+      }
+			if( (ch=='n') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
+				id_menu = MENU_NUPETSCII;
         is_menu = !(is_menu);
         return; // do not add key to "Keyboard buffer"
       }

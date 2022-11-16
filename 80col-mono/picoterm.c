@@ -619,6 +619,32 @@ void display_menu(){
     print_cursor();  // turns on
 }
 
+void display_nupetscii(){
+	char msg[80];
+	char _c;
+	reset_escape_sequence();
+	clear_entire_screen();
+	csr.x = 0; csr.y = 0;
+	print_string("                >>>>  NuPETSCII  <<<<\r\n");
+	for( char line=0; line<16; line++ ){
+		sprintf( msg, "%3i : ", line*16 );
+		print_string( msg );
+		for( char index=0; index<=15; index++ ){
+			_c = line*16+index;
+			sprintf( msg, "%c ", _c );
+			print_string( msg );
+		}
+		print_string("\r\n");
+	}
+
+	print_string("\r\n(ESC=close) ? ");
+
+
+	make_cursor_visible(true);
+	clear_cursor();  // so we have the character
+	print_cursor();  // turns on
+
+}
 
 void print_string(char str[]){
     for(int i=0;i<strlen(str);i++){
@@ -632,6 +658,13 @@ char read_key(){
   if( key_ready()==false )
     return 0;
   return read_key_from_buffer();
+}
+
+char handle_default_input(){
+	// Make your own specialized menu input handler (if needed, see handle_menu_input)
+  // and call it as needed from main.c::main()
+  char _ch = read_key();
+  return _ch;
 }
 
 char handle_menu_input(){
@@ -806,7 +839,7 @@ void handle_new_character(unsigned char asc){
     }
     else{
         // regular characters -
-        if(asc>=0x20 && asc<0x7f){
+        if(asc>=0x20 && asc<=0xFF){ /* Strict ASCII <0x7f or Extended NuPetSCII <= 0xFF */
 
             slip_character(asc-32,csr.x,csr.y);
             csr.x++;

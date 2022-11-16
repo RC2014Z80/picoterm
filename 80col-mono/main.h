@@ -47,6 +47,8 @@
 #define UART_TX_PIN     20
 #define UART_RX_PIN     21
 
+#define MENU_CONFIG    0x01 // support several menu
+#define MENU_NUPETSCII 0x02 // display NuPet ASCII charset
 
 static void pico_key_down(int scancode, int keysym, int modifiers);
 static void pico_key_up(int scancode, int keysym, int modifiers);
