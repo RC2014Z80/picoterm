@@ -80,8 +80,6 @@ bool render_scanline_test_pattern(struct scanvideo_scanline_buffer *dest, int co
 bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core);
 
 
-
-
 #define vga_mode vga_mode_640x480_60
 //#define vga_mode vga_mode_320x240_60
 //#define vga_mode vga_mode_213x160_60
@@ -124,7 +122,7 @@ uint32_t block[] = {
 
 
 
-
+extern picoterm_config_t config; // Issue #13, awesome contribution of Spock64
 
 
 // to make sure only one core updates the state when the frame number changes
@@ -241,6 +239,11 @@ const lv_font_t *font = &ubuntu_mono6;
 
 void build_font() {
     uint16_t colors[16];
+		// Free up previous font (Issue #14	, Thanks Spock64)
+    if(font_raw_pixels) {
+      free(font_raw_pixels);
+    }
+
     for (int i = 0; i < count_of(colors); i++) {
         colors[i] = PICO_SCANVIDEO_PIXEL_FROM_RGB5(1, 1, 1) * ((i * 3) / 2);
         if (i) i != 0x8000;

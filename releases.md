@@ -26,9 +26,9 @@ Big thanks to Tom Wilson and its [Character-Editor](https://github.com/tomxp411/
 * Adding support for [NuPetSCII charset](nupetscii-font/readme.md) (for char >127).
 * CTRL+SHIFT+N : display the Charset on screen.
 
-
 ### Fix & Improvement
-* N/A
+* Can change screen color without limits! Thanks to Spock64 for fixing issue #14 :-).
+* Using `picoterm_config_t` typedef definition & `extern` declaration to fix compilation issue. __Awesome contribution of Spock64__ (Issue #13).
 
 ## Version 1.3 - Nov 12 2022
 

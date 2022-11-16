@@ -60,7 +60,6 @@ See the file [releases.md](releases.md) .
 1. USB keyboard is not detected if already connected at power-up. Disconnect and reconnect it!
 2. VGA rendering sometime hangs when connecting a keyboard (rare). Press reset button (on PicoTerm) and try again.
 3. Saving the configuration into Flash fails from time to time (rare). Just press reset button (on PicoTerm) and try again.
-4. Can only change the color 2 times ( it always hang at the third color change. Suspect memory leak in build_font() ). Just press the reset button and try again.
 
 # Uploading firmware
 

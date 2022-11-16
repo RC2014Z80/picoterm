@@ -6,6 +6,8 @@
 // once written, we can access our data at flash_target_contents
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 
+picoterm_config_t config; // Issue #13, awesome contribution of Spock64
+
 void debug_print_config( struct PicotermConfig *c );
 
 void load_config(){

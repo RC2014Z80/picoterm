@@ -27,7 +27,7 @@
 /* The following structure is saved as IT into flash. So only append entries
    at the end of structure and do not modifies OLD ones. Reflashing does not
    always erase the Flash content */
-struct PicotermConfig {
+typedef struct PicotermConfig {
   char magic_key[6];
   uint8_t version;
   uint8_t colour_preference;
@@ -36,7 +36,7 @@ struct PicotermConfig {
   uint8_t databits;
   uint8_t parity;
   uint8_t stopbits; // 1, 2
-} config;
+} picoterm_config_t; // Issue #13, conversion to typedef required, awesome contribution of Spock64
 
 void load_config(); // try to load config otherwise init with defaults
 void save_config(); // save to configuration to flash

@@ -50,6 +50,7 @@ bool cursor_visible;
 static bool rvs = false;
 static unsigned char chr_under_csr;
 
+extern picoterm_config_t config; // Issue #13, awesome contribution of Spock64
 
 
 void make_cursor_visible(bool v){
