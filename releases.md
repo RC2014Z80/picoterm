@@ -25,6 +25,7 @@ Big thanks to Tom Wilson and its [Character-Editor](https://github.com/tomxp411/
 ### Features
 * Adding support for [NuPetSCII charset](nupetscii-font/readme.md) (for char >127).
 * CTRL+SHIFT+N : display the Charset on screen.
+* Revamp configuration menu with NupetScii
 
 ### Fix & Improvement
 * Can change screen color without limits! Thanks to Spock64 for fixing issue #14 :-).
