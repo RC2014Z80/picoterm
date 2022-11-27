@@ -17,17 +17,19 @@ From version 1.2 any publication will includes all U2F firmware files for 40 & 8
 
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
 
-## Version 1.3.1 - (on going)
+## Version 1.4 - Nov 27 2022
 
 This realease now support extended characters set (> 127). The [extra charset is based on NuPET ASCII](nupetscii-font/readme.md) (NuPetSCII for short) from Tom Wilson.<br />
 Big thanks to Tom Wilson and its [Character-Editor](https://github.com/tomxp411/Character-Editor) for autorising the NuPET ASCII charset inclusion.
 
 ### Features
 * Adding support for [NuPetSCII charset](nupetscii-font/readme.md) (for char >127).
+* CTRM+SHIFT+H : display Help screen
 * CTRL+SHIFT+N : display the Charset on screen.
-* Revamp configuration menu with NupetScii
+* Revamp CONFIGURATION menu with NupetScii
 
 ### Fix & Improvement
+* rename display_menu() in display_config()
 * Can change screen color without limits! Thanks to Spock64 for fixing issue #14 :-).
 * Using `picoterm_config_t` typedef definition & `extern` declaration to fix compilation issue. __Awesome contribution of Spock64__ (Issue #13).
 

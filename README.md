@@ -1,5 +1,5 @@
 # PicoTerm
-Pi Pico VGA Terminal Emulator For RC2014
+Pi Pico VGA Terminal Emulator For RC2014 supporting several keyboard layout.
 
 ![PicoTerm to RC2014](docs/_static/picoterm-to-rc2014.jpg)
 
@@ -42,6 +42,8 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 USB keyboards are supported via a USB OTG adapter – however, not all keyboards currently work. Most cheap generic keyboards seem to work fine, however, the testing sample is still fairly small. Hopefully with more data it will be easier to identify exactly which keyboards are likely to work and which aren’t, or, better still, a simple software fix will get more working.
 
 PicoTerm also support an [advanced NuPetSCII charset](nupetscii-font/readme.md). This charset use characters from 128 to 255 to display semi-graphical characters (like Commodore C64 or CodePage 437).
+
+![Characters added to the font8.c](nupetscii-font/nupet-ascii-reduced.png)
 
 Big thanks to Tom Wilson and its [Character-Editor](https://github.com/tomxp411/Character-Editor) for autorising the NuPet ASCII charset inclusion.
 
