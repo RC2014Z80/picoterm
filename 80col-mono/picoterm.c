@@ -547,7 +547,7 @@ void display_terminal(){
     print_string("_/_/      _/_/ _/_/      _/_/ _/_/      _/_/ _/_/_/    _/_/   _/_/         _/_/\r\n");
     print_string("_/_/      _/_/   _/_/_/_/_/   _/_/_/_/_/_/_/   _/_/_/_/_/ _/_/_/_/_/_/     _/_/\r\n");
     print_string("_/_/      _/_/   _/_/_/_/_/   _/_/_/_/_/_/_/   _/_/_/_/_/ _/_/_/_/_/_/     _/_/\r\n");
-    print_string("    S.Dixon & D.Meurisse                               Menu : CTRL+SHIFT+M\r\n");
+    print_string("    S.Dixon & D.Meurisse                               Help : CTRL+SHIFT+H\r\n");
     sprintf(msg, "\r\nTinyUSB=%d.%d.%d, ", TUSB_VERSION_MAJOR, TUSB_VERSION_MINOR,TUSB_VERSION_REVISION);
     print_string(msg);
     sprintf(msg, "Keymap=%s rev %d\r\n", KEYMAP, KEYMAP_REV ); // , Menu toggle: CTRL+SHIFT+M
@@ -576,13 +576,12 @@ void display_terminal(){
 }
 
 
-void display_menu(){
+void display_config(){
     char msg[80];
     reset_escape_sequence();
     clear_entire_screen();
     csr.x = 0; csr.y = 0;
 
-    //print_string("================================================================================\r\n");
     print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Menu \x0A6\x0A6\r\n");
     print_string("\x0E2\x0E1 Terminal Colors \x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E4\r\n");
     sprintf(msg, "\x0E0  %s0 White   %s1 Light Amber %s2 Dark Amber   \x0E0\r\n", (config.colour_preference==0)?"\x0D1":" ", (config.colour_preference==1)?"\x0D1":" ", (config.colour_preference==2)?"\x0D1":" " );
@@ -618,26 +617,55 @@ void display_nupetscii(){
 	reset_escape_sequence();
 	clear_entire_screen();
 	csr.x = 0; csr.y = 0;
-	print_string("                >>>>  NuPETSCII  <<<<\r\n");
-	for( char line=0; line<16; line++ ){
-		sprintf( msg, "%3i : ", line*16 );
+	print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 NuPETSCII Charset \x0A6\x0A6\r\n");
+	print_string( "     0 1 2 3 4 5 6 7 8 9 A B C D E F\r\n");
+	print_string( "   \x0B0\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n");
+	for( char line=2; line<16; line++ ){
+		sprintf( msg, "%02X \x0C2 ", line*16 );
 		print_string( msg );
 		for( char index=0; index<=15; index++ ){
 			_c = line*16+index;
 			sprintf( msg, "%c ", _c );
 			print_string( msg );
 		}
-		print_string("\r\n");
+		print_string("\x0C2\r\n");
+		// Insert a index line in the middle for easier reading
+		if( line==8 ){
+			print_string( "   \x0AB\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B3\r\n");
+			print_string( "   \x0C2 0 1 2 3 4 5 6 7 8 9 A B C D E F \x0C2\r\n");
+			print_string( "   \x0AB\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B3\r\n");
+		}
 	}
+	print_string( "   \x0AD\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0BD\r\n");
+	print_string( "     0 1 2 3 4 5 6 7 8 9 A B C D E F\r\n");
 
 	print_string("\r\n(ESC=close) ? ");
-
-
 	make_cursor_visible(true);
 	clear_cursor();  // so we have the character
 	print_cursor();  // turns on
-
 }
+
+
+void display_help(){
+	char msg[80];
+	char _c;
+	reset_escape_sequence();
+	clear_entire_screen();
+	csr.x = 0; csr.y = 0;
+	print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Help \x0A6\x0A6\r\n");
+  print_string("\x0B0\x0C3 Keyboard Shortcut \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n");
+	print_string("\x0C2 \x083 Shift+Ctrl+H : Help screen                   \x0C2\r\n" );
+	print_string("\x0C2 \x083 Shift+Ctrl+M : Configuration menu            \x0C2\r\n" );
+	print_string("\x0C2 \x083 Shift+Ctrl+N : Display NupetScii charset     \x0C2\r\n" );
+	print_string("\x0C2                                                \x0C2\r\n" );
+	print_string("\x0AD\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0BD\r\n");
+
+	print_string("\r\n(ESC=close) ? ");
+	make_cursor_visible(true);
+	clear_cursor();  // so we have the character
+	print_cursor();  // turns on
+}
+
 
 void print_string(char str[]){
     for(int i=0;i<strlen(str);i++){
@@ -660,7 +688,7 @@ char handle_default_input(){
   return _ch;
 }
 
-char handle_menu_input(){
+char handle_config_input(){
   // check if user selected an option THEN execute the appropriate action
   // return the pressed key if any.
   char _ch = read_key();
@@ -720,7 +748,7 @@ char handle_menu_input(){
         break;
     }
     uart_set_baudrate( UART_ID, config.baudrate );
-    display_menu();
+    display_config();
   }
   // data bit configuration
   if ( ( _ch >= '7') && (_ch <= '8') ) {
@@ -733,7 +761,7 @@ char handle_menu_input(){
         break;
     }
     uart_set_format(UART_ID, config.databits, config.stopbits, config.parity );
-    display_menu();
+    display_config();
   }
   // Stop bit configuration
   if ( ( _ch >= 'w') && (_ch <= 'x') ) {
@@ -746,7 +774,7 @@ char handle_menu_input(){
         break;
     }
     uart_set_format(UART_ID, config.databits, config.stopbits, config.parity );
-    display_menu();
+    display_config();
   }
   // Parity configuration
   if ( ( _ch >= 'n') || (_ch <= 'o') || (_ch <= 'v')) {
@@ -762,7 +790,7 @@ char handle_menu_input(){
         break;
     }
     uart_set_format(UART_ID, config.databits, config.stopbits, config.parity );
-    display_menu();
+    display_config();
   }
   return _ch;
 }

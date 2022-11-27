@@ -39,7 +39,8 @@ unsigned char slop_character(int x,int y);
 unsigned char * slotsForRow(int y);
 void prepare_text_buffer();
 void display_terminal();
-void display_menu();
+void display_config();
+void display_help();
 void display_nupetscii();
 void clear_cursor();
 void print_cursor();
@@ -48,7 +49,7 @@ void print_string(char str[]);
 // for menu support
 char read_key();
 char handle_default_input();
-char handle_menu_input(); // specialzed for MENU_CONFIG
+char handle_config_input(); // specialzed for MENU_CONFIG
 bool key_ready(); // in main.c
 unsigned char read_key_from_buffer(); // in main.c
 // for debugging purposes
