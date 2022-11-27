@@ -583,35 +583,27 @@ void display_menu(){
     csr.x = 0; csr.y = 0;
 
     //print_string("================================================================================\r\n");
-    print_string("                          >>>>  PicoTerm Menu <<<<\r\n");
-    print_string("\r\n");
-    print_string("+- Terminal Colors (reboot) -----------------+\r\n");
-    // "|   0 WHITE   1 LIGHT_AMBER   2 DARK_AMBER   |\r\n"
-    sprintf(msg, "|  %sWhite  %sLight Amber  %sDark Amber   |\r\n", (config.colour_preference==0)?"<0>":" 0 ", (config.colour_preference==1)?"<1>":" 1 ", (config.colour_preference==2)?"<2>":" 2 " );
+    print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Menu \x0A6\x0A6\r\n");
+    print_string("\x0E2\x0E1 Terminal Colors \x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E4\r\n");
+    sprintf(msg, "\x0E0  %s0 White   %s1 Light Amber %s2 Dark Amber   \x0E0\r\n", (config.colour_preference==0)?"\x0D1":" ", (config.colour_preference==1)?"\x0D1":" ", (config.colour_preference==2)?"\x0D1":" " );
     print_string(msg);
-    // "|   3 GREEN1  4 GREEN2        5 GREEN3       |\r\n"
-    sprintf( msg, "|  %sGreen1 %sGreen2       %sGreen3       |\r\n", (config.colour_preference==3)?"<3>":" 3 ", (config.colour_preference==4)?"<4>":" 4 ", (config.colour_preference==5)?"<5>":" 5 " );
+    sprintf( msg, "\x0E0  %s3 Green1  %s4 Green2      %s5 Green3       \x0E0\r\n", (config.colour_preference==3)?"\x0D1":" ", (config.colour_preference==4)?"\x0D1":" ", (config.colour_preference==5)?"\x0D1":" " );
     print_string(msg);
-		sprintf( msg, "|  %sPurple                                 |\r\n", (config.colour_preference==6)?"<6>":" 6 " );
+		sprintf( msg, "\x0E0  %s6 Purple                                 \x0E0\r\n", (config.colour_preference==6)?"\x0D1":" " );
     print_string(msg);
-    print_string("+- Serial  Baud ---------------+- Data bit --+\r\n" );
-    // "|   a 115200  b 57600  c 19200 |  8: 8 bits  |\r\n"
-    sprintf(msg, "|  %s115200 %s57600 %s19200 | %s 8 bits  |\r\n", (config.baudrate==115200)?"<a>":" a " , (config.baudrate==57600)?"<b>":" b ", (config.baudrate==19200)?"<c>":" c ", (config.databits==8)?"<8>":" 8 " );
+    print_string("\x0E8\x0C3 Serial  Baud \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B2\x0C3 Data bit \x0C3\x0C3\x0E9\r\n" );
+    sprintf(msg, "\x0E0  %sa 115200 %sb 57600 %sc 19200 \x0C2 %s8  8 bits  \x0E0\r\n", (config.baudrate==115200)?"\x0D1":" " , (config.baudrate==57600)?"\x0D1":" ", (config.baudrate==19200)?"\x0D1":" ", (config.databits==8)?"\x0D1":" " );
     print_string(msg);
-    // "|   d 9600    e 4800   f 2400  |  7: 7 bits  |\r\n"
-    sprintf(msg, "|  %s9600   %s4800  %s2400  | %s 7 bits  |\r\n", (config.baudrate==9600)?"<d>":" d " , (config.baudrate==4800)?"<e>":" e ", (config.baudrate==2400)?"<f>":" f ", (config.databits==7)?"<7>":" 7 " );
+    sprintf(msg, "\x0E0  %sd 9600   %se 4800  %sf 2400  \x0C2 %s7  7 bits  \x0E0\r\n", (config.baudrate==9600)?"\x0D1":" " , (config.baudrate==4800)?"\x0D1":" ", (config.baudrate==2400)?"\x0D1":" ", (config.databits==7)?"\x0D1":" " );
     print_string(msg);
-    // "|   g 1200    h 300            |             |\r\n"
-    sprintf(msg, "|  %s1200   %s300            |             |\r\n", (config.baudrate==1200)?"<g>":" g " , (config.baudrate==300)?"<h>":" h " );
+    sprintf(msg, "\x0E0  %sg 1200   %sh 300            \x0C2             \x0E0\r\n", (config.baudrate==1200)?"\x0D1":" " , (config.baudrate==300)?"\x0D1":" " );
     print_string(msg);
-    print_string("+- Parity ---------------------+- Stop bits -+\r\n" );
-    // "|   n None    o Odd    v Even  |  w: 1 bit   |\r\n"
-    sprintf(msg, "|  %sNone   %sOdd   %sEven  | %s 1 bit   |\r\n", (config.parity==UART_PARITY_NONE)?"<n>":" n " , (config.parity==UART_PARITY_ODD)?"<o>":" o ", (config.parity==UART_PARITY_EVEN)?"<v>":" v " , (config.stopbits==1)?"(w)":" w "  );
+    print_string("\x0E8\x0C3 Parity \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0DB\x0C3 Stop bits \x0C3\x0E9\r\n" );
+    sprintf(msg, "\x0E0  %sn None   %so Odd   %sv Even  \x0C2 %sw  1 bit   \x0E0\r\n", (config.parity==UART_PARITY_NONE)?"\xD1":" " , (config.parity==UART_PARITY_ODD)?"\xD1":" ", (config.parity==UART_PARITY_EVEN)?"\xD1":" " , (config.stopbits==1)?"\xD1":" "  );
     print_string(msg);
-    // "|                              |  x: 2 bits  |\r\n"
-    sprintf(msg, "|                              | %s 2 bits  |\r\n", (config.stopbits==2)?"<x>":" x " );
+    sprintf(msg, "\x0E0                              \x0C2 %sx  2 bits  \x0E0\r\n", (config.stopbits==2)?"\xD1":" " );
     print_string(msg);
-    print_string("+------------------------------+-------------+\r\n" );
+    print_string("\x0E5\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x08A\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E7\r\n" );
     print_string("\r\n(S upcase=save / ESC=close) ? ");
 
 
