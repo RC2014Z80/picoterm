@@ -743,10 +743,13 @@ int main(void) {
         read_key_from_buffer();
 			switch( id_menu ){
 				case MENU_CONFIG:
-					display_menu();
+					display_config();
 					break;
 				case MENU_NUPETSCII:
 					display_nupetscii();
+					break;
+				case MENU_HELP:
+					display_help();
 					break;
 			};
       old_menu = is_menu;
@@ -760,7 +763,7 @@ int main(void) {
 			switch( id_menu ){
 				case MENU_CONFIG:
 					// Specialized handler manage keyboard input for menu
-					_ch = handle_menu_input();
+					_ch = handle_config_input();
 					break;
 				default:
 					_ch = handle_default_input();
@@ -819,6 +822,11 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
       }
 			if( (ch=='n') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
 				id_menu = MENU_NUPETSCII;
+        is_menu = !(is_menu);
+        return; // do not add key to "Keyboard buffer"
+      }
+			if( (ch=='h') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
+				id_menu = MENU_HELP;
         is_menu = !(is_menu);
         return; // do not add key to "Keyboard buffer"
       }

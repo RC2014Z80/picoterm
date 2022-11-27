@@ -49,6 +49,7 @@
 
 #define MENU_CONFIG    0x01 // support several menu
 #define MENU_NUPETSCII 0x02 // display NuPet ASCII charset
+#define MENU_HELP      0x03 // display the HELP menu
 
 static void pico_key_down(int scancode, int keysym, int modifiers);
 static void pico_key_up(int scancode, int keysym, int modifiers);
