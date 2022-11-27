@@ -108,6 +108,8 @@ uint32_t block[] = {
 };
 
 
+extern picoterm_config_t config; // Issue #13, awesome contribution of Spock64
+
 // to make sure only one core updates the state when the frame number changes
 // todo note we should actually make sure here that the other core isn't still rendering (i.e. all must arrive before either can proceed - a la barrier)
 //auto_init_mutex(frame_logic_mutex);

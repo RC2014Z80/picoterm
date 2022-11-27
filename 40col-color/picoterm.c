@@ -103,6 +103,7 @@ static uint16_t cursor_buffer[64] = {0};
 bool cursor_visible;
 static bool rvs = false;
 
+extern picoterm_config_t config; // Issue #13, awesome contribution of Spock64
 
 void make_cursor_visible(bool v){
     cursor_visible=v;
