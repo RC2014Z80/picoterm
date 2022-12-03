@@ -41,7 +41,9 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 
 USB keyboards are supported via a USB OTG adapter – however, not all keyboards currently work. Most cheap generic keyboards seem to work fine, however, the testing sample is still fairly small. Hopefully with more data it will be easier to identify exactly which keyboards are likely to work and which aren’t, or, better still, a simple software fix will get more working.
 
-PicoTerm also support an [advanced NuPetSCII charset](nupetscii-font/readme.md). This charset use characters from 128 to 255 to display semi-graphical characters (like Commodore C64 or CodePage 437).
+PicoTerm provides:
+* VT100 ASCII: default, the 8th bit is for reverse video character.
+* [advanced NuPetSCII charset](nupetscii-font/readme.md): that charset defines entry from 128 to 255 to display semi-graphical characters (like Commodore C64 or CodePage 437).
 
 ![Characters added to the font8.c](nupetscii-font/nupet-ascii-reduced.png)
 

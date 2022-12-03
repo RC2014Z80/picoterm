@@ -46,6 +46,7 @@ void clear_cursor();
 void print_cursor();
 void handle_new_character(unsigned char ch);
 void print_string(char str[]);
+void __print_string(char str[], bool strip_nupetscii );
 // for menu support
 char read_key();
 char handle_default_input();

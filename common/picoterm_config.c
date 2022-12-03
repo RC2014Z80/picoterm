@@ -41,6 +41,8 @@ void set_default_config( struct PicotermConfig *c ){
   c->databits = 8;
   c->parity = UART_PARITY_NONE;
   c->stopbits = 1;
+	// version 3
+	c->nupetscii = 0;
 }
 
 void upgrade_config( struct PicotermConfig *c ){
@@ -53,12 +55,17 @@ void upgrade_config( struct PicotermConfig *c ){
     c->stopbits = 1;
     // Ok for version 2
     c->version  = 2;
+	}
+	if( c->version == 2 ){ // upgrade to version 3 with defaults
+		c->nupetscii = 0;
+		// Ok for version 3
+		c->version  = 3;
   }
 
   /*
-  if( c->version == 2 ){ // Upgrade to version 3 with defaults
+  if( c->version == 3 ){ // Upgrade to version 4 with defaults
     // blabla
-    c->version  = 3;
+    c->version  = 4;
   }
   */
 }
@@ -90,6 +97,8 @@ void debug_print_config( struct PicotermConfig *c ){
   sprintf( debug_msg, "  parity=%u", c->parity );
   debug_print( debug_msg );
   sprintf( debug_msg, "  stopbits=%u", c->stopbits );
+  debug_print( debug_msg );
+	sprintf( debug_msg, "  nupetscii=%u", c->nupetscii );
   debug_print( debug_msg );
 }
 

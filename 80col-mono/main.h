@@ -54,7 +54,7 @@
 static void pico_key_down(int scancode, int keysym, int modifiers);
 static void pico_key_up(int scancode, int keysym, int modifiers);
 
-void build_font();
+void build_font( bool extended_font );
 // void read_data_from_flash();
 // void write_data_to_flash();
 void render_on_core1();

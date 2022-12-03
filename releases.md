@@ -17,10 +17,27 @@ From version 1.2 any publication will includes all U2F firmware files for 40 & 8
 
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
 
+## Version 1.4.1 - Dec 2 2022 - NupetScii fix for CP/M
+
+In version 1.4, the NupetScii font does displays strange behavior on CP/M WordStar (& Turbo Pascal) because the 8th bit is used for reverse video display.
+
+This V1.4.1, allow to switch between VT100 ASCII (8th bit for reverse, default) and [NuPetScii](nupetscii-font/readme.md) making it a breeze to work with CP/M.
+
+Tested with WordStar and works as espected.
+
+### Features
+* VT100 ASCII is the default Font used (7bits+8th bit for reverse)
+* Being able to switch between [NuPetSCII 8 bits](nupetscii-font/readme.md) vs VT100 mode (7 bits, 8th bit for reverse).
+* Store the NuPetAscii vs VT100 option in Flash
+* Keyboard SHIFT+CTRL+L quick shortcut to switch between Nupetscii and VT100 on the fly.
+
+
 ## Version 1.4 - Nov 27 2022
 
 This realease now support extended characters set (> 127). The [extra charset is based on NuPET ASCII](nupetscii-font/readme.md) (NuPetSCII for short) from Tom Wilson.<br />
 Big thanks to Tom Wilson and its [Character-Editor](https://github.com/tomxp411/Character-Editor) for autorising the NuPET ASCII charset inclusion.
+
+__Remarks:__ NupetScii ruine the WordStar display under CP/M. This version is replaced with 1.4.1
 
 ### Features
 * Adding support for [NuPetSCII charset](nupetscii-font/readme.md) (for char >127).

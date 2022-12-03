@@ -216,211 +216,192 @@ void setup_video() {
 #define TEST_WAIT_FOR_SCANLINE
 
 #ifdef TEST_WAIT_FOR_SCANLINE
-volatile uint32_t scanline_color = 0;
+  volatile uint32_t scanline_color = 0;
 #endif
 
 uint8_t pad[65536];
-
-
 uint32_t *font_raw_pixels;
-
 
 #define FONT_WIDTH_WORDS FRAGMENT_WORDS
 #if FRAGMENT_WORDS == 5
-const lv_font_t *font = &ubuntu_mono10;
-//const lv_font_t *font = &lcd;
+  const lv_font_t *font = &ubuntu_mono10;
 #elif FRAGMENT_WORDS == 4
-const lv_font_t *font = &ubuntu_mono8;
+  const lv_font_t *font = &ubuntu_mono8;
 #else
-const lv_font_t *font = &ubuntu_mono6;
+  const lv_font_t *font = &ubuntu_mono6;
 #endif
+
 #define FONT_HEIGHT (font->line_height)
 #define FONT_SIZE_WORDS (FONT_HEIGHT * FONT_WIDTH_WORDS)
 
-void build_font() {
+void build_font( bool extended_font ){
     uint16_t colors[16];
-		// Free up previous font (Issue #14	, Thanks Spock64)
-    if(font_raw_pixels) {
+    // Free up previous font (Issue #14  , Thanks Spock64)
+    if(font_raw_pixels)
       free(font_raw_pixels);
-    }
+
+    // extended_font (NuPetScii) doesn't required inverted char
+    // non extended_font (default font) just reduce the initial charset to 95 THEN compute the reverse value
+    char max_char;
+    if( extended_font )
+      max_char = font->dsc->cmaps->range_length;
+    else
+      max_char = 95;
 
     for (int i = 0; i < count_of(colors); i++) {
         colors[i] = PICO_SCANVIDEO_PIXEL_FROM_RGB5(1, 1, 1) * ((i * 3) / 2);
         if (i) i != 0x8000;
     }
 
+    // We know range_length is 95 in the orginal font and full charset (up to 255)for the extended font
     // 4 is bytes per word, range_length is #chrs in font, FONT_SIZE_WORDS is words in width * font height
-    font_raw_pixels = (uint32_t *) calloc(4, font->dsc->cmaps->range_length * FONT_SIZE_WORDS * 2);
+    font_raw_pixels = (uint32_t *) calloc(4, 256 * FONT_SIZE_WORDS * 2 );
 
     uint32_t *p = font_raw_pixels;
-    // we know range_length is 95
-    uint32_t *pr = font_raw_pixels+(font->dsc->cmaps->range_length * FONT_SIZE_WORDS);
-    // pr is the reversed characters, build those in the same loop as the regular ones
-
+    uint32_t *pr = font_raw_pixels+( max_char * FONT_SIZE_WORDS); // pr is the reversed characters, build those in the same loop as the regular ones
     assert(font->line_height == FONT_HEIGHT);
 
-    // our range_length is 95
-		//char msg[80];
-		//sprintf( msg, "range_length: %i", (font->dsc->cmaps->range_length) );
-		//debug_print( msg );
-    for (int c = 0; c < (font->dsc->cmaps->range_length); c++) {
-        // inefficient but simple
+    for (int c = 0; c < max_char; c++) {
+        // *** inefficient but simple ***
 
         // I don't fully understand this, hence the reverse is far from perfect.
         const lv_font_fmt_txt_glyph_dsc_t *g = &font->dsc->glyph_dsc[c + 1];
         const uint8_t *b = font->dsc->glyph_bitmap + g->bitmap_index;
         int bi = 0;
+
         for (int y = 0; y < FONT_HEIGHT; y++) {
-            int ey = y - FONT_HEIGHT + font->base_line + g->ofs_y + g->box_h;
-            for (int x = 0; x < FONT_WIDTH_WORDS * 2; x++) {
+          int ey = y - FONT_HEIGHT + font->base_line + g->ofs_y + g->box_h;
+          for (int x = 0; x < FONT_WIDTH_WORDS * 2; x++) {
               uint32_t pixel;
               int ex = x - g->ofs_x;
 
               if (ex >= 0 && ex < g->box_w && ey >= 0 && ey < g->box_h) {
                   pixel = bi & 1 ? colors[b[bi >> 1] & 0xf] : colors[b[bi >> 1] >> 4];
                   bi++;
-
               } else {
                   pixel = 0;
-
               }
 
+              // 201121  improved reverse video
+              uint32_t r = 31 - PICO_SCANVIDEO_R5_FROM_PIXEL(pixel);
+              uint32_t g = 31 - PICO_SCANVIDEO_G5_FROM_PIXEL(pixel);
+              uint32_t b = 31 - PICO_SCANVIDEO_B5_FROM_PIXEL(pixel);
 
-            // 201121  improved reverse video
-            uint32_t r = 31 - PICO_SCANVIDEO_R5_FROM_PIXEL(pixel);
-            uint32_t g = 31 - PICO_SCANVIDEO_G5_FROM_PIXEL(pixel);
-            uint32_t b = 31 - PICO_SCANVIDEO_B5_FROM_PIXEL(pixel);
+              switch (config.colour_preference) {
+                case LIGHTAMBER:
+                    b = 0;
+                    g=g*0.8;
+                    break;
+                case DARKAMBER:
+                    b = 0;
+                    g=g*0.75;
+                    break;
+                case GREEN1: // g433n 1 33ff00
+                    b = 0;
+                    r=r*0.2;
+                    break;
+                case GREEN2: // g433n 1 00ff33
+                    r = 0;
+                    b=b*0.2;
+                    break;
+                case GREEN3: // g433n 1 00ff66
+                    b = 0.4;
+                    r=0;
+                    break;
+                case PURPLE: // g433n 1 00ff66
+                    b = b*0.8;
+                    r = r*0.9;
+                    g = g*0.4;
+                    break;
+                default:
+                  break;
+              }
 
-            switch (config.colour_preference)
-            {
-            case LIGHTAMBER:
-            // light amber
-                b = 0;
-                g=g*0.8;
-                break;
-            case DARKAMBER:
-            // dark amber
-                b = 0;
-                g=g*0.75;
-                break;
-            case GREEN1:
-            // g433n 1 33ff00
-                b = 0;
-                r=r*0.2;
-                break;
-            case GREEN2:
-            // g433n 1 00ff33
-                r = 0;
-                b=b*0.2;
-                break;
-            case GREEN3:
-            // g433n 1 00ff66
-                b = 0.4;
-                r=0;
-                break;
-            case PURPLE:
-                // g433n 1 00ff66
-                b = b*0.8;
-                r = r*0.9;
-                g = g*0.4;
-                break;
-            default:
-            break;
-            }
-
-            uint32_t rvs_pixel = PICO_SCANVIDEO_PIXEL_FROM_RGB5(r,g,b);
-
+              uint32_t rvs_pixel = PICO_SCANVIDEO_PIXEL_FROM_RGB5(r,g,b);
 
               // 090622  adds colour options
               r = PICO_SCANVIDEO_R5_FROM_PIXEL(pixel);
               g = PICO_SCANVIDEO_G5_FROM_PIXEL(pixel);
               b = PICO_SCANVIDEO_B5_FROM_PIXEL(pixel);
 
+              switch (config.colour_preference) {
+                case LIGHTAMBER:
+                    b = 0;
+                    g=g*0.8;
+                    break;
+                case DARKAMBER:
+                    b = 0;
+                    g=g*0.75;
+                    break;
+                case GREEN1: // g433n 1 33ff00
+                    b = 0;
+                    r=r*0.2;
+                    break;
+                case GREEN2: // g433n 1 00ff33
+                    r = 0;
+                    b=b*0.2;
+                    break;
+                case GREEN3: // g433n 1 00ff66
+                    b = 0.4;
+                    r=0;
+                    break;
+                case PURPLE:
+                    b = b*0.8;
+                    r = r*0.9;
+                    g = g*0.4;
+                    break;
+                default:
+                    break;
+              }
 
-            switch (config.colour_preference)
-            {
-            case LIGHTAMBER:
-                // light amber
-                b = 0;
-                g=g*0.8;
-                break;
-            case DARKAMBER:
-                // dark amber
-                b = 0;
-                g=g*0.75;
-                break;
-            case GREEN1:
-                // g433n 1 33ff00
-                b = 0;
-                r=r*0.2;
-                break;
-            case GREEN2:
-                // g433n 1 00ff33
-                r = 0;
-                b=b*0.2;
-                break;
-            case GREEN3:
-                // g433n 1 00ff66
-                b = 0.4;
-                r=0;
-                break;
-            case PURPLE:
-                b = b*0.8;
-                r = r*0.9;
-                g = g*0.4;
-                break;
-            default:
-                break;
-            }
-
-            uint32_t new_pixel = PICO_SCANVIDEO_PIXEL_FROM_RGB5(r,g,b);
+              uint32_t new_pixel = PICO_SCANVIDEO_PIXEL_FROM_RGB5(r,g,b);
 
               if (!(x & 1)) {
                   *p = new_pixel;
-                  // *pr = ~pixel;
-                  *pr = rvs_pixel;
-              } else {
-                  *p++ |= new_pixel << 16;
-                  //*pr++ |= ~pixel << 16;
-                  *pr++ |= rvs_pixel << 16;
+                  if( !(extended_font) ) // do not manipulate reverse_pointer for extended font
+                    *pr = rvs_pixel;
               }
+              else {
+                  *p++ |= new_pixel << 16;
+                  if( !(extended_font) ) // do not manipulate reverse_pointer for extended font
+                    *pr++ |= rvs_pixel << 16;
+              }
+          } // for X
 
-            }
-            if (ey >= 0 && ey < g->box_h) {
-                for (int x = FONT_WIDTH_WORDS * 2 - g->ofs_x; x < g->box_w; x++) {
-                    bi++;
-                }
-            }
-        }
-    }
+          if (ey >= 0 && ey < g->box_h)
+              for (int x = FONT_WIDTH_WORDS * 2 - g->ofs_x; x < g->box_w; x++)
+                  bi++;
+
+        } // for Y
+    } // for c
 }
 
 int video_main(void) {
     mutex_init(&frame_logic_mutex);
 
-    build_font();
+    build_font( config.nupetscii==1 );
     sem_init(&video_setup_complete, 0, 1);
 
     setup_video();
 
-    init_render_state(0);   // does nothing
-    init_render_state(1);   // does nothing
+//    init_render_state(0);   // does nothing
+//    init_render_state(1);   // does nothing
 
-#ifdef RENDER_ON_CORE1
+//#ifdef RENDER_ON_CORE1
     render_on_core1();   // render_loop() on core 1
-#endif
-#ifdef RENDER_ON_CORE0
-    render_loop();
-#endif
+//#endif
+//#ifdef RENDER_ON_CORE0
+//    render_loop();
+//#endif
 
 }
 
 
 // must not be called concurrently
-void init_render_state(int core) {
-
-
-}
+//void init_render_state(int core) {
+//
+//
+//}
 
 
 static __not_in_flash("x") uint16_t beginning_of_line[] = {
@@ -741,37 +722,37 @@ int main(void) {
       // empty the keyboard buffer
       while( key_ready() )
         read_key_from_buffer();
-			switch( id_menu ){
-				case MENU_CONFIG:
-					display_config();
-					break;
-				case MENU_NUPETSCII:
-					display_nupetscii();
-					break;
-				case MENU_HELP:
-					display_help();
-					break;
-			};
+      switch( id_menu ){
+        case MENU_CONFIG:
+          display_config();
+          break;
+        case MENU_NUPETSCII:
+          display_nupetscii();
+          break;
+        case MENU_HELP:
+          display_help();
+          break;
+      };
       old_menu = is_menu;
     }
     else if( !(is_menu) && old_menu ){ // CRL+M : menu de-activated ?
-			display_terminal();
+      display_terminal();
       old_menu = is_menu;
     }
 
     if( is_menu ){ // Under menu display
-			switch( id_menu ){
-				case MENU_CONFIG:
-					// Specialized handler manage keyboard input for menu
-					_ch = handle_config_input();
-					break;
-				default:
-					_ch = handle_default_input();
-			}
+      switch( id_menu ){
+        case MENU_CONFIG:
+          // Specialized handler manage keyboard input for menu
+          _ch = handle_config_input();
+          break;
+        default:
+          _ch = handle_default_input();
+      }
       if( _ch==ESC ){ // ESC will also close the menu
           is_menu = false;
-					id_menu = 0x00;
-			}
+          id_menu = 0x00;
+      }
     }
     else
       handle_keyboard_input(); // normal terminal management
@@ -816,18 +797,23 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
       uint8_t ch = keycode2ascii[scancode][0];
       // Is there a modifier key under use while pressing the key?
       if( (ch=='m') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
-				id_menu = MENU_CONFIG;
+        id_menu = MENU_CONFIG;
         is_menu = !(is_menu);
         return; // do not add key to "Keyboard buffer"
       }
-			if( (ch=='n') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
-				id_menu = MENU_NUPETSCII;
+      if( (ch=='n') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
+        id_menu = MENU_NUPETSCII;
         is_menu = !(is_menu);
         return; // do not add key to "Keyboard buffer"
       }
-			if( (ch=='h') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
-				id_menu = MENU_HELP;
+      if( (ch=='h') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
+        id_menu = MENU_HELP;
         is_menu = !(is_menu);
+        return; // do not add key to "Keyboard buffer"
+      }
+      if( (ch=='l') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
+        config.nupetscii = (config.nupetscii == 0 ? 1 : 0);
+        build_font( config.nupetscii );
         return; // do not add key to "Keyboard buffer"
       }
       if( modifiers & WITH_SHIFT ){

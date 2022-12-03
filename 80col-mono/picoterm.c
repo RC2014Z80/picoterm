@@ -582,27 +582,31 @@ void display_config(){
     clear_entire_screen();
     csr.x = 0; csr.y = 0;
 
-    print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Menu \x0A6\x0A6\r\n");
-    print_string("\x0E2\x0E1 Terminal Colors \x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E4\r\n");
+    __print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Menu \x0A6\x0A6\r\n" , !(config.nupetscii) ); // strip Nupetscii when not activated
+    __print_string("\x0E2\x0E1 Terminal Colors \x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E4\r\n", !(config.nupetscii) );
     sprintf(msg, "\x0E0  %s0 White   %s1 Light Amber %s2 Dark Amber   \x0E0\r\n", (config.colour_preference==0)?"\x0D1":" ", (config.colour_preference==1)?"\x0D1":" ", (config.colour_preference==2)?"\x0D1":" " );
-    print_string(msg);
+    __print_string(msg, !(config.nupetscii) );
     sprintf( msg, "\x0E0  %s3 Green1  %s4 Green2      %s5 Green3       \x0E0\r\n", (config.colour_preference==3)?"\x0D1":" ", (config.colour_preference==4)?"\x0D1":" ", (config.colour_preference==5)?"\x0D1":" " );
-    print_string(msg);
-		sprintf( msg, "\x0E0  %s6 Purple                                 \x0E0\r\n", (config.colour_preference==6)?"\x0D1":" " );
-    print_string(msg);
-    print_string("\x0E8\x0C3 Serial  Baud \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B2\x0C3 Data bit \x0C3\x0C3\x0E9\r\n" );
+    __print_string(msg, !(config.nupetscii) );
+    sprintf( msg, "\x0E0  %s6 Purple                                 \x0E0\r\n", (config.colour_preference==6)?"\x0D1":" " );
+    __print_string( msg, !(config.nupetscii) );
+    __print_string("\x0E8\x0C3 Serial  Baud \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B2\x0C3 Data bit \x0C3\x0C3\x0E9\r\n", !(config.nupetscii) );
     sprintf(msg, "\x0E0  %sa 115200 %sb 57600 %sc 19200 \x0C2 %s8  8 bits  \x0E0\r\n", (config.baudrate==115200)?"\x0D1":" " , (config.baudrate==57600)?"\x0D1":" ", (config.baudrate==19200)?"\x0D1":" ", (config.databits==8)?"\x0D1":" " );
-    print_string(msg);
+    __print_string(msg, !(config.nupetscii) );
     sprintf(msg, "\x0E0  %sd 9600   %se 4800  %sf 2400  \x0C2 %s7  7 bits  \x0E0\r\n", (config.baudrate==9600)?"\x0D1":" " , (config.baudrate==4800)?"\x0D1":" ", (config.baudrate==2400)?"\x0D1":" ", (config.databits==7)?"\x0D1":" " );
-    print_string(msg);
+    __print_string(msg, !(config.nupetscii) );
     sprintf(msg, "\x0E0  %sg 1200   %sh 300            \x0C2             \x0E0\r\n", (config.baudrate==1200)?"\x0D1":" " , (config.baudrate==300)?"\x0D1":" " );
-    print_string(msg);
-    print_string("\x0E8\x0C3 Parity \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0DB\x0C3 Stop bits \x0C3\x0E9\r\n" );
+    __print_string(msg, !(config.nupetscii) );
+    __print_string("\x0E8\x0C3 Parity \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0DB\x0C3 Stop bits \x0C3\x0E9\r\n", !(config.nupetscii) );
     sprintf(msg, "\x0E0  %sn None   %so Odd   %sv Even  \x0C2 %sw  1 bit   \x0E0\r\n", (config.parity==UART_PARITY_NONE)?"\xD1":" " , (config.parity==UART_PARITY_ODD)?"\xD1":" ", (config.parity==UART_PARITY_EVEN)?"\xD1":" " , (config.stopbits==1)?"\xD1":" "  );
-    print_string(msg);
-    sprintf(msg, "\x0E0                              \x0C2 %sx  2 bits  \x0E0\r\n", (config.stopbits==2)?"\xD1":" " );
-    print_string(msg);
-    print_string("\x0E5\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x08A\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E7\r\n" );
+    __print_string(msg, !(config.nupetscii) );
+    sprintf(msg, "\x0E8\x0C3 Charset \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B3 %sx  2 bits  \x0E0\r\n", (config.stopbits==2)?"\xD1":" " );
+    __print_string(msg, !(config.nupetscii) );
+		sprintf(msg, "\x0E0   %sl VT100 (7bits+reverse)   \x0C2             \x0E0\r\n", (config.nupetscii==0)?"\x0D1":" " );
+		__print_string(msg, !(config.nupetscii) );
+		sprintf(msg, "\x0E0   %sm NupetSCII (8bits)       \x0C2             \x0E0\r\n", (config.nupetscii==1)?"\x0D1":" " );
+		__print_string(msg, !(config.nupetscii) );
+    __print_string("\x0E5\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x08A\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E7\r\n", !(config.nupetscii) );
     print_string("\r\n(S upcase=save / ESC=close) ? ");
 
 
@@ -611,66 +615,125 @@ void display_config(){
     print_cursor();  // turns on
 }
 
-void display_nupetscii(){
-	char msg[80];
-	char _c;
-	reset_escape_sequence();
-	clear_entire_screen();
-	csr.x = 0; csr.y = 0;
-	print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 NuPETSCII Charset \x0A6\x0A6\r\n");
-	print_string( "     0 1 2 3 4 5 6 7 8 9 A B C D E F\r\n");
-	print_string( "   \x0B0\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n");
-	for( char line=2; line<16; line++ ){
-		sprintf( msg, "%02X \x0C2 ", line*16 );
-		print_string( msg );
-		for( char index=0; index<=15; index++ ){
-			_c = line*16+index;
-			sprintf( msg, "%c ", _c );
-			print_string( msg );
-		}
-		print_string("\x0C2\r\n");
-		// Insert a index line in the middle for easier reading
-		if( line==8 ){
-			print_string( "   \x0AB\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B3\r\n");
-			print_string( "   \x0C2 0 1 2 3 4 5 6 7 8 9 A B C D E F \x0C2\r\n");
-			print_string( "   \x0AB\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B3\r\n");
-		}
-	}
-	print_string( "   \x0AD\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0BD\r\n");
-	print_string( "     0 1 2 3 4 5 6 7 8 9 A B C D E F\r\n");
+int replace_char(char *str, char orig, char rep) {
+    char *ix = str;
+    int n = 0;
+    while((ix = strchr(ix, orig)) != NULL) {
+        *ix++ = rep;
+        n++;
+    }
+    return n;
+}
 
-	print_string("\r\n(ESC=close) ? ");
-	make_cursor_visible(true);
-	clear_cursor();  // so we have the character
-	print_cursor();  // turns on
+void display_nupetscii(){
+  char msg[80];
+  char _c;
+  reset_escape_sequence();
+  clear_entire_screen();
+  csr.x = 0; csr.y = 0;
+  //strcpy( msg,  );
+  __print_string( "\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 NuPETSCII Charset \x0A6\x0A6\r\n" , !(config.nupetscii) ); // strip Nupetscii when not activated
+  print_string( "     0 1 2 3 4 5 6 7 8 9 A B C D E F\r\n");
+  __print_string( "   \x0B0\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n"  , !(config.nupetscii) );
+  for( char line=2; line<16; line++ ){
+    sprintf( msg, "%02X \x0C2 ", line*16 );
+    __print_string( msg , !(config.nupetscii) ); // strip Nupetscii when not activated
+    for( char index=0; index<=15; index++ ){
+      _c = line*16+index;
+      sprintf( msg, "%c ", _c );
+      print_string( msg );
+    }
+    __print_string("\x0C2\r\n", !(config.nupetscii) );
+    // Insert a index line in the middle for easier reading
+    if( line==8 ){
+      __print_string( "   \x0AB\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B3\r\n", !(config.nupetscii) );
+      __print_string( "   \x0C2 0 1 2 3 4 5 6 7 8 9 A B C D E F \x0C2\r\n" , !(config.nupetscii) );
+      __print_string( "   \x0AB\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B3\r\n", !(config.nupetscii) );
+    }
+  }
+  __print_string( "   \x0AD\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0BD\r\n", !(config.nupetscii) );
+  print_string( "     0 1 2 3 4 5 6 7 8 9 A B C D E F\r\n");
+
+  print_string("\r\n(ESC=close) ? ");
+  make_cursor_visible(true);
+  clear_cursor();  // so we have the character
+  print_cursor();  // turns on
 }
 
 
 void display_help(){
-	char msg[80];
-	char _c;
-	reset_escape_sequence();
-	clear_entire_screen();
-	csr.x = 0; csr.y = 0;
-	print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Help \x0A6\x0A6\r\n");
-  print_string("\x0B0\x0C3 Keyboard Shortcut \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n");
-	print_string("\x0C2 \x083 Shift+Ctrl+H : Help screen                   \x0C2\r\n" );
-	print_string("\x0C2 \x083 Shift+Ctrl+M : Configuration menu            \x0C2\r\n" );
-	print_string("\x0C2 \x083 Shift+Ctrl+N : Display NupetScii charset     \x0C2\r\n" );
-	print_string("\x0C2                                                \x0C2\r\n" );
-	print_string("\x0AD\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0BD\r\n");
+  char msg[80];
+  char _c;
+  reset_escape_sequence();
+  clear_entire_screen();
+  csr.x = 0; csr.y = 0;
+  __print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Help \x0A6\x0A6\r\n", !(config.nupetscii) );
+  __print_string("\x0B0\x0C3 Keyboard Shortcut \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n", !(config.nupetscii) );
+  __print_string("\x0C2 \x083 Shift+Ctrl+H : Help screen                   \x0C2\r\n", !(config.nupetscii) ); // strip Nupetscii when not activated
+	__print_string("\x0C2 \x083 Shift+Ctrl+L : Toggle NupetSCII/VT100 charset\x0C2\r\n", !(config.nupetscii) );
+  __print_string("\x0C2 \x083 Shift+Ctrl+M : Configuration menu            \x0C2\r\n", !(config.nupetscii) );
+  __print_string("\x0C2 \x083 Shift+Ctrl+N : Display NupetScii charset     \x0C2\r\n", !(config.nupetscii) );
+  __print_string("\x0C2                                                \x0C2\r\n", !(config.nupetscii) );
+  __print_string("\x0AD\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0BD\r\n", !(config.nupetscii));
 
-	print_string("\r\n(ESC=close) ? ");
-	make_cursor_visible(true);
-	clear_cursor();  // so we have the character
-	print_cursor();  // turns on
+  print_string("\r\n(ESC=close) ? ");
+  make_cursor_visible(true);
+  clear_cursor();  // so we have the character
+  print_cursor();  // turns on
 }
 
+void print_string(char str[] ){
+  __print_string( str, false );
+}
 
-void print_string(char str[]){
-    for(int i=0;i<strlen(str);i++){
-        handle_new_character(str[i]);
-    }
+void __print_string(char str[], bool strip_nupetscii ){
+   // remove the NuPetScii extended charset from a string and replace them with
+  // more convenient.
+  // This function is used by the configuration screen. See display_config().
+  char c;
+  for(int i=0;i<strlen(str);i++){
+      c = str[i];
+      if( strip_nupetscii )
+        switch (c) {
+          case '\x0A6':
+              c = ' ';
+              break;
+          case '\x0C2':
+          case '\x0E0':
+              c = '|';
+              break;
+          case '\x0C3':
+          case '\x0E1':
+              c = '-';
+              break;
+          case '\x083':
+              c = '*'; // replace a bullet
+              break;
+          case '\x0B0':
+          case '\x0AD':
+          case '\x0BD':
+          case '\x0AE':
+          case '\x0AB':
+          case '\x0B3':
+          case '\x0E8':
+          case '\x0E9':
+          case '\x0B2':
+          case '\x08A':
+          case '\x0E7':
+          case '\x0E5':
+          case '\x0E2':
+          case '\x0E4':
+          case '\x0DB':
+              c = '+';
+              break;
+          case '\x0D1':
+              c = '>'; // Replace a "selected item" marker
+              break;
+          default:
+              break;
+        }
+      handle_new_character( c );
+  }
 }
 
 char read_key(){
@@ -682,7 +745,7 @@ char read_key(){
 }
 
 char handle_default_input(){
-	// Make your own specialized menu input handler (if needed, see handle_menu_input)
+  // Make your own specialized menu input handler (if needed, see handle_menu_input)
   // and call it as needed from main.c::main()
   char _ch = read_key();
   return _ch;
@@ -716,7 +779,7 @@ char handle_config_input(){
   if( (_ch >= '0') && (_ch <= '6') ) {
     uint8_t _color = _ch - 48; // 48->54 to 0->6 (WHITE->PURPLE)
     config.colour_preference = _color;
-    build_font(); // rebuilt font
+    build_font( config.nupetscii ); // rebuilt font
   }
 
   // Baud rate
@@ -792,6 +855,20 @@ char handle_config_input(){
     uart_set_format(UART_ID, config.databits, config.stopbits, config.parity );
     display_config();
   }
+  // NupetSCII font configuration
+  if ( ( _ch >= 'l') && (_ch <= 'm') ) {
+    switch( _ch ){
+      case 'l':
+        config.nupetscii = 0; // normal font
+        break;
+      case 'm':
+        config.nupetscii = 1;
+        break;
+    }
+    build_font(config.nupetscii==1);
+    display_config();
+  }
+
   return _ch;
 }
 
