@@ -37,11 +37,17 @@
 
 unsigned char slop_character(int x,int y);
 unsigned char * slotsForRow(int y);
+unsigned char * slotsForInvRow(int y);
+
 void prepare_text_buffer();
 void display_terminal();
 void display_config();
 void display_help();
 void display_nupetscii();
+
+bool get_csr_blink_state();
+void set_csr_blink_state(bool state);
+void refresh_cursor();
 void clear_cursor();
 void print_cursor();
 void handle_new_character(unsigned char ch);

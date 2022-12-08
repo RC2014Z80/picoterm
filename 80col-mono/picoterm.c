@@ -47,11 +47,13 @@ static unsigned char esc_c1;
 static unsigned char esc_final_byte;
 
 bool cursor_visible;
+bool cursor_blinking = false;
+
 static bool rvs = false;
 static unsigned char chr_under_csr;
+static bool inv_under_csr;
 
 extern picoterm_config_t config; // Issue #13, awesome contribution of Spock64
-
 
 void make_cursor_visible(bool v){
     cursor_visible=v;
@@ -75,7 +77,10 @@ void reset_escape_sequence(){
 
 
 
-typedef struct row_of_text { unsigned char slot[COLUMNS]; } row_of_text;
+typedef struct row_of_text { 
+	unsigned char slot[COLUMNS];
+	unsigned char inv[COLUMNS];
+} row_of_text;
 //struct row_of_text rows[ROWS];  // make 100 of our text rows
 //static struct row_of_text *p = &rows[0];  // pointer p assigned the address of the first row
     // then p[y].slot[x] = ch;
@@ -108,11 +113,17 @@ void slip_character(unsigned char ch,int x,int y){
     if(csr.x>=COLUMNS || csr.y>=VISIBLEROWS){
         return;
     }
-
+	/*
     if(rvs && ch<95){   // 95 is the start of the rvs character set
         ch = ch + 95;
     }
+	*/
     ptr[y]->slot[x] = ch;
+	if(rvs)
+		ptr[y]->inv[x] = 1;
+	else
+		ptr[y]->inv[x] = 0;
+	
 }
 
 unsigned char slop_character(int x,int y){
@@ -121,8 +132,16 @@ unsigned char slop_character(int x,int y){
     return ptr[y]->slot[x];
 }
 
+unsigned char inv_character(int x,int y){
+    return ptr[y]->inv[x];
+}
+
+
 unsigned char * slotsForRow(int y){
     return &ptr[y]->slot[0];
+}
+unsigned char * slotsForInvRow(int y){
+    return &ptr[y]->inv[0];
 }
 
 /*
@@ -185,7 +204,7 @@ void delete_lines(int n){
 
 
 
-void shuffle(){
+void shuffle_down(){
     // this is our scroll
     // because we're using pointers to rows, we only need to shuffle the array of pointers
 
@@ -202,28 +221,79 @@ void shuffle(){
     // recycled line needs blanking
     for(int i=0;i<COLUMNS;i++){
         ptr[ROWS-1]->slot[i] = 0;
+		ptr[ROWS-1]->inv[i] = 0;
     }
 }
 
-void print_cursor(){
-    chr_under_csr = slop_character(csr.x,csr.y);
-    if(cursor_visible==false) return;
+void shuffle_up(){
+    // this is our scroll
+    // because we're using pointers to rows, we only need to shuffle the array of pointers
 
-    unsigned char rvs_chr = chr_under_csr;
+    // recycle first line.
+    struct row_of_text *temphandle = ptr[ROWS-1];
+    //ptr[ROWS-1]=ptr[0];
+
+    for(int r=ROWS-2;r>=0;r--){
+        ptr[r+1]=ptr[r];
+    }
+	
+    ptr[0] = temphandle;
+
+    // recycled line needs blanking
+    for(int i=0;i<COLUMNS;i++){
+        ptr[0]->slot[i] = 0;
+		ptr[0]->inv[i] = 0;
+    }
+}
+
+
+
+bool get_csr_blink_state() { return cursor_blinking; }
+void set_csr_blink_state(bool state) { cursor_blinking = state; }
+
+void refresh_cursor(){
+	clear_cursor();
+	print_cursor();
+}
+
+void print_cursor(){
+
+    chr_under_csr = slop_character(csr.x,csr.y);
+	inv_under_csr = inv_character(csr.x,csr.y);
+	
+    if(cursor_visible==false || cursor_blinking) return;    
+	
+	if(config.nupetscii && chr_under_csr == 0)
+		ptr[csr.y]->slot[csr.x] = 143;
+	
+	else if(inv_under_csr == 1)
+		ptr[csr.y]->inv[csr.x] = 0;
+	
+	else
+		ptr[csr.y]->inv[csr.x] = 1;
+	
+	/*		
+	unsigned char rvs_chr = chr_under_csr;
+	
     if(rvs_chr>=95){        // yes, 95, our screen codes start at ascii 0x20-0x7f
         rvs_chr -= 95;
     }
     else{
        rvs_chr += 95;
     }
+	
     //slip_character(rvs_chr,csr.x,csr.y); // fix 191121
     // can't use slip, because it applies reverse
     ptr[csr.y]->slot[csr.x] = rvs_chr;
+	*/
 }
+
+
 void clear_cursor(){
     //slip_character(chr_under_csr,csr.x,csr.y); // fix 191121
     // can't use slip, because it applies reverse
     ptr[csr.y]->slot[csr.x] = chr_under_csr;
+	ptr[csr.y]->inv[csr.x] = inv_under_csr;
 }
 
 
@@ -233,6 +303,9 @@ void clear_line_from_cursor(){
     //}
     // new faster method
     void *sl = &ptr[csr.y]->slot[csr.x];
+    memset(sl, 0, COLUMNS-csr.x);
+	
+	sl = &ptr[csr.y]->inv[csr.x];
     memset(sl, 0, COLUMNS-csr.x);
 
 
@@ -244,6 +317,9 @@ void clear_line_to_cursor(){
     // new faster method
     void *sl = &ptr[csr.y]->slot[0];
     memset(sl, 0, csr.x);
+	
+	sl = &ptr[csr.y]->inv[0];
+    memset(sl, 0, csr.x);
 
 }
 void clear_entire_line(){
@@ -253,7 +329,9 @@ void clear_entire_line(){
     // new faster method
     void *sl = &ptr[csr.y]->slot[0];
     memset(sl, 0, COLUMNS);
-
+	
+	sl = &ptr[csr.y]->inv[0];
+    memset(sl, 0, COLUMNS);
 }
 
 
@@ -264,13 +342,15 @@ void clear_entire_screen(){
         // tighter method, as too much of a delay here can cause dropped characters
         void *sl = &ptr[r]->slot[0];
         memset(sl, 0, COLUMNS);
-
+		
+		sl = &ptr[r]->inv[0];
+        memset(sl, 0, COLUMNS);
     }
 }
 
 void clear_screen_from_csr(){
     clear_line_from_cursor();
-    for(int r=csr.y;r<ROWS;r++){
+    for(int r=csr.y+1;r<ROWS;r++){
         for(int c=0;c<COLUMNS;c++){
             slip_character(0,c,r);    // todo: should use the new method in clear_entire_screen
         }
@@ -324,6 +404,7 @@ if(esc_c1=='['){
     // CSI
     switch(esc_final_byte){
     case 'H':
+	case 'f':
         // Moves the cursor to row n, column m
         // The values are 1-based, and default to 1
 
@@ -337,6 +418,53 @@ if(esc_c1=='['){
         csr.y = n;
         constrain_cursor_values();
     break;
+	
+	case 'E':
+        // ESC[#E	moves cursor to beginning of next line, # lines down
+        
+		n = esc_parameters[0];
+		if(n==0)n=1;
+		
+		// these are zero based
+        csr.x = 0;
+        csr.y += n;
+        constrain_cursor_values();
+    break;
+	
+	case 'F':
+        // ESC[#F	moves cursor to beginning of previous line, # lines up
+        
+		n = esc_parameters[0];
+		if(n==0)n=1;
+		
+		// these are zero based
+        csr.x = 0;
+        csr.y -= n;
+        constrain_cursor_values();
+    break;	
+
+
+	case 'd':
+        // ESC[#d	moves cursor to an absolute # line
+        
+		n = esc_parameters[0];
+		n--;
+		
+		// these are zero based
+        csr.y = n;
+        constrain_cursor_values();
+    break;	
+	
+	case 'G':
+        // ESC[#G	moves cursor to column #
+        
+		n = esc_parameters[0];
+		n--;
+		
+		// these are zero based
+        csr.x = n;
+        constrain_cursor_values();
+    break;	
 
     case 'h':
         if(parameter_q && esc_parameters[0]==25){
@@ -356,14 +484,11 @@ if(esc_c1=='['){
         //SGR
         // Sets colors and style of the characters following this code
         //TODO: allows multiple paramters
-        switch(esc_parameters[0]){
-            case 0:
-            // reset / normal
-            rvs = false;
-        break;
-            case 7:
+        if(esc_parameters[0]==0 || esc_parameters[0]==27){
+            rvs = false; // reset / normal
+        }
+        if(esc_parameters[0]==7){
             rvs = true;
-        break;
         }
     break;
 
@@ -463,15 +588,23 @@ if(esc_c1=='['){
         csr.x -= n;
         constrain_cursor_values();
     break;
-
     case 'S':
     // Scroll whole page up by n (default 1) lines. New lines are added at the bottom. (not ANSI.SYS)
         n = esc_parameters[0];
         if(n==0)n=1;
         for(int i=0;i<n;i++){
-            shuffle();
+            shuffle_down();
         }
     break;
+	
+    case 'T':
+    // Scroll whole page down by n (default 1) lines. New lines are added at the top. (not ANSI.SYS)
+        n = esc_parameters[0];
+        if(n==0)n=1;
+        for(int i=0;i<n;i++){
+            shuffle_up();
+        }
+    break;	
 
     // MORE
 
@@ -591,11 +724,11 @@ void display_config(){
     sprintf( msg, "\x0E0  %s6 Purple                                 \x0E0\r\n", (config.colour_preference==6)?"\x0D1":" " );
     __print_string( msg, !(config.nupetscii) );
     __print_string("\x0E8\x0C3 Serial  Baud \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B2\x0C3 Data bit \x0C3\x0C3\x0E9\r\n", !(config.nupetscii) );
-    sprintf(msg, "\x0E0  %sa 115200 %sb 57600 %sc 19200 \x0C2 %s8  8 bits  \x0E0\r\n", (config.baudrate==115200)?"\x0D1":" " , (config.baudrate==57600)?"\x0D1":" ", (config.baudrate==19200)?"\x0D1":" ", (config.databits==8)?"\x0D1":" " );
+    sprintf(msg, "\x0E0  %sa 115200 %sb 57600 %sc 38400 \x0C2 %s8  8 bits  \x0E0\r\n", (config.baudrate==115200)?"\x0D1":" " , (config.baudrate==57600)?"\x0D1":" ", (config.baudrate==38400)?"\x0D1":" ", (config.databits==8)?"\x0D1":" " );
     __print_string(msg, !(config.nupetscii) );
-    sprintf(msg, "\x0E0  %sd 9600   %se 4800  %sf 2400  \x0C2 %s7  7 bits  \x0E0\r\n", (config.baudrate==9600)?"\x0D1":" " , (config.baudrate==4800)?"\x0D1":" ", (config.baudrate==2400)?"\x0D1":" ", (config.databits==7)?"\x0D1":" " );
+    sprintf(msg, "\x0E0  %sd 19200  %se 9600  %sf 4800  \x0C2 %s7  7 bits  \x0E0\r\n", (config.baudrate==19200)?"\x0D1":" " , (config.baudrate==9600)?"\x0D1":" ", (config.baudrate==4800)?"\x0D1":" ", (config.databits==7)?"\x0D1":" " );
     __print_string(msg, !(config.nupetscii) );
-    sprintf(msg, "\x0E0  %sg 1200   %sh 300            \x0C2             \x0E0\r\n", (config.baudrate==1200)?"\x0D1":" " , (config.baudrate==300)?"\x0D1":" " );
+    sprintf(msg, "\x0E0  %sg 2400   %sh 1200  %si 300   \x0C2             \x0E0\r\n", (config.baudrate==2400)?"\x0D1":" " , (config.baudrate==1200)?"\x0D1":" " , (config.baudrate==300)?"\x0D1":" " );
     __print_string(msg, !(config.nupetscii) );
     __print_string("\x0E8\x0C3 Parity \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0DB\x0C3 Stop bits \x0C3\x0E9\r\n", !(config.nupetscii) );
     sprintf(msg, "\x0E0  %sn None   %so Odd   %sv Even  \x0C2 %sw  1 bit   \x0E0\r\n", (config.parity==UART_PARITY_NONE)?"\xD1":" " , (config.parity==UART_PARITY_ODD)?"\xD1":" ", (config.parity==UART_PARITY_EVEN)?"\xD1":" " , (config.stopbits==1)?"\xD1":" "  );
@@ -631,7 +764,7 @@ void display_nupetscii(){
   reset_escape_sequence();
   clear_entire_screen();
   csr.x = 0; csr.y = 0;
-  //strcpy( msg,  );
+
   __print_string( "\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 NuPETSCII Charset \x0A6\x0A6\r\n" , !(config.nupetscii) ); // strip Nupetscii when not activated
   print_string( "     0 1 2 3 4 5 6 7 8 9 A B C D E F\r\n");
   __print_string( "   \x0B0\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n"  , !(config.nupetscii) );
@@ -739,8 +872,10 @@ void __print_string(char str[], bool strip_nupetscii ){
 char read_key(){
   // read a key from input buffer (the keyboard or serial line). This is used
   // for menu handling. Return 0 if no char available
-  if( key_ready()==false )
-    return 0;
+  if( key_ready()==false ) return 0;
+
+  if(cursor_blinking) cursor_blinking = false;
+	
   return read_key_from_buffer();
 }
 
@@ -783,7 +918,7 @@ char handle_config_input(){
   }
 
   // Baud rate
-  if( ( _ch >= 'a') && (_ch <= 'h') ) {
+  if( ( _ch >= 'a') && (_ch <= 'i') ) {
     switch( _ch ){
       case 'a':
         config.baudrate = 115200;
@@ -791,22 +926,25 @@ char handle_config_input(){
       case 'b':
         config.baudrate = 57600;
         break;
-      case 'c':
+	  case 'c':
+        config.baudrate = 38400;
+        break;		
+      case 'd':
         config.baudrate = 19200;
         break;
-      case 'd':
+      case 'e':
         config.baudrate = 9600;
         break;
-      case 'e':
+      case 'f':
         config.baudrate = 4800;
         break;
-      case 'f':
+      case 'g':
         config.baudrate = 2400;
         break;
-      case 'g':
+      case 'h':
         config.baudrate = 1200;
         break;
-      case 'h':
+      case 'i':
         config.baudrate = 300;
         break;
     }
@@ -952,7 +1090,7 @@ void handle_new_character(unsigned char asc){
             if(csr.x>=COLUMNS){
                 csr.x=0;
                 if(csr.y==VISIBLEROWS-1){
-                    shuffle();
+                    shuffle_down();
                 }
                 else{
                     csr.y++;
@@ -977,7 +1115,7 @@ void handle_new_character(unsigned char asc){
                 case LF:
 
                     if(csr.y==VISIBLEROWS-1){   // visiblerows is the count, csr is zero based
-                        shuffle();
+                        shuffle_down();
                     }
                     else{
                     csr.y++;
@@ -998,6 +1136,6 @@ void handle_new_character(unsigned char asc){
 
     } // not esc sequence
 
-
+	if(cursor_blinking) cursor_blinking = false;
 
 }

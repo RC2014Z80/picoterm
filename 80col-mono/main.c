@@ -135,7 +135,8 @@ static int top = 0;
 static int x_sprites = 1;
 
 void init_render_state(int core);
-void led_blinking_task(void);
+void led_blinking_task();
+void csr_blinking_task();
 
 
 
@@ -242,11 +243,7 @@ void build_font( bool extended_font ){
 
     // extended_font (NuPetScii) doesn't required inverted char
     // non extended_font (default font) just reduce the initial charset to 95 THEN compute the reverse value
-    char max_char;
-    if( extended_font )
-      max_char = font->dsc->cmaps->range_length;
-    else
-      max_char = 95;
+    char max_char = extended_font ? font->dsc->cmaps->range_length : 95;
 
     for (int i = 0; i < count_of(colors); i++) {
         colors[i] = PICO_SCANVIDEO_PIXEL_FROM_RGB5(1, 1, 1) * ((i * 3) / 2);
@@ -460,30 +457,39 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
 
     *output32++ = host_safe_hw_ptr(beginning_of_line);
     uint32_t *dbase = font_raw_pixels + FONT_WIDTH_WORDS * (y % FONT_HEIGHT);
-    int cmax = font->dsc->cmaps[0].range_length;
-
+    
+    int max_char = config.nupetscii==1 ?  font->dsc->cmaps->range_length : 95;
 
 
     char ch = 0;
+	char inv = 0;
 
     int tr = (y/FONT_HEIGHT);
     unsigned char *rowslots = slotsForRow(tr); // I want a better word for slots. (Character positions).
+	unsigned char *rowinv = slotsForInvRow(tr);
 
     for (int i = 0; i < COUNT; i++) {
 
       ch = *rowslots;
       rowslots++;
+	  
+	  inv = *rowinv;
+      rowinv++;
 
-      if(ch==0){
-          *output32++ = host_safe_hw_ptr(&block);
-          // shortcut
-          // there's likely to be a lot of spaces on the screen.
-          // if this character is a space, just use this predefined zero block rather than the calculation below
-      }
-      else{
-        *output32++ = host_safe_hw_ptr(dbase + ch * FONT_HEIGHT * FONT_WIDTH_WORDS);
-      }
+	  if(inv == 1){
+			  *output32++ = host_safe_hw_ptr(dbase + ((ch + max_char) * FONT_HEIGHT * FONT_WIDTH_WORDS));
+		}
+	  else{
+		  if(ch==0)
+			  *output32++ = host_safe_hw_ptr(&block);
+			  // shortcut
+			  // there's likely to be a lot of spaces on the screen.
+			  // if this character is a space, just use this predefined zero block rather than the calculation below
 
+		  else
+			*output32++ = host_safe_hw_ptr(dbase + (ch * FONT_HEIGHT * FONT_WIDTH_WORDS));
+		  
+	  }
     }
 
 
@@ -681,8 +687,7 @@ int main(void) {
 
   uart_init(UART_ID, config.baudrate); // UART 1
   uart_set_hw_flow(UART_ID,false,false);
-  uart_set_format(UART_ID, config.databits, config.stopbits, config.parity );
-
+  uart_set_format(UART_ID, config.databits, config.stopbits, config.parity);
 
   // Set the TX and RX pins by using the function select on the GPIO
   // Set datasheet for more information on function select
@@ -717,6 +722,7 @@ int main(void) {
     // TinyUsb Host Task (see keybd.c::process_kdb_report() callback and pico_key_down() here below)
     tuh_task();
     led_blinking_task();
+	csr_blinking_task();
 
     if( is_menu && !(old_menu) ){ // CRL+M : menu activated ?
       // empty the keyboard buffer
@@ -741,18 +747,18 @@ int main(void) {
     }
 
     if( is_menu ){ // Under menu display
-      switch( id_menu ){
-        case MENU_CONFIG:
-          // Specialized handler manage keyboard input for menu
-          _ch = handle_config_input();
-          break;
-        default:
-          _ch = handle_default_input();
-      }
+			switch( id_menu ){
+				case MENU_CONFIG:
+					// Specialized handler manage keyboard input for menu
+					_ch = handle_config_input();
+					break;
+				default:
+					_ch = handle_default_input();
+			}
       if( _ch==ESC ){ // ESC will also close the menu
           is_menu = false;
-          id_menu = 0x00;
-      }
+					id_menu = 0x00;
+			}
     }
     else
       handle_keyboard_input(); // normal terminal management
@@ -760,15 +766,14 @@ int main(void) {
   return 0;
 }
 
-
 //--------------------------------------------------------------------+
 // Blinking Task
 //--------------------------------------------------------------------+
 bool led_state = false;
 
-void led_blinking_task(void) {
-  const uint32_t interval_ms = 1000;
-  static uint32_t start_ms = 0;
+void led_blinking_task() {
+  const uint32_t interval_ms_led = 1000;
+  static uint32_t start_ms_led = 0;
 
   // No HID keyboard --> Led blink
   // HID Keyboard    --> Led off
@@ -777,13 +782,28 @@ void led_blinking_task(void) {
     //board_led_write(true);
   else {
       // Blink every interval ms
-      if ( board_millis() - start_ms > interval_ms) {
-        start_ms += interval_ms;
+      if ( board_millis() - start_ms_led > interval_ms_led) {
+        start_ms_led += interval_ms_led;
 
         board_led_write(led_state);
         led_state = 1 - led_state; // toggle
       }
   }
+}
+
+void csr_blinking_task() {
+  const uint32_t interval_ms_csr = 600;
+  static uint32_t start_ms_csr = 0;
+
+  // Blink every interval ms
+  if ( board_millis() - start_ms_csr > interval_ms_csr) {
+	start_ms_csr += interval_ms_csr;
+	
+	set_csr_blink_state(1 - get_csr_blink_state());
+	
+	refresh_cursor();
+  }
+  
 }
 
 //--------------------------------------------------------------------+
@@ -792,22 +812,24 @@ void led_blinking_task(void) {
 
 static void pico_key_down(int scancode, int keysym, int modifiers) {
     //printf("Key down, %i, %i, %i \r\n", scancode, keysym, modifiers);
-    if( scancode_is_mod(scancode)==false ){
+
+	if( scancode_is_mod(scancode)==false ){
       // which char at that key?
       uint8_t ch = keycode2ascii[scancode][0];
       // Is there a modifier key under use while pressing the key?
       if( (ch=='m') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
-        id_menu = MENU_CONFIG;
+		id_menu = MENU_CONFIG;
         is_menu = !(is_menu);
         return; // do not add key to "Keyboard buffer"
       }
       if( (ch=='n') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
-        id_menu = MENU_NUPETSCII;
+		id_menu = MENU_NUPETSCII;
         is_menu = !(is_menu);
         return; // do not add key to "Keyboard buffer"
       }
+	
       if( (ch=='h') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
-        id_menu = MENU_HELP;
+		id_menu = MENU_HELP;
         is_menu = !(is_menu);
         return; // do not add key to "Keyboard buffer"
       }
@@ -822,7 +844,11 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
       else if((modifiers & WITH_CAPSLOCK) && ch>='a' && ch<='z'){
           ch = keycode2ascii[scancode][1];
       }
-      else if(modifiers & WITH_CTRL && ch>95){
+      
+	  if((modifiers & WITH_CTRL) && ch>63 && ch<=95){
+          ch=ch-64;
+      }	  
+      else if((modifiers & WITH_CTRL) && ch>95){
           ch=ch-96;
       }
       else if(modifiers & WITH_ALTGR){
