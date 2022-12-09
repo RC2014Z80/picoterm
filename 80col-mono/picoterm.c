@@ -602,10 +602,10 @@ void display_config(){
     __print_string(msg, !(config.nupetscii) );
     sprintf(msg, "\x0E8\x0C3 Charset \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B3 %sx  2 bits  \x0E0\r\n", (config.stopbits==2)?"\xD1":" " );
     __print_string(msg, !(config.nupetscii) );
-		sprintf(msg, "\x0E0   %sl VT100 (7bits+reverse)   \x0C2             \x0E0\r\n", (config.nupetscii==0)?"\x0D1":" " );
-		__print_string(msg, !(config.nupetscii) );
-		sprintf(msg, "\x0E0   %sm NupetSCII (8bits)       \x0C2             \x0E0\r\n", (config.nupetscii==1)?"\x0D1":" " );
-		__print_string(msg, !(config.nupetscii) );
+    sprintf(msg, "\x0E0   %sl VT100 (7bits+reverse)   \x0C2             \x0E0\r\n", (config.nupetscii==0)?"\x0D1":" " );
+    __print_string(msg, !(config.nupetscii) );
+    sprintf(msg, "\x0E0   %sm NupetSCII (8bits)       \x0C2             \x0E0\r\n", (config.nupetscii==1)?"\x0D1":" " );
+    __print_string(msg, !(config.nupetscii) );
     __print_string("\x0E5\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x08A\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E7\r\n", !(config.nupetscii) );
     print_string("\r\n(S upcase=save / ESC=close) ? ");
 
@@ -670,7 +670,7 @@ void display_help(){
   __print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Help \x0A6\x0A6\r\n", !(config.nupetscii) );
   __print_string("\x0B0\x0C3 Keyboard Shortcut \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n", !(config.nupetscii) );
   __print_string("\x0C2 \x083 Shift+Ctrl+H : Help screen                   \x0C2\r\n", !(config.nupetscii) ); // strip Nupetscii when not activated
-	__print_string("\x0C2 \x083 Shift+Ctrl+L : Toggle NupetSCII/VT100 charset\x0C2\r\n", !(config.nupetscii) );
+  __print_string("\x0C2 \x083 Shift+Ctrl+L : Toggle NupetSCII/VT100 charset\x0C2\r\n", !(config.nupetscii) );
   __print_string("\x0C2 \x083 Shift+Ctrl+M : Configuration menu            \x0C2\r\n", !(config.nupetscii) );
   __print_string("\x0C2 \x083 Shift+Ctrl+N : Display NupetScii charset     \x0C2\r\n", !(config.nupetscii) );
   __print_string("\x0C2                                                \x0C2\r\n", !(config.nupetscii) );
@@ -874,130 +874,109 @@ char handle_config_input(){
 
 void handle_new_character(unsigned char asc){
 
-    // handle escape sequences
-    if(esc_state != ESC_READY){
-        switch(esc_state){
-            case ESC_ESC_RECEIVED:
-                // waiting on c1 character
-                if(asc>='N' && asc<'_'){
-                    // 0x9B = CSI, that's the only one we're interested in atm
-                    // the others are 'Fe Escape sequences'
-                    // usually two bytes, ie we have them already.
-                    if(asc=='['){    // ESC+[ =  0x9B){
-                        // move forward
+  if(esc_state != ESC_READY){
+      // === ESC SEQUENCE ====================================================
+      switch(esc_state){
+          case ESC_ESC_RECEIVED:
+              // --- waiting on c1 character ---
+              // c1 is the first parameter after the ESC
+              if(asc>='N' && asc<'_'){
+                  // 0x9B = CSI, that's the only one we're interested in atm
+                  // the others are 'Fe Escape sequences'
+                  // usually two bytes, ie we have them already.
+                  if(asc=='['){    // ESC+[ =  0x9B){
+                      esc_c1 = asc;
+                      esc_state=ESC_PARAMETER_READY; // Lets wait for parameter
+                      clear_escape_parameters();
+                  }
+                  // other type Fe sequences go here
+                  else
+                      // for now, do nothing
+                      reset_escape_sequence();
+              }
+              else if ( asc=='F' ){
+                  config.nupetscii=1; // Enter graphic charset
+                  build_font( true );
+                  reset_escape_sequence();
+              }
+              else if (asc=='G'){
+                  config.nupetscii=0; // Enter ASCII charset
+                  build_font( false );
+                  reset_escape_sequence();
+              }
+              else
+                  // unrecognised character after escape.
+                  reset_escape_sequence();
+              break;
+          case ESC_PARAMETER_READY:
+              // waiting on parameter character, semicolon or final byte
+              if(asc>='0' && asc<='9'){
+                  // parameter value
+                  if(esc_parameter_count<MAX_ESC_PARAMS){
+                      unsigned char digit_value = asc - 0x30; // '0'
+                      esc_parameters[esc_parameter_count] *= 10;
+                      esc_parameters[esc_parameter_count] += digit_value;
+                  }
 
-                        esc_c1 = asc;
-                        esc_state=ESC_PARAMETER_READY;
-                        clear_escape_parameters();
-                    }
-                    // other type Fe sequences go here
-                    else{
-                        // for now, do nothing
-                        reset_escape_sequence();
-                    }
-                }
-                else{
-                    // unrecognised character after escape.
-                    reset_escape_sequence();
-                }
-                break;
-            case ESC_PARAMETER_READY:
-                // waiting on parameter character, semicolon or final byte
-                if(asc>='0' && asc<='9'){
-                    // parameter value
-                    if(esc_parameter_count<MAX_ESC_PARAMS){
-                        unsigned char digit_value = asc - 0x30; // '0'
-                        esc_parameters[esc_parameter_count] *= 10;
-                        esc_parameters[esc_parameter_count] += digit_value;
-                    }
+              }
+              else if(asc==';'){
+                  // move to next param
+                  esc_parameter_count++;
+                  if(esc_parameter_count>MAX_ESC_PARAMS) esc_parameter_count=MAX_ESC_PARAMS;
+              }
+              else if(asc=='?'){
+                  parameter_q=true;
+              }
+              else if(asc>=0x40 && asc<0x7E){
+                  // final byte. Log and handle
+                  esc_final_byte = asc;
+                  esc_sequence_received();
+              }
+              else{
+                  // unexpected value, undefined
+              }
+              break;
+      }
 
-                }
-                else if(asc==';'){
-                    // move to next param
-                    esc_parameter_count++;
-                    if(esc_parameter_count>MAX_ESC_PARAMS) esc_parameter_count=MAX_ESC_PARAMS;
-                }
-                else if(asc=='?'){
-                    parameter_q=true;
-                }
-                else if(asc>=0x40 && asc<0x7E){
-                    // final byte. Log and handle
-                    esc_final_byte = asc;
-                    esc_sequence_received();
-                }
-                else{
-                    // unexpected value, undefined
-                }
-                break;
-        }
-
-
-
-
-    }
-    else{
-        // regular characters -
-        if(asc>=0x20 && asc<=0xFF){ /* Strict ASCII <0x7f or Extended NuPetSCII <= 0xFF */
-
-            slip_character(asc-32,csr.x,csr.y);
-            csr.x++;
-
-
-            // this for disabling wrapping in terminal
-            constrain_cursor_values();
-
-            // alternatively, use this code for enabling wrapping in terminal
-            // NB the last released source has a bug - add the -1 after VISIBLEROWS to fix, if you really want to turn the wrapping on.
-            /*
-            if(csr.x>=COLUMNS){
-                csr.x=0;
-                if(csr.y==VISIBLEROWS-1){
-                    shuffle();
-                }
-                else{
-                    csr.y++;
-                }
-            }
-            */
-
-
-        }
-        //is it esc?
-        else if(asc==0x1B){
-            esc_state=ESC_ESC_RECEIVED;
-        }
-        else{
-            // return, backspace etc
-            switch (asc){
-                case BSP:
+  }
+  else {
+      // === regular characters ==============================================
+      if(asc>=0x20 && asc<=0xFF){
+          // --- Strict ASCII <0x7f or Extended NuPetSCII <= 0xFF ---
+          slip_character(asc-32,csr.x,csr.y);
+          csr.x++;
+          // this for disabling wrapping in terminal
+          constrain_cursor_values();
+      }
+      else if(asc==0x1B){
+          // --- Begin of ESCAPE SEQUENCE ---
+          esc_state=ESC_ESC_RECEIVED;
+      }
+      else
+          // --- return, backspace etc ---
+          switch (asc){
+              case BSP:
                 if(csr.x>0){
-                    csr.x--;
+                  csr.x--;
                 }
                 break;
-                case LF:
-
-                    if(csr.y==VISIBLEROWS-1){   // visiblerows is the count, csr is zero based
-                        shuffle();
-                    }
-                    else{
+              case LF:
+                  if(csr.y==VISIBLEROWS-1){   // visiblerows is the count, csr is zero based
+                    shuffle();
+                  }
+                  else {
                     csr.y++;
-                    }
+                  }
                 break;
-                case CR:
-                    csr.x=0;
+              case CR:
+                  csr.x=0;
+                  break;
+              case FF:
+                  clear_entire_screen();
+                  csr.x=0; csr.y=0;
+                  break;
+          } // switch(asc)
 
-                break;
-                case FF:
-                    clear_entire_screen();
-                    csr.x=0; csr.y=0;
-
-                break;
-            }
-
-        }
-
-    } // not esc sequence
-
-
+  } // eof Regular character
 
 }

@@ -31,6 +31,8 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 | \ESC[1J   | clear screen to cursor                                                     |
 | \ESC[3J   | same as \ESC[2J                                                            |
 | \ESC[nS   | scroll whole page up by n rows (default 1 if n missing)                    |
+| \ESCF     | Enter graphic mode (special graphic charset, NuPetScii). [Sample](docs/using-nupetscii.md).        |
+| \ESCG     | Exit graphic mode (ASCII charset)        
 
 40 col colour only: (sequence is ignored, no effect in 80 col b/w)
 

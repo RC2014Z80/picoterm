@@ -7,7 +7,9 @@ The `font8.c` used in the original PicoTerm 80 column only defines the ASCII cha
 
 Extending ASCII charset would be a great idea to draw ASCII tables and rudimentary interface.
 
-# NuPETSCII - ASCII charset for C256 Foenix
+It is even possible to draw screen and maps by using the Playscii software (see further).
+
+## NuPETSCII - ASCII charset for C256 Foenix
 
 Here are the additionnal chars merged into the `font8.c` file.
 
@@ -24,7 +26,34 @@ Tom did use its own [Character-Editor](https://github.com/tomxp411/Character-Edi
 
 Tom Wilson gracefuly authorise the usage of its NuPet font design in PicoTerm. Thanks to him for its sharing.
 
-# nupetscii.data
+# Drawing/Art with NuPetScii
+
+If you want to draw screen or art with NuPetScii, you can use the [Playscii from JP Lebreton](https://jp.itch.io/playscii), an open-source software written in Python3.
+
+This software can be used on Windows, Mac and Linux. Linux version runs directly from source code.
+
+![Playscii sotfware](playscii.jpg)<small><br/>Credit: [Playscii by JP Lebreton](https://jp.itch.io/playscii)</small>
+
+Some efforts have been made to create the NuPetSCII charset to create ressources with Playscii + NupetSCII.
+
+After installation of Playscii:
+1. open the [nupetscii-for-playscii.zip](nupetscii-for-playscii.zip) archive.
+2. extract the `nupetscii.char` and `nupetscii.png` files from the archive.
+3. copy the files in the `/charsets` folder of Playscii software.
+
+Voilà!
+
+## Ressources
+* [Playscii by JP Lebreton](https://jp.itch.io/playscii)
+* [NupetScii charset for Playscii](nupetscii-for-playscii.zip) (zip file)
+
+# Activating NuPetScii with Escape Sequence
+
+NuPetScii can be activated from PicoTerm menu and with Esc sequence. So an application can request to the terminal to switch to semi-graphical font (AKA NuPetScii).
+
+See the [using-nupetscii.md](../docs/using-nupetscii.md) document for more details.
+
+# About nupetscii.data
 
 The file `nupetscii.data` contains the definition of the additional chars. This file will be compiled with the `compile_font.py` python script to generate the expanded font charset named `nupetscii.c` .
 

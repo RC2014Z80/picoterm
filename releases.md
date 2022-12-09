@@ -17,6 +17,15 @@ From version 1.2 any publication will includes all U2F firmware files for 40 & 8
 
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
 
+## Version 1.4.2 - (ongoing)
+
+### Features
+* Add \ESCF to enter graphic mode (special graphic charset, NuPetSCII). See [example](docs/using-nupetscii.md).
+* Add \ESCG to exit graphic mode (ASCII charset)
+* Add [nupetscii-for-playscii.zip](nupetscii-font/nupetscii-for-playscii.zip) for [Playscii](https://jp.itch.io/playscii) (a ASCII art drawing tool by JP Lebreton).
+* Add terminal escape sequence [resources](docs/resources.md) documentation.
+* Add initial documentation [using-nupetscii](docs/using-nupetscii.md).
+
 ## Version 1.4.1 - Dec 2 2022 - NupetScii fix for CP/M
 
 In version 1.4, the NupetScii font does displays strange behavior on CP/M WordStar (& Turbo Pascal) because the 8th bit is used for reverse video display.
