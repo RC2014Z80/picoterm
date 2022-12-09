@@ -32,6 +32,8 @@
 #define VISIBLEROWS 30
 #define CSRCHAR     128
 
+// wrap text
+#define WRAP_TEXT
 
 // escape sequence state
 #define ESC_READY               0
@@ -48,6 +50,10 @@ static unsigned char esc_final_byte;
 
 bool cursor_visible;
 bool cursor_blinking = false;
+
+#ifdef	WRAP_TEXT
+bool just_wrapped = false;
+#endif
 
 static bool rvs = false;
 static unsigned char chr_under_csr;
@@ -124,6 +130,9 @@ void slip_character(unsigned char ch,int x,int y){
 	else
 		ptr[y]->inv[x] = 0;
 	
+#ifdef	WRAP_TEXT
+ 	if (just_wrapped) just_wrapped = false;
+#endif
 }
 
 unsigned char slop_character(int x,int y){
@@ -201,9 +210,6 @@ void delete_lines(int n){
     }
 }
 
-
-
-
 void shuffle_down(){
     // this is our scroll
     // because we're using pointers to rows, we only need to shuffle the array of pointers
@@ -247,6 +253,22 @@ void shuffle_up(){
 }
 
 
+
+void wrap_constrain_cursor_values(){
+	
+	if(csr.x>=COLUMNS) {
+		csr.x=0;
+		if(csr.y==VISIBLEROWS-1){   // visiblerows is the count, csr is zero based
+			shuffle_down();
+		}
+		else{
+			csr.y++;
+		}
+#ifdef	WRAP_TEXT		
+		just_wrapped = true;
+#endif		
+	}
+}
 
 bool get_csr_blink_state() { return cursor_blinking; }
 void set_csr_blink_state(bool state) { cursor_blinking = state; }
@@ -1079,26 +1101,17 @@ void handle_new_character(unsigned char asc){
 
             slip_character(asc-32,csr.x,csr.y);
             csr.x++;
-
-
-            // this for disabling wrapping in terminal
+            
+#ifndef	WRAP_TEXT			
+			// this for disabling wrapping in terminal
             constrain_cursor_values();
+#endif			
 
+#ifdef	WRAP_TEXT
             // alternatively, use this code for enabling wrapping in terminal
-            // NB the last released source has a bug - add the -1 after VISIBLEROWS to fix, if you really want to turn the wrapping on.
-            /*
-            if(csr.x>=COLUMNS){
-                csr.x=0;
-                if(csr.y==VISIBLEROWS-1){
-                    shuffle_down();
-                }
-                else{
-                    csr.y++;
-                }
-            }
-            */
-
-
+            wrap_constrain_cursor_values();
+#endif			
+			
         }
         //is it esc?
         else if(asc==0x1B){
@@ -1113,13 +1126,20 @@ void handle_new_character(unsigned char asc){
                 }
                 break;
                 case LF:
-
-                    if(csr.y==VISIBLEROWS-1){   // visiblerows is the count, csr is zero based
-                        shuffle_down();
-                    }
-                    else{
-                    csr.y++;
-                    }
+#ifdef	WRAP_TEXT				
+					if(!just_wrapped){
+#endif						
+						if(csr.y==VISIBLEROWS-1){   // visiblerows is the count, csr is zero based
+							shuffle_down();
+						}
+						else{
+							csr.y++;
+						}
+#ifdef	WRAP_TEXT						
+					}
+					else
+						just_wrapped = false;
+#endif					
                 break;
                 case CR:
                     csr.x=0;

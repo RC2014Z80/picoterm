@@ -87,7 +87,7 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core);
 ////#define vga_mode vga_mode_tft_800x480_50
 //#define vga_mode vga_mode_tft_400x240_50
 
-#define COUNT ((vga_mode.width/8)-1)
+#define COUNT 80 //((vga_mode.width/8)-1) // 80 chars = 640 / 8 = (vga_mode.width/8)
 
 // for now we want to see second counter on native and don't need both cores
 
@@ -154,7 +154,7 @@ void render_loop() {
     //printf("Rendering on core %d\n", core_num);
 
     while (true) {
-        struct scanvideo_scanline_buffer *scanline_buffer = scanvideo_begin_scanline_generation(true);
+		scanvideo_scanline_buffer_t *scanline_buffer = scanvideo_begin_scanline_generation(true);
 //        if (scanline_buffer->data_used) {
 //            // validate the previous scanline to make sure noone corrupted it
 //            validate_scanline(scanline_buffer->data, scanline_buffer->data_used, vga_mode.width, vga_mode.width);
@@ -355,13 +355,11 @@ void build_font( bool extended_font ){
 
               if (!(x & 1)) {
                   *p = new_pixel;
-                  if( !(extended_font) ) // do not manipulate reverse_pointer for extended font
-                    *pr = rvs_pixel;
+                   *pr = rvs_pixel;
               }
               else {
                   *p++ |= new_pixel << 16;
-                  if( !(extended_font) ) // do not manipulate reverse_pointer for extended font
-                    *pr++ |= rvs_pixel << 16;
+                  *pr++ |= rvs_pixel << 16;
               }
           } // for X
 
@@ -442,10 +440,10 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
 //            COMPOSABLE_RAW_1P | (0u<<16),
 //            COMPOSABLE_EOL_SKIP_ALIGN | (0xffff << 16) // eye catcher ffff
 //    };
-#undef COUNT
+//#undef COUNT
     // todo for SOME REASON, 80 is the max we can do without starting to really get bus delays (even with priority)... not sure how this could be
     // todo actually it seems it can work, it just mostly starts incorrectly synced!?
-#define COUNT MIN(vga_mode.width/(FRAGMENT_WORDS*2)-1, 80)
+//#define COUNT MIN(vga_mode.width/(FRAGMENT_WORDS*2)-1, 80)
 
     dest->fragment_words = FRAGMENT_WORDS;
 
