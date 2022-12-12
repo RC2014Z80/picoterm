@@ -20,11 +20,13 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 ## Version 1.4.2 - (ongoing)
 
 ### Features
-* Add \ESCF to enter graphic mode (special graphic charset, NuPetSCII). See [example](docs/using-nupetscii.md).
-* Add \ESCG to exit graphic mode (ASCII charset)
+* Add __ESC F__ to enter graphic mode (special graphic charset, NuPetSCII). See [example](docs/using-nupetscii.md).
+* Add __ESC G__ to exit graphic mode (ASCII charset)
 * Add [nupetscii-for-playscii.zip](nupetscii-font/nupetscii-for-playscii.zip) for [Playscii](https://jp.itch.io/playscii) (a ASCII art drawing tool by JP Lebreton).
 * Add terminal escape sequence [resources](docs/resources.md) documentation.
-* Add initial documentation [using-nupetscii](docs/using-nupetscii.md).
+* Add documentation [using-nupetscii](docs/using-nupetscii.md), how to draw art/screen/ressource with [Playscii](https://jp.itch.io/playscii) and how to draw with some assembly & code.
+
+
 
 ## Version 1.4.1 - Dec 2 2022 - NupetScii fix for CP/M
 
