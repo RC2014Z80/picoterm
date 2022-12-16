@@ -83,7 +83,7 @@ void reset_escape_sequence(){
 
 
 
-typedef struct row_of_text { 
+typedef struct row_of_text {
 	unsigned char slot[COLUMNS];
 	unsigned char inv[COLUMNS];
 } row_of_text;
@@ -129,7 +129,7 @@ void slip_character(unsigned char ch,int x,int y){
 		ptr[y]->inv[x] = 1;
 	else
 		ptr[y]->inv[x] = 0;
-	
+
 #ifdef	WRAP_TEXT
  	if (just_wrapped) just_wrapped = false;
 #endif
@@ -242,7 +242,7 @@ void shuffle_up(){
     for(int r=ROWS-2;r>=0;r--){
         ptr[r+1]=ptr[r];
     }
-	
+
     ptr[0] = temphandle;
 
     // recycled line needs blanking
@@ -255,7 +255,7 @@ void shuffle_up(){
 
 
 void wrap_constrain_cursor_values(){
-	
+
 	if(csr.x>=COLUMNS) {
 		csr.x=0;
 		if(csr.y==VISIBLEROWS-1){   // visiblerows is the count, csr is zero based
@@ -264,9 +264,9 @@ void wrap_constrain_cursor_values(){
 		else{
 			csr.y++;
 		}
-#ifdef	WRAP_TEXT		
+#ifdef	WRAP_TEXT
 		just_wrapped = true;
-#endif		
+#endif
 	}
 }
 
@@ -282,28 +282,28 @@ void print_cursor(){
 
     chr_under_csr = slop_character(csr.x,csr.y);
 	inv_under_csr = inv_character(csr.x,csr.y);
-	
-    if(cursor_visible==false || cursor_blinking) return;    
-	
+
+    if(cursor_visible==false || cursor_blinking) return;
+
 	if(config.nupetscii && chr_under_csr == 0)
 		ptr[csr.y]->slot[csr.x] = 143;
-	
+
 	else if(inv_under_csr == 1)
 		ptr[csr.y]->inv[csr.x] = 0;
-	
+
 	else
 		ptr[csr.y]->inv[csr.x] = 1;
-	
-	/*		
+
+	/*
 	unsigned char rvs_chr = chr_under_csr;
-	
+
     if(rvs_chr>=95){        // yes, 95, our screen codes start at ascii 0x20-0x7f
         rvs_chr -= 95;
     }
     else{
        rvs_chr += 95;
     }
-	
+
     //slip_character(rvs_chr,csr.x,csr.y); // fix 191121
     // can't use slip, because it applies reverse
     ptr[csr.y]->slot[csr.x] = rvs_chr;
@@ -326,7 +326,7 @@ void clear_line_from_cursor(){
     // new faster method
     void *sl = &ptr[csr.y]->slot[csr.x];
     memset(sl, 0, COLUMNS-csr.x);
-	
+
 	sl = &ptr[csr.y]->inv[csr.x];
     memset(sl, 0, COLUMNS-csr.x);
 
@@ -339,7 +339,7 @@ void clear_line_to_cursor(){
     // new faster method
     void *sl = &ptr[csr.y]->slot[0];
     memset(sl, 0, csr.x);
-	
+
 	sl = &ptr[csr.y]->inv[0];
     memset(sl, 0, csr.x);
 
@@ -351,7 +351,7 @@ void clear_entire_line(){
     // new faster method
     void *sl = &ptr[csr.y]->slot[0];
     memset(sl, 0, COLUMNS);
-	
+
 	sl = &ptr[csr.y]->inv[0];
     memset(sl, 0, COLUMNS);
 }
@@ -364,7 +364,7 @@ void clear_entire_screen(){
         // tighter method, as too much of a delay here can cause dropped characters
         void *sl = &ptr[r]->slot[0];
         memset(sl, 0, COLUMNS);
-		
+
 		sl = &ptr[r]->inv[0];
         memset(sl, 0, COLUMNS);
     }
@@ -440,53 +440,53 @@ if(esc_c1=='['){
         csr.y = n;
         constrain_cursor_values();
     break;
-	
+
 	case 'E':
         // ESC[#E	moves cursor to beginning of next line, # lines down
-        
+
 		n = esc_parameters[0];
 		if(n==0)n=1;
-		
+
 		// these are zero based
         csr.x = 0;
         csr.y += n;
         constrain_cursor_values();
     break;
-	
+
 	case 'F':
         // ESC[#F	moves cursor to beginning of previous line, # lines up
-        
+
 		n = esc_parameters[0];
 		if(n==0)n=1;
-		
+
 		// these are zero based
         csr.x = 0;
         csr.y -= n;
         constrain_cursor_values();
-    break;	
+    break;
 
 
 	case 'd':
         // ESC[#d	moves cursor to an absolute # line
-        
+
 		n = esc_parameters[0];
 		n--;
-		
+
 		// these are zero based
         csr.y = n;
         constrain_cursor_values();
-    break;	
-	
+    break;
+
 	case 'G':
         // ESC[#G	moves cursor to column #
-        
+
 		n = esc_parameters[0];
 		n--;
-		
+
 		// these are zero based
         csr.x = n;
         constrain_cursor_values();
-    break;	
+    break;
 
     case 'h':
         if(parameter_q && esc_parameters[0]==25){
@@ -618,7 +618,7 @@ if(esc_c1=='['){
             shuffle_down();
         }
     break;
-	
+
     case 'T':
     // Scroll whole page down by n (default 1) lines. New lines are added at the top. (not ANSI.SYS)
         n = esc_parameters[0];
@@ -626,7 +626,7 @@ if(esc_c1=='['){
         for(int i=0;i<n;i++){
             shuffle_up();
         }
-    break;	
+    break;
 
     // MORE
 
@@ -897,7 +897,7 @@ char read_key(){
   if( key_ready()==false ) return 0;
 
   if(cursor_blinking) cursor_blinking = false;
-	
+
   return read_key_from_buffer();
 }
 
@@ -950,7 +950,7 @@ char handle_config_input(){
         break;
 	  case 'c':
         config.baudrate = 38400;
-        break;		
+        break;
       case 'd':
         config.baudrate = 19200;
         break;
@@ -1104,21 +1104,21 @@ void handle_new_character(unsigned char asc){
           // --- Strict ASCII <0x7f or Extended NuPetSCII <= 0xFF ---
           slip_character(asc-32,csr.x,csr.y);
           csr.x++;
-#ifndef	WRAP_TEXT			
+#ifndef	WRAP_TEXT
           // this for disabling wrapping in terminal
           constrain_cursor_values();
-#endif			
+#endif
 #ifdef	WRAP_TEXT
           // alternatively, use this code for enabling wrapping in terminal
           wrap_constrain_cursor_values();
-#endif          
-          
+#endif
+
       }
       else if(asc==0x1B){
           // --- Begin of ESCAPE SEQUENCE ---
           esc_state=ESC_ESC_RECEIVED;
       }
-      else
+      else {
           // --- return, backspace etc ---
           switch (asc){
               case BSP:
@@ -1126,38 +1126,36 @@ void handle_new_character(unsigned char asc){
                   csr.x--;
                 }
                 break;
-                
+
               case LF:
-#ifdef	WRAP_TEXT				
+#ifdef	WRAP_TEXT
                 if(!just_wrapped){
-#endif						
+#endif
                   if(csr.y==VISIBLEROWS-1){ // visiblerows is the count, csr is zero based
                     shuffle_down();
                   }
                   else {
                     csr.y++;
                   }
-#ifdef	WRAP_TEXT						
+#ifdef	WRAP_TEXT
                 }
                 else
                   just_wrapped = false;
-#endif					
+#endif
                 break;
-                  
+
               case CR:
                 csr.x=0;
                 break;
-                
+
               case FF:
                 clear_entire_screen();
                 csr.x=0; csr.y=0;
                 break;
           } // switch(asc)
-  } eof Regular character
-
-  } // not esc sequence
+      } // else
+  } // eof Regular character
 
   if(cursor_blinking) cursor_blinking = false;
-  
 
 }
