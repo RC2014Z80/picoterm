@@ -39,6 +39,8 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 | \ESC[3J   | same as \ESC[2J                                                            |
 | \ESC[nS   | scroll whole page up by n rows (default 1 if n missing)                    |
 | \ESC[-n-T	| scroll up -n- lines                                                        |
+| \ESCF     | Enter graphic mode (special graphic charset, NuPetScii). [Sample](docs/using-nupetscii.md).        |
+| \ESCG     | Exit graphic mode (ASCII charset)        
 
 40 col colour only: (sequence is ignored, no effect in 80 col b/w)
 
@@ -57,7 +59,13 @@ PicoTerm provides:
 
 Big thanks to Tom Wilson and its [Character-Editor](https://github.com/tomxp411/Character-Editor) for autorising the NuPet ASCII charset inclusion.
 
-## How it works
+![NuPetScii Demo example](docs/_static/NupetSciiDemo-result.jpg)
+
+If you are interested in Drawing & Rendering NuPetScii ressource in PicoTerm you can read:
+* [NupetScii-Font readme](nupetscii-font/readme.md): explains how to create ressource and extract data
+* [Using NupetScii readme](docs/using-nupetscii.md): some RC2014 assembly & codes related to NuPetScii usage on RC2014.
+
+## How PicoTerm works
 * Textmode version (from v1.1) allows choice of green, amber or white on black, by holding button A, B or C on power-up. (choice is remembered).
 * Configuration menu is available via CTRL+SHIFT+M (configuration can be stored in Flash)
 * VGA generation starts at power-up

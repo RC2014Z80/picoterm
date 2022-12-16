@@ -7,7 +7,7 @@ include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
 pico_sdk_init()
 
-project(picoterm VERSION 1.4.1)
+project(picoterm VERSION 1.4.2)
 message("PicoTerm 80Col version = ${CMAKE_PROJECT_VERSION}")
 
 # Defines source files to compile
