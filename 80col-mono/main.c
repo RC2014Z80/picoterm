@@ -804,7 +804,7 @@ void led_blinking_task() {
 }
 
 void csr_blinking_task() {
-  const uint32_t interval_ms_csr = 600;
+  const uint32_t interval_ms_csr = 525;
   static uint32_t start_ms_csr = 0;
 
   // Blink every interval ms
