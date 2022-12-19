@@ -17,12 +17,13 @@ From version 1.2 any publication will includes all U2F firmware files for 40 & 8
 
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
 
-## Version 1.4.2 - (ongoing)
+
+## Version 1.5 - Dec 18 2022
 
 ### Features
 * Added 38400 bauds (used by RomWBW) by [abaffa](https://github.com/abaffa)
 * Blinking cursor by [abaffa](https://github.com/abaffa)
-* Add new ANSI escape by [abaffa](https://github.com/abaffa)
+* Add new ANSI escape by [abaffa](https://github.com/abaffa) for 80col
  * ESC[{line};{column}f : move cursor to given position
  * ESC[#d : moves cursor to an absolute # line
  * ESC[#G : moves cursor to column #
@@ -30,11 +31,12 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
  * ESC[#F : moves cursor to beginning of previous line
  * ESC[#T : scrolls up # lines
  * ESC[27m : reset inverse/reverse mode
-* Add __ESC F__ to enter graphic mode (special graphic charset, NuPetSCII). See [example](docs/using-nupetscii.md).
-* Add __ESC G__ to exit graphic mode (ASCII charset)
+* New escape to switch between ASCII and Semi graphical font for 80col
+ * Add __ESC F__ to enter graphic mode (special graphic charset, NuPetSCII). See [example](docs/using-nupetscii.md).
+ * Add __ESC G__ to exit graphic mode (ASCII charset)
 * Add [nupetscii-for-playscii.zip](nupetscii-font/nupetscii-for-playscii.zip) for [Playscii](https://jp.itch.io/playscii) (a ASCII art drawing tool by JP Lebreton).
-* Add terminal escape sequence [resources](docs/resources.md) documentation.
-* Add documentation [using-nupetscii](docs/using-nupetscii.md), how to draw art/screen/ressource with [Playscii](https://jp.itch.io/playscii) and how to draw with some assembly & code.
+* Add documentation: terminal escape sequence [resources](docs/resources.md)
+* Add documentation: [using-nupetscii](docs/using-nupetscii.md), how to draw art/screen/ressource with [Playscii](https://jp.itch.io/playscii) and how to draw with some assembly & code.
 
 
 ## Version 1.4.1 - Dec 2 2022 - NupetScii fix for CP/M
