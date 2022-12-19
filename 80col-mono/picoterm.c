@@ -44,20 +44,32 @@
 static int esc_state = ESC_READY;
 static int esc_parameters[MAX_ESC_PARAMS];
 static bool parameter_q;
+static bool parameter_p;
+static bool parameter_sp;
 static int esc_parameter_count;
 static unsigned char esc_c1;
 static unsigned char esc_final_byte;
 
 bool cursor_visible;
 bool cursor_blinking = false;
+bool cursor_blinking_mode = true;
+char cursor_symbol = 143;
 
-#ifdef	WRAP_TEXT
+bool dec_mode = false;
+int dec_mode_type = 0;
+
+bool insert_mode = false;
+
+bool wrap_text = true;
+//#ifdef	WRAP_TEXT
 bool just_wrapped = false;
-#endif
+//#endif
 
 static bool rvs = false;
+static bool blk = false;
 static unsigned char chr_under_csr;
 static bool inv_under_csr;
+static bool blk_under_csr;
 
 extern picoterm_config_t config; // Issue #13, awesome contribution of Spock64
 
@@ -78,6 +90,8 @@ void reset_escape_sequence(){
     esc_c1=0;
     esc_final_byte=0;
     parameter_q=false;
+    parameter_p=false;
+    parameter_sp=false;
 }
 
 
@@ -86,6 +100,7 @@ void reset_escape_sequence(){
 typedef struct row_of_text {
 	unsigned char slot[COLUMNS];
 	unsigned char inv[COLUMNS];
+    unsigned char blk[COLUMNS];
 } row_of_text;
 //struct row_of_text rows[ROWS];  // make 100 of our text rows
 //static struct row_of_text *p = &rows[0];  // pointer p assigned the address of the first row
@@ -124,15 +139,115 @@ void slip_character(unsigned char ch,int x,int y){
         ch = ch + 95;
     }
 	*/
-    ptr[y]->slot[x] = ch;
+
+    //decmode on
+    if(dec_mode){
+        ch = ch + 32;
+        if(ch >= 'j' && ch <= 'x')
+        {
+            if(dec_mode_type == 1){
+                switch(ch){
+                case 'j':    //0x6a	j	+
+                    ptr[y]->slot[x] = 0xe7;
+                break;
+                case 'k':    //0x6b	k	+
+                    ptr[y]->slot[x] = 0xe4;
+                break;
+                case 'l':    //0x6c	l	+
+                    ptr[y]->slot[x] = 0xe2;
+                break;
+                case 'm':    //0x6d	m	+
+                    ptr[y]->slot[x] = 0xe5;
+                break;
+                case 'n':    //0x6e	n	+
+                    ptr[y]->slot[x] = 0xea;
+                break;
+                case 'q':    //0x71	q	-
+                    ptr[y]->slot[x] = 0xe1;
+                break;
+                case 't':    //0x74	t	+
+                    ptr[y]->slot[x] = 0xe8;
+                break;
+                case 'u':    //0x75	u	¦
+                    ptr[y]->slot[x] = 0xe9;
+                break;
+                case 'v':    //0x76	v	-
+                    ptr[y]->slot[x] = 0xe6;
+                break;
+                case 'w':    //0x77	w	-
+                    ptr[y]->slot[x] = 0xe3;
+                break;
+                case 'x':    //0x78	x	¦
+                    ptr[y]->slot[x] = 0xe0;
+                break;
+                default:
+                    ptr[y]->slot[x] = ch;
+                break;
+                }
+            }
+            else{
+                switch(ch){
+                case 'j':    //0x6a	j	+
+                    ptr[y]->slot[x] = 0xbd;
+                break;
+                case 'k':    //0x6b	k	+
+                    ptr[y]->slot[x] = 0xae;
+                break;
+                case 'l':    //0x6c	l	+
+                    ptr[y]->slot[x] = 0xb0;
+                break;
+                case 'm':    //0x6d	m	+
+                    ptr[y]->slot[x] = 0xad;
+                break;
+                case 'n':    //0x6e	n	+
+                    ptr[y]->slot[x] = 0xdb;
+                break;
+                case 'q':    //0x71	q	-
+                    ptr[y]->slot[x] = 0xc3;
+                break;
+                case 't':    //0x74	t	+
+                    ptr[y]->slot[x] = 0xab;
+                break;
+                case 'u':    //0x75	u	¦
+                    ptr[y]->slot[x] = 0xb3;
+                break;
+                case 'v':    //0x76	v	-
+                    ptr[y]->slot[x] = 0xb1;
+                break;
+                case 'w':    //0x77	w	-
+                    ptr[y]->slot[x] = 0xb2;
+                break;
+                case 'x':    //0x78	x	¦
+                    ptr[y]->slot[x] = 0xdd;
+                break;
+                default:
+                    ptr[y]->slot[x] = ch;
+                break;
+                }
+            }
+        }
+        else{
+            ptr[y]->slot[x] = ch;
+        }
+        ptr[y]->slot[x] = ptr[y]->slot[x] - 32;
+    }
+    else{
+        ptr[y]->slot[x] = ch;
+    }
+    
 	if(rvs)
 		ptr[y]->inv[x] = 1;
 	else
 		ptr[y]->inv[x] = 0;
 
-#ifdef	WRAP_TEXT
+	if(blk)
+		ptr[y]->blk[x] = 1;
+	else
+		ptr[y]->blk[x] = 0;        
+
+//#ifdef	WRAP_TEXT
  	if (just_wrapped) just_wrapped = false;
-#endif
+//#endif
 }
 
 unsigned char slop_character(int x,int y){
@@ -145,12 +260,19 @@ unsigned char inv_character(int x,int y){
     return ptr[y]->inv[x];
 }
 
+unsigned char blk_character(int x,int y){
+    return ptr[y]->blk[x];
+}
+
 
 unsigned char * slotsForRow(int y){
     return &ptr[y]->slot[0];
 }
 unsigned char * slotsForInvRow(int y){
     return &ptr[y]->inv[0];
+}
+unsigned char * slotsForBlkRow(int y){
+    return &ptr[y]->blk[0];
 }
 
 /*
@@ -175,6 +297,8 @@ void insert_line(){
     // recycled row needs blanking
     for(int i=0;i<COLUMNS;i++){
         ptr[csr.y]->slot[i] = 0;
+        ptr[csr.y]->inv[i] = 0;
+        ptr[csr.y]->blk[i] = 0;
     }
 
 }
@@ -192,6 +316,8 @@ void delete_line(){
     // recycled row needs blanking
     for(int i=0;i<COLUMNS;i++){
         ptr[ROWS-1]->slot[i] = 0;
+        ptr[ROWS-1]->inv[i] = 0;
+        ptr[ROWS-1]->blk[i] = 0;        
     }
 
 }
@@ -208,6 +334,41 @@ void delete_lines(int n){
     {
         delete_line();
     }
+}
+
+void delete_chars(int n){
+    int c = csr.x;
+    for(int i=csr.x + n;i<COLUMNS;i++){
+        ptr[csr.y]->slot[c] = ptr[csr.y]->slot[i];
+        ptr[csr.y]->inv[c] = ptr[csr.y]->inv[i];
+        ptr[csr.y]->blk[c] = ptr[csr.y]->blk[i];
+        c++;
+    }
+    for(int i=c;i<COLUMNS;i++){
+        ptr[csr.y]->slot[i] = 0;
+        ptr[csr.y]->inv[i] = 0;
+        ptr[csr.y]->blk[i] = 0;
+    }
+}
+
+void erase_chars(int n){
+    int c = csr.x;
+    for(int i=csr.x;i<COLUMNS && i<c+n;i++){
+        ptr[csr.y]->slot[i] = 0;
+        ptr[csr.y]->inv[i] = 0;
+        ptr[csr.y]->blk[i] = 0;
+    }
+}
+
+void insert_chars(int n){
+
+    for(int r=COLUMNS-1;r>=csr.x+n;r--){
+        ptr[csr.y]->slot[r] = ptr[csr.y]->slot[r-n];
+        ptr[csr.y]->inv[r] = ptr[csr.y]->inv[r-n];
+        ptr[csr.y]->blk[r] = ptr[csr.y]->blk[r-n];
+    }
+
+    erase_chars(n);
 }
 
 void shuffle_down(){
@@ -228,6 +389,7 @@ void shuffle_down(){
     for(int i=0;i<COLUMNS;i++){
         ptr[ROWS-1]->slot[i] = 0;
 		ptr[ROWS-1]->inv[i] = 0;
+        ptr[ROWS-1]->blk[i] = 0;
     }
 }
 
@@ -249,6 +411,7 @@ void shuffle_up(){
     for(int i=0;i<COLUMNS;i++){
         ptr[0]->slot[i] = 0;
 		ptr[0]->inv[i] = 0;
+        ptr[0]->blk[i] = 0;
     }
 }
 
@@ -264,9 +427,9 @@ void wrap_constrain_cursor_values(){
 		else{
 			csr.y++;
 		}
-#ifdef	WRAP_TEXT
+//#ifdef	WRAP_TEXT
 		just_wrapped = true;
-#endif
+//#endif
 	}
 }
 
@@ -282,11 +445,12 @@ void print_cursor(){
 
     chr_under_csr = slop_character(csr.x,csr.y);
 	inv_under_csr = inv_character(csr.x,csr.y);
+    blk_under_csr = blk_character(csr.x,csr.y);
 
-    if(cursor_visible==false || cursor_blinking) return;
+    if(cursor_visible==false || (cursor_blinking_mode && cursor_blinking)) return;
 
 	if(config.nupetscii && chr_under_csr == 0)
-		ptr[csr.y]->slot[csr.x] = 143;
+		ptr[csr.y]->slot[csr.x] = cursor_symbol;
 
 	else if(inv_under_csr == 1)
 		ptr[csr.y]->inv[csr.x] = 0;
@@ -316,6 +480,7 @@ void clear_cursor(){
     // can't use slip, because it applies reverse
     ptr[csr.y]->slot[csr.x] = chr_under_csr;
 	ptr[csr.y]->inv[csr.x] = inv_under_csr;
+    ptr[csr.y]->blk[csr.x] = blk_under_csr;
 }
 
 
@@ -330,6 +495,8 @@ void clear_line_from_cursor(){
 	sl = &ptr[csr.y]->inv[csr.x];
     memset(sl, 0, COLUMNS-csr.x);
 
+	sl = &ptr[csr.y]->blk[csr.x];
+    memset(sl, 0, COLUMNS-csr.x);
 
 }
 void clear_line_to_cursor(){
@@ -343,6 +510,9 @@ void clear_line_to_cursor(){
 	sl = &ptr[csr.y]->inv[0];
     memset(sl, 0, csr.x);
 
+	sl = &ptr[csr.y]->blk[0];
+    memset(sl, 0, csr.x);    
+
 }
 void clear_entire_line(){
     //for(int c=0;c<COLUMNS;c++){
@@ -354,6 +524,9 @@ void clear_entire_line(){
 
 	sl = &ptr[csr.y]->inv[0];
     memset(sl, 0, COLUMNS);
+
+	sl = &ptr[csr.y]->blk[0];
+    memset(sl, 0, COLUMNS);    
 }
 
 
@@ -367,6 +540,9 @@ void clear_entire_screen(){
 
 		sl = &ptr[r]->inv[0];
         memset(sl, 0, COLUMNS);
+
+		sl = &ptr[r]->blk[0];
+        memset(sl, 0, COLUMNS);        
     }
 }
 
@@ -420,6 +596,16 @@ void esc_sequence_received(){
     static unsigned char esc_final_byte;
 */
 
+//ESC H           Set tab at current column
+//ESC [ g         Clear tab at current column
+//ESC [ 0g        Same
+//ESC [ 3g        Clear all tabs
+
+//ESC H	HTS	Horizontal Tab Set	Sets a tab stop in the current column the cursor is in.
+//ESC [ <n> I	CHT	Cursor Horizontal (Forward) Tab	Advance the cursor to the next column (in the same row) with a tab stop. If there are no more tab stops, move to the last column in the row. If the cursor is in the last column, move to the first column of the next row.
+//ESC [ <n> Z	CBT	Cursor Backwards Tab	Move the cursor to the previous column (in the same row) with a tab stop. If there are no more tab stops, moves the cursor to the first column. If the cursor is in the first column, doesn’t move the cursor.
+//ESC [ 0 g	TBC	Tab Clear (current column)	Clears the tab stop in the current column, if there is one. Otherwise does nothing.
+//ESC [ 3 g	TBC	Tab Clear (all columns)
 
 int n,m;
 if(esc_c1=='['){
@@ -429,6 +615,13 @@ if(esc_c1=='['){
 	case 'f':
         // Moves the cursor to row n, column m
         // The values are 1-based, and default to 1
+
+        //Move cursor to upper left corner ESC [H
+        //Move cursor to upper left corner ESC [;H
+        //Move cursor to screen location v,h ESC [<v>;<h>H
+        //Move cursor to upper left corner ESC [f
+        //Move cursor to upper left corner ESC [;f
+        //Move cursor to screen location v,h ESC [<v>;<h>f
 
         n = esc_parameters[0];
         m = esc_parameters[1];
@@ -489,15 +682,84 @@ if(esc_c1=='['){
     break;
 
     case 'h':
-        if(parameter_q && esc_parameters[0]==25){
-            // show csr
-            make_cursor_visible(true);
+        //[ 2 h		Keyboard locked
+        //[ 4 h		Insert mode selected
+        //[ 20 h    Set new line mode
+
+        //[ ? 1 h       Set cursor key to application
+        //[ ? 2 h       Set ANSI (versus VT52)
+        //[ ? 3 h		132 Characters on
+        //[ ? 4 h		Smooth Scroll on
+        //[ ? 5 h		Inverse video on
+        //[ ? 7 h		Wraparound ON
+        //[ ? 8 h		Autorepeat ON
+        //[ ? 9 h       Set 24 lines per screen (default) 
+        //[ ? 12 h		Text Cursor Enable Blinking
+        //[ ? 14 h  	Immediate operation of ENTER key
+        //[ ? 16 h  	Edit selection immediate
+        //[ ? 25 h  	Cursor ON
+        //[ ? 50 h  	Cursor ON
+        //[ ? 75 h  	Screen display ON
+
+        if(parameter_q){ 
+            if(esc_parameters[0]==25 || esc_parameters[0]==50){
+                // show csr
+                make_cursor_visible(true);
+            }
+            else if(esc_parameters[0]==7){
+                //Auto-wrap mode on (default) ESC [?7h
+                wrap_text = true;
+            }
+            else if(esc_parameters[0]==12){
+                //Text Cursor Enable Blinking
+                cursor_blinking_mode = true;
+            }
+        }
+        else{
+            if(esc_parameters[0]==4){
+                //Insert mode selected
+                insert_mode = true;
+            }
         }
     break;
     case 'l':
-        if(parameter_q && esc_parameters[0]==25){
-            // hide csr
-            make_cursor_visible(false);
+        //[ 2 l		Keyboard unlocked
+        //[ 4 l		Replacement mode selected
+        //[ 20 l    Set line feed mode
+
+        //[ ? 1 l       Set cursor key to cursor               
+        //[ ? 2 l       Set VT52 (versus ANSI)                 
+        //[ ? 3 l		80 Characters on
+        //[ ? 4 l		Jump Scroll on
+        //[ ? 5 l		Normal video off
+        //[ ? 7 l		Wraparound OFF
+        //[ ? 8 l		Autorepeat OFF
+        //[ ? 9 l       Set 36 lines per screen 
+        //[ ? 12 l	    Text Cursor Disable Blinking
+        //[ ? 14 l	    Deferred operation of ENTER key
+        //[ ? 16 l	    Edit selection deferred
+        //[ ? 25 l	    Cursor OFF
+        //[ ? 50 l	    Cursor OFF
+        //[ ? 75 l	    Screen display OFF
+        if(parameter_q){
+            if(esc_parameters[0]==25 || esc_parameters[0]==50){
+                // hide csr
+                make_cursor_visible(false);
+            }
+            else if(esc_parameters[0]==7){
+                //Auto-wrap mode off ESC [?7l
+                wrap_text = false;
+            }
+            else if(esc_parameters[0]==12){
+                //Text Cursor Disable Blinking
+                cursor_blinking_mode = false;
+            }
+        }
+        else{
+            if(esc_parameters[0]==4){
+                //Replacement mode selected
+                insert_mode = false;
+            }
         }
     break;
 
@@ -505,12 +767,34 @@ if(esc_c1=='['){
     case 'm':
         //SGR
         // Sets colors and style of the characters following this code
-        //TODO: allows multiple paramters
-        if(esc_parameters[0]==0 || esc_parameters[0]==27){
+        //TODO: allows multiple parameters        
+        //[ 0 m		Clear all character attributes
+        //[ 1 m		(Bold) Alternate Intensity ON
+        //[ 3 m     Select font #2 (large characters)
+        //[ 4 m		Underline ON
+        //[ 5 m		Blink ON
+        //[ 6 m     Select font #2 (jumbo characters)
+        //[ 7 m		Inverse video ON
+        //[ 8 m     Turn invisible text mode on
+        //[ 22 m		Alternate Intensity OFF
+        //[ 24 m		Underline OFF
+        //[ 25 m		Blink OFF
+        //[ 27 m		Inverse Video OFF
+        if(esc_parameters[0]==0){
             rvs = false; // reset / normal
+            blk = false;
         }
-        if(esc_parameters[0]==7){
+        else if(esc_parameters[0]==5){
+            blk = true;
+        }
+        else if(esc_parameters[0]==7){
             rvs = true;
+        }
+        else if(esc_parameters[0]==25){
+            blk = false;
+        }        
+        else if(esc_parameters[0]==27){
+            rvs = false;
         }
     break;
 
@@ -646,9 +930,93 @@ if(esc_c1=='['){
         delete_lines(n);
     break;
 
+    case 'P':
+    // 'DELETE CHARS' - delete <n> characters at the current cursor position, shifting in space characters from the right edge of the screen.
+        n = esc_parameters[0];
+        if(n==0)n=1;
+        delete_chars(n);
+    break;
 
+    case 'X':
+    // 'ERASE CHARS' - erase <n> characters from the current cursor position by overwriting them with a space character.
+        n = esc_parameters[0];
+        if(n==0)n=1;
+        erase_chars(n);
+    break;    
+
+    case '@':
+    // 'Insert Character' - insert <n> spaces at the current cursor position, shifting all existing text to the right. Text exiting the screen to the right is removed.
+        n = esc_parameters[0];
+        if(n==0)n=1;
+        insert_chars(n);
+    break;    
+
+    case 'q':
+
+        if(parameter_sp){
+            parameter_sp = false;
+            
+            //ESC [ 0 SP q	DECSCUSR	User Shape	Default cursor shape configured by the user
+            //ESC [ 1 SP q	DECSCUSR	Blinking Block	Blinking block cursor shape
+            //ESC [ 2 SP q	DECSCUSR	Steady Block	Steady block cursor shape
+            //ESC [ 3 SP q	DECSCUSR	Blinking Underline	Blinking underline cursor shape
+            //ESC [ 4 SP q	DECSCUSR	Steady Underline	Steady underline cursor shape
+            //ESC [ 5 SP q	DECSCUSR	Blinking Bar	Blinking bar cursor shape
+            //ESC [ 6 SP q	DECSCUSR	Steady Bar	Steady bar cursor shape
+
+            switch(esc_parameters[0]){
+                case 0:
+                cursor_symbol = 143;
+                cursor_blinking_mode = true;
+            break;
+                case 1:
+                cursor_symbol = 121; //95;
+                cursor_blinking_mode = true;
+            break;
+                case 2:
+                cursor_symbol = 121; //95;
+                cursor_blinking_mode = false;
+            break;
+                case 3:
+                cursor_symbol = 143;
+                cursor_blinking_mode = true;
+            break;
+                case 4:
+                cursor_symbol = 143;
+                cursor_blinking_mode = false;
+            break;
+                case 5:
+                cursor_symbol = 148;
+                cursor_blinking_mode = true;
+            break;
+                case 6:
+                cursor_symbol = 148;
+                cursor_blinking_mode = false;
+            break;                
+            }
+        }
+    break;
     }
 
+}
+else if(esc_c1=='('){
+    // CSI
+    switch(esc_final_byte){
+    case 'B':
+        dec_mode = false;
+    break;
+    case '0':
+        dec_mode = true;
+        dec_mode_type = 0;
+    break;
+    case '2':
+        dec_mode = true;
+        dec_mode_type = 1;
+    break;    
+    default:
+        dec_mode = false;
+    break;
+    }
 }
 else{
     // ignore everything else
@@ -1070,11 +1438,19 @@ void handle_new_character(unsigned char asc){
           case ESC_PARAMETER_READY:
               // waiting on parameter character, semicolon or final byte
               if(asc>='0' && asc<='9'){
-                  // parameter value
-                  if(esc_parameter_count<MAX_ESC_PARAMS){
-                      unsigned char digit_value = asc - 0x30; // '0'
-                      esc_parameters[esc_parameter_count] *= 10;
-                      esc_parameters[esc_parameter_count] += digit_value;
+
+                  if(parameter_p){
+                    // final byte. Log and handle
+                    esc_final_byte = asc;
+                    esc_sequence_received();                    
+                  }
+                  else{
+                    // parameter value
+                    if(esc_parameter_count<MAX_ESC_PARAMS){
+                        unsigned char digit_value = asc - 0x30; // '0'
+                        esc_parameters[esc_parameter_count] *= 10;
+                        esc_parameters[esc_parameter_count] += digit_value;
+                    }
                   }
 
               }
@@ -1085,6 +1461,13 @@ void handle_new_character(unsigned char asc){
               }
               else if(asc=='?'){
                   parameter_q=true;
+              }
+              else if(asc==' '){
+                  parameter_sp=true;
+              }
+              else if(asc=='('){
+                  esc_c1 = '(';
+                  parameter_p=true;
               }
               else if(asc>=0x40 && asc<0x7E){
                   // final byte. Log and handle
@@ -1101,17 +1484,26 @@ void handle_new_character(unsigned char asc){
   else {
       // === regular characters ==============================================
       if(asc>=0x20 && asc<=0xFF){
+          
+          //if insert mode shift chars to the right
+          if(insert_mode) insert_chars(1);
+
           // --- Strict ASCII <0x7f or Extended NuPetSCII <= 0xFF ---
           slip_character(asc-32,csr.x,csr.y);
           csr.x++;
-#ifndef	WRAP_TEXT
+
+          if(!wrap_text){
+//#ifndef	WRAP_TEXT
           // this for disabling wrapping in terminal
           constrain_cursor_values();
-#endif
-#ifdef	WRAP_TEXT
+//#endif
+          }
+          else{
+//#ifdef	WRAP_TEXT
           // alternatively, use this code for enabling wrapping in terminal
           wrap_constrain_cursor_values();
-#endif
+//#endif
+          }
 
       }
       else if(asc==0x1B){
@@ -1128,20 +1520,31 @@ void handle_new_character(unsigned char asc){
                 break;
 
               case LF:
-#ifdef	WRAP_TEXT
-                if(!just_wrapped){
-#endif
-                  if(csr.y==VISIBLEROWS-1){ // visiblerows is the count, csr is zero based
-                    shuffle_down();
-                  }
-                  else {
-                    csr.y++;
-                  }
-#ifdef	WRAP_TEXT
+                if(wrap_text){
+    //#ifdef	WRAP_TEXT
+                    if(!just_wrapped){
+    //#endif
+                    if(csr.y==VISIBLEROWS-1){ // visiblerows is the count, csr is zero based
+                        shuffle_down();
+                    }
+                    else {
+                        csr.y++;
+                    }
+    //#ifdef	WRAP_TEXT
+                    }
+                    else
+                    just_wrapped = false;
+    //#endif
                 }
-                else
-                  just_wrapped = false;
-#endif
+                else{
+                    if(csr.y==VISIBLEROWS-1){ // visiblerows is the count, csr is zero based
+                        shuffle_down();
+                    }
+                    else {
+                        csr.y++;
+                    }
+
+                }
                 break;
 
               case CR:

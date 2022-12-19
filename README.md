@@ -11,6 +11,10 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 
 | Escape sequence             | Description                                              |
 |-----------------------------|----------------------------------------------------------|
+| \ESC[?7l	| Wraparound OFF                                                             |
+| \ESC[?7h	| Wraparound ON                                                              |
+| \ESC[?12l	| Text Cursor Disable Blinking                                               |
+| \ESC[?12h	| Text Cursor Enable Blinking                                                |
 | \ESC[?25l | Cursor invisible                                                           |
 | \ESC[?25h | Cursor visible                                                             |
 | \ESC[H    | Move to 0-0                                                                |
@@ -21,8 +25,11 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 | \ESC[0K   | Clear from cursor to the end of the line                                   |
 | \ESC[1K   | Clear from the beginning of the current line to the cursor                 |
 | \ESC[2K   | Clear the whole line                                                       |
-| \ESC[0J	  | Clear the screen from cursor until end of screen                           |
+| \ESC[0J	| Clear the screen from cursor until end of screen                           |
 | \ESC[2J   | Clear the screen and move the cursor to 0-0                                |
+| \ESC[-n-@	| Insert -n- Space Characters                                                |  
+| \ESC[-n-P	| Delete -n- Characters, shifting in space characters                        |
+| \ESC[-n-X	| Erase -n- Characters, overwriting them with a space character.             |
 | \ESC[-n-A | Move the cursor up -n- lines                                               |
 | \ESC[-n-B | Move the cursor down -n- lines                                             |
 | \ESC[-n-C | Move the cursor forward -n- characters                                     |
@@ -32,7 +39,9 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 | \ESC[-n-F	| Move the cursor to beginning of previous line, -n- lines up                |
 | \ESC[-n-G	| Move the cursor to column -n-                                              |
 | \ESC[0m   | normal text (should also set foreground & background colours to normal)    |
+| \ESC[5m	| blink ON                                                                   |
 | \ESC[7m   | reverse text                                                               |
+| \ESC[25m	| blink OFF                                                                  |
 | \ESC[27m	| reset inverse/reverse mode                                                 |
 | \ESC[0J   | clear screen from cursor                                                   |
 | \ESC[1J   | clear screen to cursor                                                     |
@@ -41,6 +50,40 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 | \ESC[-n-T	| scroll up -n- lines                                                        |
 | \ESCF     | Enter graphic mode (special graphic charset, NuPetScii). [Sample](docs/using-nupetscii.md).        |
 | \ESCG     | Exit graphic mode (ASCII charset)        
+
+Cursor Style
+
+| Escape sequence             | Description                                              |
+|-----------------------------|----------------------------------------------------------|
+| \ESC[0 q	| Default cursor shape configured by the user                                |
+| \ESC[1 q	| Blinking block cursor shape                                                |
+| \ESC[2 q	| Steady block cursor shape                                                  |
+| \ESC[3 q	| Blinking underline cursor shape                                            |
+| \ESC[4 q	| Steady underline cursor shape                                              |
+| \ESC[5 q	| Blinking bar cursor shape                                                  |
+| \ESC[6 q	| Steady bar cursor shape                                                    |
+
+DEC Line Drawing
+
+| Escape sequence             | Description                                              |
+|-----------------------------|----------------------------------------------------------|
+| \ESC(0   | Enables DEC Line Drawing Mode - single line                                 |
+| \ESC(2   | Enables DEC Line Drawing Mode - double line                                 |
+| \ESC(B   | Enables ASCII Mode (Default)                                                |
+
+| Hex     | ASCII    | DEC Line Drawing      |
+|---------|----------|-----------------------|
+| 0x6a    | j        | ┘                     |
+| 0x6b    | k        | ┐                     |
+| 0x6c    | l        | ┌                     |
+| 0x6d    | m        | └                     |
+| 0x6e    | n        | ┼                     |
+| 0x71    | q        | ─                     |
+| 0x74    | t        | ├                     |
+| 0x75    | u        | ┤                     |
+| 0x76    | v        | ┴                     |
+| 0x77    | w        | ┬                     |
+| 0x78    | x        | │                     |
 
 40 col colour only: (sequence is ignored, no effect in 80 col b/w)
 
