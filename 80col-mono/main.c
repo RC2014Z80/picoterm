@@ -723,6 +723,7 @@ int main(void) {
   keybd_init( pico_key_down, pico_key_up );
 
   prepare_text_buffer();
+  reset_terminal();
   display_terminal(); // display terminal entry screen
   video_main();
   tusb_init(); // initialize tinyusb stack

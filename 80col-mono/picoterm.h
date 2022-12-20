@@ -27,19 +27,25 @@
 #ifndef _PICOTERM_H
 #define _PICOTERM_H
 
+#define BEL         0x07 //BEL	7	007	0x07	\a	^G	Terminal bell
+#define BSP         0x08 //BS	8	010	0x08	\b	^H	Backspace
+#define HT          0x09 //HT	9	011	0x09	\t	^I	Horizontal TAB
 #define SPC         0x20
-#define ESC         0x1b
-#define DEL         0x7f
-#define BSP         0x08
-#define LF          0x0a
-#define CR          0x0d
-#define FF          0x0c
+
+#define LF          0x0a //LF	10	012	0x0A	\n	^J	Linefeed (newline)
+#define VT          0x0b //VT	11	013	0x0B	\v	^K	Vertical TAB
+#define FF          0x0c //FF	12	014	0x0C	\f	^L	Formfeed (also: New page NP)
+#define CR          0x0d //CR	13	015	0x0D	\r	^M	Carriage return
+
+#define ESC         0x1b //ESC	27	033	0x1B	<none>	^[	Escape character
+#define DEL         0x7f //DEL	127	177	0x7F	<none>	<none>	Delete character
 
 unsigned char slop_character(int x,int y);
 unsigned char * slotsForRow(int y);
 unsigned char * slotsForInvRow(int y);
 unsigned char * slotsForBlkRow(int y);
 
+void reset_terminal();
 void prepare_text_buffer();
 void display_terminal();
 void display_config();
@@ -62,6 +68,5 @@ bool key_ready(); // in main.c
 unsigned char read_key_from_buffer(); // in main.c
 // for debugging purposes
 void print_ascii_value(unsigned char asc);
-
 
 #endif
