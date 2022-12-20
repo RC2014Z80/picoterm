@@ -828,8 +828,19 @@ if(mode==VT100){
                     //Text Cursor Enable Blinking
                     cursor_blinking_mode = true;
                 }
-                else if(esc_parameters[0]==47){
+                else if(esc_parameters[0]==47 || esc_parameters[0]==1047){
                     //save screen
+                    copy_main_to_secondary_screen();
+                }
+                else if(esc_parameters[0]==1048){
+                    //save cursor
+                    saved_csr.x = csr.x;
+                    saved_csr.y = csr.y;
+                }
+                else if(esc_parameters[0]==1049){
+                    //save cursor and save screen
+                    saved_csr.x = csr.x;
+                    saved_csr.y = csr.y;
                     copy_main_to_secondary_screen();
                 }
             }
@@ -884,9 +895,19 @@ if(mode==VT100){
                     //Text Cursor Disable Blinking
                     cursor_blinking_mode = false;
                 }
-                else if(esc_parameters[0]==47){
+                else if(esc_parameters[0]==47 || esc_parameters[0]==1047){
                     //restore screen
                     copy_secondary_to_main_screen();
+                }
+                else if(esc_parameters[0]==1048){
+                    //restore cursor
+                    copy_secondary_to_main_screen();
+                }                
+                else if(esc_parameters[0]==1049){
+                    //restore screen and restore cursor
+                    copy_secondary_to_main_screen();
+                    csr.x = saved_csr.x;
+                    csr.y = saved_csr.y;
                 }
             }
             else{
