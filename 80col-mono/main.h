@@ -51,6 +51,11 @@
 #define MENU_NUPETSCII 0x02 // display NuPet ASCII charset
 #define MENU_HELP      0x03 // display the HELP menu
 
+#define USB_POWER_GPIO 26 // this GPIO can be used with a MOSFET to power-up USB
+#define USB_POWER_DELAY 5000 // ms
+
+static uint32_t start_time;
+
 static void pico_key_down(int scancode, int keysym, int modifiers);
 static void pico_key_up(int scancode, int keysym, int modifiers);
 
