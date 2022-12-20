@@ -95,6 +95,10 @@ Please follow the [compiling](compiling.md) for details about setting-up compile
 
 Need to debug and troubleshoot? See the [debug.md](debug.md) document which describes the picoterm _debug uart_.
 
+## Expansion port and available GPIOs
+
+see [expansion port](picoterm-port.md) for details.
+
 # Adding a keyboard layout
 
 To add a keyboard layout, you must refer to this following picture (sourced from [this article from Vasily Rubashka, Ukraine , Sergey Shilov, Russia](https://www.mcselec.com/index.php?option=com_content&task=view&id=322)) to identify the keycode with the keys position.
