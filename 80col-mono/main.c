@@ -65,15 +65,12 @@
 static bool is_menu = false;   // switch between Terminal mode and Menu mode
 static uint8_t id_menu = 0x00; // toggle with CTRL+SHIFT+M
 
-
 //CU_REGISTER_DEBUG_PINS(frame_gen)
 //CU_SELECT_DEBUG_PINS(frame_gen)
-
 
 #define BTN_A 0
 #define BTN_B 6
 #define BTN_C 11
-
 
 typedef bool (*render_scanline_func)(struct scanvideo_scanline_buffer *dest, int core);
 bool render_scanline_test_pattern(struct scanvideo_scanline_buffer *dest, int core);
@@ -138,16 +135,10 @@ static int x_sprites = 1;
 void init_render_state(int core);
 void led_blinking_task();
 void csr_blinking_task();
-
-
-
-
-// ok this is going to be the beginning of retained mode
-//
-
+void usb_power_task();
 
 void render_loop() {
-  /* Multithreaded execution */
+    /* Multithreaded execution */
     static uint8_t last_input = 0;
     static uint32_t last_frame_num = 0;
     int core_num = get_core_num();
@@ -155,11 +146,7 @@ void render_loop() {
     //printf("Rendering on core %d\n", core_num);
 
     while (true) {
-		scanvideo_scanline_buffer_t *scanline_buffer = scanvideo_begin_scanline_generation(true);
-//        if (scanline_buffer->data_used) {
-//            // validate the previous scanline to make sure noone corrupted it
-//            validate_scanline(scanline_buffer->data, scanline_buffer->data_used, vga_mode.width, vga_mode.width);
-//        }
+    scanvideo_scanline_buffer_t *scanline_buffer = scanvideo_begin_scanline_generation(true);
         // do any frame related logic
         // todo probably a race condition here ... thread dealing with last line of a frame may end
         // todo up waiting on the next frame...
@@ -172,25 +159,6 @@ void render_loop() {
             // todo should we ignore if we aren't attempting the next line
             last_frame_num = frame_num;
             hpos += hspeed;
-//            if (hpos < 0) {
-//                hpos = 0;
-//                hspeed = -hspeed;
-//            } else if (hpos >= (level0_map_width*8 - vga_mode.width) << COORD_SHIFT) {
-//                hpos = (level0_map_width*8 - vga_mode.width) << COORD_SHIFT;
-//                hspeed = -hspeed;
-//            }
-//            uint8_t new_input = gpio_get(input_pin0);
-//            if (last_input && !new_input) {
-//                static int foo = 1;
-//                foo++;
-//
-//               bus_ctrl_hw->priority = (foo & 1u) << BUSCTRL_BUS_PRIORITY_DMA_R_LSB;
-
-//                hpos++;
-//            }
-//            last_input = new_input;
-//            static int bar = 1;
-
         }
         mutex_exit(&frame_logic_mutex);
         //DEBUG_PINS_SET(frame_gen, core_num ? 2 : 4);
@@ -202,8 +170,6 @@ void render_loop() {
         // release the scanline into the wild
         scanvideo_end_scanline_generation(scanline_buffer);
         // do this outside mutex and scanline generation
-
-
     } // end while(true) loop
 }
 
@@ -379,25 +345,9 @@ int video_main(void) {
     sem_init(&video_setup_complete, 0, 1);
 
     setup_video();
-
-//    init_render_state(0);   // does nothing
-//    init_render_state(1);   // does nothing
-
-//#ifdef RENDER_ON_CORE1
     render_on_core1();   // render_loop() on core 1
-//#endif
-//#ifdef RENDER_ON_CORE0
-//    render_loop();
-//#endif
-
 }
 
-
-// must not be called concurrently
-//void init_render_state(int core) {
-//
-//
-//}
 
 
 static __not_in_flash("x") uint16_t beginning_of_line[] = {
@@ -437,15 +387,6 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
     int x = hpos;
 
     // we handle both ends separately
-//    static const uint32_t end_of_line[] = {
-//            COMPOSABLE_RAW_1P | (0u<<16),
-//            COMPOSABLE_EOL_SKIP_ALIGN | (0xffff << 16) // eye catcher ffff
-//    };
-//#undef COUNT
-    // todo for SOME REASON, 80 is the max we can do without starting to really get bus delays (even with priority)... not sure how this could be
-    // todo actually it seems it can work, it just mostly starts incorrectly synced!?
-//#define COUNT MIN(vga_mode.width/(FRAGMENT_WORDS*2)-1, 80)
-
     dest->fragment_words = FRAGMENT_WORDS;
 
     beginning_of_line[FRAGMENT_WORDS * 2 - 2] = COUNT * 2 * FRAGMENT_WORDS - 3 + 2;
@@ -456,7 +397,7 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
 
     *output32++ = host_safe_hw_ptr(beginning_of_line);
     uint32_t *dbase = font_raw_pixels + FONT_WIDTH_WORDS * (y % FONT_HEIGHT);
-    
+
     int max_char = config.nupetscii==1 ?  font->dsc->cmaps->range_length : 95;
 
 
@@ -473,8 +414,8 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
 
       ch = *rowslots;
       rowslots++;
-	  
-	  inv = *rowinv;
+
+      inv = *rowinv;
       rowinv++;
 
 	  blk = *rowblk;
@@ -504,17 +445,13 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
       }
     }
 
-
     *output32++ = host_safe_hw_ptr(end_of_line);
     *output32++ = 0; // end of chain
 
     assert(0 == (3u & (intptr_t) output32));
     assert((uint32_t *) output32 <= (buf + dest->data_max));
 
-    dest->data_used = (uint16_t) (output32 -
-                                  buf); // todo we don't want to include the off the end data in the "size" for the dma
-
-
+    dest->data_used = (uint16_t) (output32 - buf); // todo we don't want to include the off the end data in the "size" for the dma
 
 #if PICO_SCANVIDEO_PLANE_COUNT > 1
 #if !PICO_SCANVIDEO_PLANE2_VARIABLE_FRAGMENT_DMA
@@ -566,8 +503,6 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
 #endif
     dest->status = SCANLINE_OK;
 
-
-
     return true;
 }
 
@@ -590,7 +525,6 @@ void on_uart_rx() {
 
 }
 
-
 void tih_handler(){
     gpio_put(LED,true);
 }
@@ -600,15 +534,11 @@ void handle_keyboard_input(){
   // normal terminal operation: if key received -> display it on term
   if(key_ready()){
     clear_cursor();
-
-    do{
-
+    do {
         handle_new_character(read_key_from_buffer());
         // or for analysing what comes in
         //print_ascii_value(read_key_from_buffer());
-
-    }while(key_ready());
-
+    } while(key_ready());
     print_cursor();
   }
 }
@@ -636,6 +566,11 @@ int main(void) {
   gpio_init(LED);
   gpio_set_dir(LED, GPIO_OUT);
   gpio_put(LED,false);
+
+  gpio_init(USB_POWER_GPIO); // GPIO 26
+  gpio_set_dir(USB_POWER_GPIO, GPIO_OUT);
+  gpio_put(USB_POWER_GPIO,false);
+	start_time = board_millis();
 
   uint8_t bootchoice = 0;
   gpio_init(BTN_A);
@@ -734,8 +669,9 @@ int main(void) {
   while(true){
     // TinyUsb Host Task (see keybd.c::process_kdb_report() callback and pico_key_down() here below)
     tuh_task();
+    usb_power_task();
     led_blinking_task();
-	csr_blinking_task();
+    csr_blinking_task();
 
     if( is_menu && !(old_menu) ){ // CRL+M : menu activated ?
       // empty the keyboard buffer
@@ -760,18 +696,18 @@ int main(void) {
     }
 
     if( is_menu ){ // Under menu display
-			switch( id_menu ){
-				case MENU_CONFIG:
-					// Specialized handler manage keyboard input for menu
-					_ch = handle_config_input();
-					break;
-				default:
-					_ch = handle_default_input();
-			}
+      switch( id_menu ){
+        case MENU_CONFIG:
+          // Specialized handler manage keyboard input for menu
+          _ch = handle_config_input();
+          break;
+        default:
+          _ch = handle_default_input();
+      }
       if( _ch==ESC ){ // ESC will also close the menu
           is_menu = false;
-					id_menu = 0x00;
-			}
+          id_menu = 0x00;
+      }
     }
     else
       handle_keyboard_input(); // normal terminal management
@@ -783,6 +719,7 @@ int main(void) {
 // Blinking Task
 //--------------------------------------------------------------------+
 bool led_state = false;
+bool usb_power_state = false; // GPIO 5
 
 void led_blinking_task() {
   const uint32_t interval_ms_led = 1000;
@@ -804,12 +741,20 @@ void led_blinking_task() {
   }
 }
 
+void usb_power_task() {
+  if( !usb_power_state && ((board_millis() - start_time)>USB_POWER_DELAY )){
+    usb_power_state = true;
+    gpio_put( USB_POWER_GPIO, true );
+  }
+}
+
 void csr_blinking_task() {
   const uint32_t interval_ms_csr = 525;
   static uint32_t start_ms_csr = 0;
 
   // Blink every interval ms
   if ( board_millis() - start_ms_csr > interval_ms_csr) {
+
 	start_ms_csr += interval_ms_csr;
 	
 	is_blinking = !is_blinking;
@@ -817,7 +762,7 @@ void csr_blinking_task() {
 	
 	refresh_cursor();
   }
-  
+
 }
 
 //--------------------------------------------------------------------+
@@ -827,23 +772,23 @@ void csr_blinking_task() {
 static void pico_key_down(int scancode, int keysym, int modifiers) {
     //printf("Key down, %i, %i, %i \r\n", scancode, keysym, modifiers);
 
-	if( scancode_is_mod(scancode)==false ){
+  if( scancode_is_mod(scancode)==false ){
       // which char at that key?
       uint8_t ch = keycode2ascii[scancode][0];
       // Is there a modifier key under use while pressing the key?
       if( (ch=='m') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
-		id_menu = MENU_CONFIG;
+    id_menu = MENU_CONFIG;
         is_menu = !(is_menu);
         return; // do not add key to "Keyboard buffer"
       }
       if( (ch=='n') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
-		id_menu = MENU_NUPETSCII;
+    id_menu = MENU_NUPETSCII;
         is_menu = !(is_menu);
         return; // do not add key to "Keyboard buffer"
       }
-	
+
       if( (ch=='h') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
-		id_menu = MENU_HELP;
+    id_menu = MENU_HELP;
         is_menu = !(is_menu);
         return; // do not add key to "Keyboard buffer"
       }
@@ -858,10 +803,10 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
       else if((modifiers & WITH_CAPSLOCK) && ch>='a' && ch<='z'){
           ch = keycode2ascii[scancode][1];
       }
-      
-	  if((modifiers & WITH_CTRL) && ch>63 && ch<=95){
+
+    if((modifiers & WITH_CTRL) && ch>63 && ch<=95){
           ch=ch-64;
-      }	  
+      }
       else if((modifiers & WITH_CTRL) && ch>95){
           ch=ch-96;
       }
