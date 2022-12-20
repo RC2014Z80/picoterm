@@ -100,6 +100,7 @@ int vspeed = 1 * 1;
 int hspeed = 1 << COORD_SHIFT;
 int hpos;
 int vpos;
+bool is_blinking = false;
 
 static const int input_pin0 = 22;
 
@@ -401,11 +402,13 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
 
 
     char ch = 0;
-  char inv = 0;
+	char inv = 0;
+    char blk = 0;
 
     int tr = (y/FONT_HEIGHT);
     unsigned char *rowslots = slotsForRow(tr); // I want a better word for slots. (Character positions).
-  unsigned char *rowinv = slotsForInvRow(tr);
+	unsigned char *rowinv = slotsForInvRow(tr);
+    unsigned char *rowblk = slotsForBlkRow(tr);
 
     for (int i = 0; i < COUNT; i++) {
 
@@ -415,17 +418,30 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
       inv = *rowinv;
       rowinv++;
 
-      if(inv == 1){
-        *output32++ = host_safe_hw_ptr(dbase + ((ch + max_char) * FONT_HEIGHT * FONT_WIDTH_WORDS));
-      }
-      else {
-        if(ch==0)
-          *output32++ = host_safe_hw_ptr(&block);
-          // shortcut
-          // there's likely to be a lot of spaces on the screen.
-          // if this character is a space, just use this predefined zero block rather than the calculation below
+	  blk = *rowblk;
+      rowblk++;
+    
+      if(blk == 1 && is_blinking){
+        if(inv == 1)
+            *output32++ = host_safe_hw_ptr(dbase + ((max_char) * FONT_HEIGHT * FONT_WIDTH_WORDS));
+        
         else
-          *output32++ = host_safe_hw_ptr(dbase + (ch * FONT_HEIGHT * FONT_WIDTH_WORDS));
+            *output32++ = host_safe_hw_ptr(&block);
+      }
+      else{
+        if(inv == 1){
+            *output32++ = host_safe_hw_ptr(dbase + ((ch + max_char) * FONT_HEIGHT * FONT_WIDTH_WORDS));
+        }
+        else{
+          if(ch==0)
+            *output32++ = host_safe_hw_ptr(&block);
+            // shortcut
+            // there's likely to be a lot of spaces on the screen.
+            // if this character is a space, just use this predefined zero block rather than the calculation below
+
+          else
+            *output32++ = host_safe_hw_ptr(dbase + (ch * FONT_HEIGHT * FONT_WIDTH_WORDS));
+          }
       }
     }
 
@@ -732,16 +748,18 @@ void usb_power_task() {
 }
 
 void csr_blinking_task() {
-  const uint32_t interval_ms_csr = 600;
+  const uint32_t interval_ms_csr = 525;
   static uint32_t start_ms_csr = 0;
 
   // Blink every interval ms
   if ( board_millis() - start_ms_csr > interval_ms_csr) {
-  start_ms_csr += interval_ms_csr;
 
-  set_csr_blink_state(1 - get_csr_blink_state());
-
-  refresh_cursor();
+	start_ms_csr += interval_ms_csr;
+	
+	is_blinking = !is_blinking;
+	set_csr_blink_state(1 - get_csr_blink_state());
+	
+	refresh_cursor();
   }
 
 }

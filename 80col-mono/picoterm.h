@@ -38,6 +38,7 @@
 unsigned char slop_character(int x,int y);
 unsigned char * slotsForRow(int y);
 unsigned char * slotsForInvRow(int y);
+unsigned char * slotsForBlkRow(int y);
 
 void prepare_text_buffer();
 void display_terminal();
