@@ -168,7 +168,7 @@ void slip_character(unsigned char ch,int x,int y){
                 case 't':    //0x74	t	+
                     ptr[y]->slot[x] = 0xe8;
                 break;
-                case 'u':    //0x75	u	¦
+                case 'u':    //0x75	u	ï¿½
                     ptr[y]->slot[x] = 0xe9;
                 break;
                 case 'v':    //0x76	v	-
@@ -177,7 +177,7 @@ void slip_character(unsigned char ch,int x,int y){
                 case 'w':    //0x77	w	-
                     ptr[y]->slot[x] = 0xe3;
                 break;
-                case 'x':    //0x78	x	¦
+                case 'x':    //0x78	x	ï¿½
                     ptr[y]->slot[x] = 0xe0;
                 break;
                 default:
@@ -208,7 +208,7 @@ void slip_character(unsigned char ch,int x,int y){
                 case 't':    //0x74	t	+
                     ptr[y]->slot[x] = 0xab;
                 break;
-                case 'u':    //0x75	u	¦
+                case 'u':    //0x75	u	ï¿½
                     ptr[y]->slot[x] = 0xb3;
                 break;
                 case 'v':    //0x76	v	-
@@ -217,7 +217,7 @@ void slip_character(unsigned char ch,int x,int y){
                 case 'w':    //0x77	w	-
                     ptr[y]->slot[x] = 0xb2;
                 break;
-                case 'x':    //0x78	x	¦
+                case 'x':    //0x78	x	ï¿½
                     ptr[y]->slot[x] = 0xdd;
                 break;
                 default:
@@ -234,7 +234,7 @@ void slip_character(unsigned char ch,int x,int y){
     else{
         ptr[y]->slot[x] = ch;
     }
-    
+
 	if(rvs)
 		ptr[y]->inv[x] = 1;
 	else
@@ -243,7 +243,7 @@ void slip_character(unsigned char ch,int x,int y){
 	if(blk)
 		ptr[y]->blk[x] = 1;
 	else
-		ptr[y]->blk[x] = 0;        
+		ptr[y]->blk[x] = 0;
 
 //#ifdef	WRAP_TEXT
  	if (just_wrapped) just_wrapped = false;
@@ -317,7 +317,7 @@ void delete_line(){
     for(int i=0;i<COLUMNS;i++){
         ptr[ROWS-1]->slot[i] = 0;
         ptr[ROWS-1]->inv[i] = 0;
-        ptr[ROWS-1]->blk[i] = 0;        
+        ptr[ROWS-1]->blk[i] = 0;
     }
 
 }
@@ -479,7 +479,7 @@ void clear_cursor(){
     //slip_character(chr_under_csr,csr.x,csr.y); // fix 191121
     // can't use slip, because it applies reverse
     ptr[csr.y]->slot[csr.x] = chr_under_csr;
-	ptr[csr.y]->inv[csr.x] = inv_under_csr;
+    ptr[csr.y]->inv[csr.x] = inv_under_csr;
     ptr[csr.y]->blk[csr.x] = blk_under_csr;
 }
 
@@ -511,7 +511,7 @@ void clear_line_to_cursor(){
     memset(sl, 0, csr.x);
 
 	sl = &ptr[csr.y]->blk[0];
-    memset(sl, 0, csr.x);    
+    memset(sl, 0, csr.x);
 
 }
 void clear_entire_line(){
@@ -526,7 +526,7 @@ void clear_entire_line(){
     memset(sl, 0, COLUMNS);
 
 	sl = &ptr[csr.y]->blk[0];
-    memset(sl, 0, COLUMNS);    
+    memset(sl, 0, COLUMNS);
 }
 
 
@@ -542,7 +542,7 @@ void clear_entire_screen(){
         memset(sl, 0, COLUMNS);
 
 		sl = &ptr[r]->blk[0];
-        memset(sl, 0, COLUMNS);        
+        memset(sl, 0, COLUMNS);
     }
 }
 
@@ -603,7 +603,7 @@ void esc_sequence_received(){
 
 //ESC H	HTS	Horizontal Tab Set	Sets a tab stop in the current column the cursor is in.
 //ESC [ <n> I	CHT	Cursor Horizontal (Forward) Tab	Advance the cursor to the next column (in the same row) with a tab stop. If there are no more tab stops, move to the last column in the row. If the cursor is in the last column, move to the first column of the next row.
-//ESC [ <n> Z	CBT	Cursor Backwards Tab	Move the cursor to the previous column (in the same row) with a tab stop. If there are no more tab stops, moves the cursor to the first column. If the cursor is in the first column, doesn’t move the cursor.
+//ESC [ <n> Z	CBT	Cursor Backwards Tab	Move the cursor to the previous column (in the same row) with a tab stop. If there are no more tab stops, moves the cursor to the first column. If the cursor is in the first column, doesnï¿½t move the cursor.
 //ESC [ 0 g	TBC	Tab Clear (current column)	Clears the tab stop in the current column, if there is one. Otherwise does nothing.
 //ESC [ 3 g	TBC	Tab Clear (all columns)
 
@@ -693,7 +693,7 @@ if(esc_c1=='['){
         //[ ? 5 h		Inverse video on
         //[ ? 7 h		Wraparound ON
         //[ ? 8 h		Autorepeat ON
-        //[ ? 9 h       Set 24 lines per screen (default) 
+        //[ ? 9 h       Set 24 lines per screen (default)
         //[ ? 12 h		Text Cursor Enable Blinking
         //[ ? 14 h  	Immediate operation of ENTER key
         //[ ? 16 h  	Edit selection immediate
@@ -701,7 +701,7 @@ if(esc_c1=='['){
         //[ ? 50 h  	Cursor ON
         //[ ? 75 h  	Screen display ON
 
-        if(parameter_q){ 
+        if(parameter_q){
             if(esc_parameters[0]==25 || esc_parameters[0]==50){
                 // show csr
                 make_cursor_visible(true);
@@ -727,14 +727,14 @@ if(esc_c1=='['){
         //[ 4 l		Replacement mode selected
         //[ 20 l    Set line feed mode
 
-        //[ ? 1 l       Set cursor key to cursor               
-        //[ ? 2 l       Set VT52 (versus ANSI)                 
+        //[ ? 1 l       Set cursor key to cursor
+        //[ ? 2 l       Set VT52 (versus ANSI)
         //[ ? 3 l		80 Characters on
         //[ ? 4 l		Jump Scroll on
         //[ ? 5 l		Normal video off
         //[ ? 7 l		Wraparound OFF
         //[ ? 8 l		Autorepeat OFF
-        //[ ? 9 l       Set 36 lines per screen 
+        //[ ? 9 l       Set 36 lines per screen
         //[ ? 12 l	    Text Cursor Disable Blinking
         //[ ? 14 l	    Deferred operation of ENTER key
         //[ ? 16 l	    Edit selection deferred
@@ -767,7 +767,7 @@ if(esc_c1=='['){
     case 'm':
         //SGR
         // Sets colors and style of the characters following this code
-        //TODO: allows multiple parameters        
+        //TODO: allows multiple parameters
         //[ 0 m		Clear all character attributes
         //[ 1 m		(Bold) Alternate Intensity ON
         //[ 3 m     Select font #2 (large characters)
@@ -792,7 +792,7 @@ if(esc_c1=='['){
         }
         else if(esc_parameters[0]==25){
             blk = false;
-        }        
+        }
         else if(esc_parameters[0]==27){
             rvs = false;
         }
@@ -942,20 +942,20 @@ if(esc_c1=='['){
         n = esc_parameters[0];
         if(n==0)n=1;
         erase_chars(n);
-    break;    
+    break;
 
     case '@':
     // 'Insert Character' - insert <n> spaces at the current cursor position, shifting all existing text to the right. Text exiting the screen to the right is removed.
         n = esc_parameters[0];
         if(n==0)n=1;
         insert_chars(n);
-    break;    
+    break;
 
     case 'q':
 
         if(parameter_sp){
             parameter_sp = false;
-            
+
             //ESC [ 0 SP q	DECSCUSR	User Shape	Default cursor shape configured by the user
             //ESC [ 1 SP q	DECSCUSR	Blinking Block	Blinking block cursor shape
             //ESC [ 2 SP q	DECSCUSR	Steady Block	Steady block cursor shape
@@ -992,7 +992,7 @@ if(esc_c1=='['){
                 case 6:
                 cursor_symbol = 148;
                 cursor_blinking_mode = false;
-            break;                
+            break;
             }
         }
     break;
@@ -1012,7 +1012,7 @@ else if(esc_c1=='('){
     case '2':
         dec_mode = true;
         dec_mode_type = 1;
-    break;    
+    break;
     default:
         dec_mode = false;
     break;
@@ -1442,7 +1442,7 @@ void handle_new_character(unsigned char asc){
                   if(parameter_p){
                     // final byte. Log and handle
                     esc_final_byte = asc;
-                    esc_sequence_received();                    
+                    esc_sequence_received();
                   }
                   else{
                     // parameter value
@@ -1484,7 +1484,7 @@ void handle_new_character(unsigned char asc){
   else {
       // === regular characters ==============================================
       if(asc>=0x20 && asc<=0xFF){
-          
+
           //if insert mode shift chars to the right
           if(insert_mode) insert_chars(1);
 
