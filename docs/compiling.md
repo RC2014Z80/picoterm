@@ -1,6 +1,10 @@
 # How to compile the Firmware
 
-This document is written while installing and compiling PicoTerm on a Linux machine (Linux Mint/Ubuntu)
+It is highly recommended that you follow the Getting Started With Raspberry Pi Pico documentation from the Raspberry Pi Foundation.  In addition to this, you will need to copy pico_sdk_import.cmake, pico_extras_import.cmake and font.h from pico-sdk, pico-extras and pico-playground\scanvideo\textmode.
+
+Please follow this documentfor details about setting-up compile chain and build the picoterm for all the keyboard layouts. Issuing a `make all` will build all the layout at once.
+
+**This document have been written while installing and compiling PicoTerm on a Linux machine (Linux Mint/Ubuntu)**.
 
 ## Install Pico-SDK
 

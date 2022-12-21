@@ -18,7 +18,33 @@ From version 1.2 any publication will includes all U2F firmware files for 40 & 8
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
 
 ## Version 1.5.1 - (on going)
-* activate GPIO 5 five seconds after reset/power-up. This is used to activate external USB power.
+* reorganize documentation
+* Append /test-suite for testing escape sequences on PicoTerm
+* activate GPIO 26 five seconds after reset/power-up. This is used to activate external USB power (for keyboard).
+* Blinking interval at 525ms (like vt100 terminal)
+* Add new ANSI escape by [abaffa](https://github.com/abaffa) for 80col
+ * ESC[?7h : Wraparound ON
+ * ESC[?7l : Wraparound OFF
+ * ESC[?12h : Text Cursor Enable Blinking
+ * ESC[?12l : Text Cursor Disable Blinking
+ * ESC[5m : Blink ON
+ * ESC[25m : Blink OFF
+ * ESC[{n}@ : Insert Character Insert {n} spaces at the current cursor position, shifting all existing text to the right. Text exiting the screen to the right is removed.
+ * ESC[P : Delete Character Delete characters at the current cursor position, shifting in space characters from the right edge of the screen.
+ * ESC[X : Erase Character Erase characters from the current cursor position by overwriting them with a space character.
+* Cursor Types by [abaffa](https://github.com/abaffa) for 80col< br/>SP is space.
+ * ESC[0SPq User Shape Default cursor shape configured by the user
+ * ESC[1SPq Blinking Block Blinking block cursor shape
+ * ESC[2SPq Steady Block Steady block cursor shape
+ * ESC[3SPq Blinking Underline Blinking underline cursor shape
+ * ESC[4SPq Steady Underline Steady underline cursor shape
+ * ESC[5SPq Blinking Bar Blinking bar cursor shape
+ * ESC[6SPq Steady Bar Steady bar cursor shape
+* DEC Line Drawing by [abaffa](https://github.com/abaffa) for 80col
+ * ESC(0 Designate Character Set – DEC Line Drawing Enables DEC Line Drawing Mode - single line
+ * ESC(2 Designate Character Set – DEC Line Drawing Enables DEC Line Drawing Mode - double line
+ * see also the "Hex	ASCII	DEC Line Drawing" (in the ESC Seq documentation)
+* ESC(B Designate Character Set – US ASCII Enables ASCII Mode (Default)
 
 ## Version 1.5 - Dec 18 2022
 

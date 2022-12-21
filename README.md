@@ -9,67 +9,67 @@ Once wired to the UART of the RC2014 (or any retro-computer) your get an autonom
 
 __PicoTerm is a terminal emulator__ written specifically for this module. Currently it runs 80 columns by 30 lines in black and white mode. Switching to 40 column colour version will be available shortly. It can use VT100 style escape codes, with support for the following
 
-| Escape sequence             | Description                                              |
-|-----------------------------|----------------------------------------------------------|
-| \ESC[?7l	| Wraparound OFF                                                             |
-| \ESC[?7h	| Wraparound ON                                                              |
-| \ESC[?12l	| Text Cursor Disable Blinking                                               |
-| \ESC[?12h	| Text Cursor Enable Blinking                                                |
-| \ESC[?25l | Cursor invisible                                                           |
-| \ESC[?25h | Cursor visible                                                             |
-| \ESC[H    | Move to 0-0                                                                |
-| \ESC[s    | Save the cursor position                                                   |
-| \ESC[u    | Move cursor to previously saved position                                   |
-| \ESC[*{row}*;*{col}*H | Move to *{row}*,*{col}*                                        |
-| \ESC[*{row}*;*{col}*f | Move to *{row}*,*{col}*  (same as H)                           |
-| \ESC[0K   | Clear from cursor to the end of the line                                   |
-| \ESC[1K   | Clear from the beginning of the current line to the cursor                 |
-| \ESC[2K   | Clear the whole line                                                       |
-| \ESC[0J	| Clear the screen from cursor until end of screen                           |
-| \ESC[2J   | Clear the screen and move the cursor to 0-0                                |
-| \ESC[*{n}*@	| Insert *{n}* Space Characters                                          |  
-| \ESC[*{n}*P	| Delete *{n}* Characters, shifting in space characters                  |
-| \ESC[*{n}*X	| Erase *{n}* Characters, overwriting them with a space character.       |
-| \ESC[*{n}*A | Move the cursor up *{n}* lines                                           |
-| \ESC[*{n}*B | Move the cursor down *{n}* lines                                         |
-| \ESC[*{n}*C | Move the cursor forward *{n}* characters                                 |
-| \ESC[*{n}*D | Move the cursor backward *{n}* characters                                |
-| \ESC[*{n}*d	| Move the cursor to an absolute *{n}* line                              |
-| \ESC[*{n}*E	| Move the cursor to beginning of next line, *{n}* lines down            |
-| \ESC[*{n}*F	| Move the cursor to beginning of previous line, *{n}* lines up          |
-| \ESC[*{n}*G	| Move the cursor to column *{n}*                                        |
-| \ESC[0m   | normal text (should also set foreground & background colours to normal)    |
-| \ESC[5m	| blink ON                                                                   |
-| \ESC[7m   | reverse text                                                               |
-| \ESC[25m	| blink OFF                                                                  |
-| \ESC[27m	| reset inverse/reverse mode                                                 |
-| \ESC[0J   | clear screen from cursor                                                   |
-| \ESC[1J   | clear screen to cursor                                                     |
-| \ESC[3J   | same as \ESC[2J                                                            |
-| \ESC[nS   | scroll whole page up by n rows (default 1 if n missing)                    |
-| \ESC[*{n}*T	| scroll up *{n}* lines                                                    |
-| \ESCF     | Enter graphic mode (special graphic charset, NuPetScii). [Sample](docs/using-nupetscii.md).        |
-| \ESCG     | Exit graphic mode (ASCII charset)                                          |
+| Escape sequence             | Description                                              | [Test name](test-suite/readme.md)  |
+|-----------------------------|----------------------------------------------------------|--------------------|
+| \ESC[?7l	| Wraparound OFF                                                             | no_warp            |
+| \ESC[?7h	| Wraparound ON                                                              | do_warp            |
+| \ESC[?12l	| Text Cursor Disable Blinking (but still visible)                           | cursor_blink       |
+| \ESC[?12h	| Text Cursor Enable Blinking                                                | cursor_blink       |
+| \ESC[?25l | Cursor invisible                                                           | cursor_hide        |
+| \ESC[?25h | Cursor visible                                                             | cursor_hide        |
+| \ESC[H    | Move to 0-0                                                                | clearscr           |
+| \ESC[s    | Save the cursor position                                                   | cursor_save        |
+| \ESC[u    | Move cursor to previously saved position                                   | cursor_save        |
+| \ESC[*{row}*;*{col}*H | Move to *{row}*,*{col}*                                        | move_at_2_3        |
+| \ESC[*{row}*;*{col}*f | Move to *{row}*,*{col}*  (same as H)                           | move_at_2_3_v2     |
+| \ESC[0K   | Clear from cursor to the end of the line                                   |                    |
+| \ESC[1K   | Clear from the beginning of the current line to the cursor                 |                    |
+| \ESC[2K   | Clear the whole line                                                       |                    |
+| \ESC[0J	  | Clear the screen from cursor until end of screen                           |                    |
+| \ESC[2J   | Clear the screen and move the cursor to 0-0                                | clear              |
+| \ESC[*{n}*@	| Insert *{n}* Space Characters                                            | char_insert        |
+| \ESC[*{n}*P	| Delete *{n}* Characters, shifting in space characters                    |                    |
+| \ESC[*{n}*X	| Erase *{n}* Characters, overwriting them with a space character.         |                    |
+| \ESC[*{n}*A | Move the cursor up *{n}* lines                                           |                    |
+| \ESC[*{n}*B | Move the cursor down *{n}* lines                                         |                    |
+| \ESC[*{n}*C | Move the cursor forward *{n}* characters                                 |                    |
+| \ESC[*{n}*D | Move the cursor backward *{n}* characters                                |                    |
+| \ESC[*{n}*d	| Move the cursor to an absolute *{n}* line                                |                    |
+| \ESC[*{n}*E	| Move the cursor to beginning of next line, *{n}* lines down              |                    |
+| \ESC[*{n}*F	| Move the cursor to beginning of previous line, *{n}* lines up            |                    |
+| \ESC[*{n}*G	| Move the cursor to column *{n}*                                          |                    |
+| \ESC[0m     | normal text (should also set foreground & background colours to normal)  |                    |
+| \ESC[5m	  | blink ON                                                                   | blink              |
+| \ESC[7m   | reverse text                                                               |                    |
+| \ESC[25m	| blink OFF                                                                  | blink              |
+| \ESC[27m	| reset inverse/reverse mode                                                 |                    |
+| \ESC[0J   | clear screen from cursor                                                   | clearscr           |
+| \ESC[1J   | clear screen to cursor                                                     |                    |
+| \ESC[3J   | same as \ESC[2J                                                            |                    |
+| \ESC[nS   | scroll whole page up by n rows (default 1 if n missing)                    |                    |
+| \ESC[*{n}*T	| scroll up *{n}* lines                                                    |                    |
+| \ESCF     | Enter graphic mode (special graphic charset, NuPetScii). [Sample](docs/using-nupetscii.md).        |  nupetscii    |
+| \ESCG     | Exit graphic mode (ASCII charset)                                          |  ascii             |
 
 Cursor Style
 
-| Escape sequence             | Description                                              |
-|-----------------------------|----------------------------------------------------------|
-| \ESC[0 q	| Default cursor shape configured by the user                                |
-| \ESC[1 q	| Blinking block cursor shape                                                |
-| \ESC[2 q	| Steady block cursor shape                                                  |
-| \ESC[3 q	| Blinking underline cursor shape                                            |
-| \ESC[4 q	| Steady underline cursor shape                                              |
-| \ESC[5 q	| Blinking bar cursor shape                                                  |
-| \ESC[6 q	| Steady bar cursor shape                                                    |
+| Escape sequence             | Description                                              | Test name          |
+|-----------------------------|----------------------------------------------------------|--------------------|
+| \ESC[0 q	| Default cursor shape configured by the user                                |                    |
+| \ESC[1 q	| Blinking block cursor shape                                                |                    |
+| \ESC[2 q	| Steady block cursor shape                                                  |                    |
+| \ESC[3 q	| Blinking underline cursor shape                                            |                    |
+| \ESC[4 q	| Steady underline cursor shape                                              |                    |
+| \ESC[5 q	| Blinking bar cursor shape                                                  |                    |
+| \ESC[6 q	| Steady bar cursor shape                                                    |                    |
 
 DEC Line Drawing
 
-| Escape sequence             | Description                                              |
-|-----------------------------|----------------------------------------------------------|
-| \ESC(0   | Enables DEC Line Drawing Mode - single line                                 |
-| \ESC(2   | Enables DEC Line Drawing Mode - double line                                 |
-| \ESC(B   | Enables ASCII Mode (Default)                                                |
+| Escape sequence             | Description                                              | Test name          |
+|-----------------------------|----------------------------------------------------------|--------------------|
+| \ESC(0   | Enables DEC Line Drawing Mode - single line                                 |                    |
+| \ESC(2   | Enables DEC Line Drawing Mode - double line                                 |                    |
+| \ESC(B   | Enables ASCII Mode (Default)                                                |                    |
 
 | Hex     | ASCII    | DEC Line Drawing      |
 |---------|----------|-----------------------|
@@ -116,43 +116,30 @@ If you are interested in Drawing & Rendering NuPetScii ressource in PicoTerm you
 * Pico LED off --> USB device/keyboard connected
 * VGA display is suspended 1 second when plug-in an USB keyboard
 
+## Uploading firmware
+
+The Pi Pico uses a UF2 bootloader to appear as a mass storage device so that new firmware can be uploaded to it.  To do this, connect a Micro USB lead between the Pico and your PC/Mac/Laptop/Raspberry Pi/Android Phone.  Then push the BOOTSEL button on the Pico. Whilst holding this down, push and release the RUN button on the VGA board.  (Trust me, This is easier to to than to put in to words!). The Pico will then show up as a drive on your computer.  Simply drag and drop the UF2 firmware on to this drive.  The Pico will automatically reboot and disconnect once this is complete.
+
 # Release notes
 See the file [releases.md](releases.md) .
 
 ## Know issues
-1. USB keyboard is not detected if already connected at power-up. Disconnect and reconnect it!
+1. USB keyboard is not detected if already connected at power-up. Disconnect and reconnect it! __Hardware workaround available see the [picoterm-port](docs/picoterm-port.md)__.
 2. VGA rendering sometime hangs when connecting a keyboard (rare). Press reset button (on PicoTerm) and try again.
 3. Saving the configuration into Flash fails from time to time (rare). Just press reset button (on PicoTerm) and try again.
 
-# Uploading firmware
+# PicoTerm documentation
 
-The Pi Pico uses a UF2 bootloader to appear as a mass storage device so that new firmware can be uploaded to it.  To do this, connect a Micro USB lead between the Pico and your PC/Mac/Laptop/Raspberry Pi/Android Phone.  Then push the BOOTSEL button on the Pico. Whilst holding this down, push and release the RUN button on the VGA board.  (Trust me, This is easier to to than to put in to words!). The Pico will then show up as a drive on your computer.  Simply drag and drop the UF2 firmware on to this drive.  The Pico will automatically reboot and disconnect once this is complete.
+The picoterm projet contains a wide variety of documentation and ressources about the software.
 
-# Building firmware from source
-
-It is highly recommended that you follow the Getting Started With Raspberry Pi Pico documentation from the Raspberry Pi Foundation.  In addition to this, you will need to copy pico_sdk_import.cmake, pico_extras_import.cmake and font.h from pico-sdk, pico-extras and pico-playground\scanvideo\textmode.
-
-Please follow the [compiling](compiling.md) for details about setting-up compile chain and build the picoterm for all the keyboard layouts. Issuing a `make all` will build all the layout at once.
-
-## About debugging
-
-Need to debug and troubleshoot? See the [debug.md](debug.md) document which describes the picoterm _debug uart_.
-
-## Expansion port and available GPIOs
-
-see [expansion port](picoterm-port.md) for details.
-
-# Adding a keyboard layout
-
-To add a keyboard layout, you must refer to this following picture (sourced from [this article from Vasily Rubashka, Ukraine , Sergey Shilov, Russia](https://www.mcselec.com/index.php?option=com_content&task=view&id=322)) to identify the keycode with the keys position.
-
-![keycodes](docs/_static/keycodes.jpg)
-
-Then:
-1. define the __LOCALISE_xx__ layout constant (eg: `LOCALISE_FR` for French keyboard)
-2. Update the `CMakeLists.txt` and append a new __picoterm_xx__ executable for the new layout (eg: `picoterm_FR`). Just follow the `picoterm_FR` as an example and repeat the operations.
-3. Code a new section in the `pmhid.h` file for the new __LOCALISE_xx__ layout. This should be obvious.
-4. `cmake ..` need to be issued once to be able to build the new executable __picoterm_xx__ .
-5. From now, the picoterm can be compiled for the new layout with `make picoterm_xx` (eg: `make picoterm_FR`).
-
-Voila!
+| Document                    | Description                                              |
+|-----------------------------|----------------------------------------------------------|
+| [Release notes](releases.md)       | History of changes                                |
+| [NupetScii](nupetscii-font/readme.md) | Discovering the NuppetScii alternative font and coding. Discover Playscii a software to draw screen with NuPetScii. |
+| [Using-NupetScii](docs/_static/using-nupetscii.md) | How to activate NuPetScii from RC2014. |
+| [Compiling](compiling.md)          | Building firmware from source<br />How to setup the compilation environment to compile PicoTerm on your computer |
+| [Debug](docs/debug.md)             | Poor man serial debugger for PicoTerm.<br />Need to debug and troubleshoot? This document describes the picoterm _debug uart_. |
+| [Add keyboard layout](docs/add-keyboard-layout) | How to add a new keyboard layout to PicoTerm.                    |
+| [test-suite](test-suite/readme.md) | How to test ESC sequence support of Picoterm and how to expand the tests.     |
+| [picoterm-conn](docs/picoterm-conn.md)  | Details about the PicoTerm expansion connector and available GPIOs.      |
+| [Resources](docs/resources.md)     | Useful ressource link used during development of PicoTerm                     |
