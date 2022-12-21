@@ -6,10 +6,10 @@ The expansion connector is available just below the Pico.
 
 | GPIO  | Description                                              |
 |-------|----------------------------------------------------------|
-| 18    | SDReader (function???)                                   |
-| 19    | SDReader (function???)                                   |
-| 5     | SDReader (function???)                                   |
-| 22    | SDReader (function???)                                   |
+| 18    | SD CMD = SPI_MOSI                                        |
+| 19    | SD DAT0= SPI_MISO                                        |
+| 5     | SD CLK = SPI_SCK                                         |
+| 22    | SD DAT3/CD = SPI_CS                                      |
 | 26    | I2C1 SDA (temporarily used for USB power-Up)             |
 | 27    | I2C1 SCL (temporarily used for active Buzzer, Adafruit 1536)     |
 | 28    | Poor man `debug_print()`. See [debug.md](debug.md) for details.  |
