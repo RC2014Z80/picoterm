@@ -22,54 +22,54 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 | \ESC[u    | Move cursor to previously saved position                                   | cursor_save        |
 | \ESC[*{row}*;*{col}*H | Move to *{row}*,*{col}*                                        | move_at_2_3        |
 | \ESC[*{row}*;*{col}*f | Move to *{row}*,*{col}*  (same as H)                           | move_at_2_3_v2     |
-| \ESC[0K   | Clear from cursor to the end of the line                                   |                    |
-| \ESC[1K   | Clear from the beginning of the current line to the cursor                 |                    |
-| \ESC[2K   | Clear the whole line                                                       |                    |
-| \ESC[0J	  | Clear the screen from cursor until end of screen                           |                    |
+| \ESC[0K   | Clear from cursor to the end of the line                                   | clear_to_eol       |
+| \ESC[1K   | Clear from the beginning of the current line to the cursor                 | clear_from_bol     |
+| \ESC[2K   | Clear the whole line                                                       | clear_line         |
+| \ESC[0J	  | Clear the screen from cursor until end of screen                           | clearscr           |
+| \ESC[1J   | clear screen to cursor                                                     | clear_to_cursor    |
 | \ESC[2J   | Clear the screen and move the cursor to 0-0                                | clear              |
+| \ESC[3J   | same as \ESC[2J<br/>__[Not accordinly to that documentation](https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797)__    |                    |
 | \ESC[*{n}*@	| Insert *{n}* Space Characters                                            | char_insert        |
-| \ESC[*{n}*P	| Delete *{n}* Characters, shifting in space characters                    |                    |
-| \ESC[*{n}*X	| Erase *{n}* Characters, overwriting them with a space character.         |                    |
-| \ESC[*{n}*A | Move the cursor up *{n}* lines                                           |                    |
-| \ESC[*{n}*B | Move the cursor down *{n}* lines                                         |                    |
-| \ESC[*{n}*C | Move the cursor forward *{n}* characters                                 |                    |
-| \ESC[*{n}*D | Move the cursor backward *{n}* characters                                |                    |
-| \ESC[*{n}*d	| Move the cursor to an absolute *{n}* line                                |                    |
-| \ESC[*{n}*E	| Move the cursor to beginning of next line, *{n}* lines down              |                    |
-| \ESC[*{n}*F	| Move the cursor to beginning of previous line, *{n}* lines up            |                    |
-| \ESC[*{n}*G	| Move the cursor to column *{n}*                                          |                    |
-| \ESC[0m     | normal text (should also set foreground & background colours to normal)  |                    |
-| \ESC[5m	  | blink ON                                                                   | blink              |
-| \ESC[7m   | reverse text                                                               |                    |
-| \ESC[25m	| blink OFF                                                                  | blink              |
-| \ESC[27m	| reset inverse/reverse mode                                                 |                    |
+| \ESC[*{n}*P	| Delete *{n}* Characters, shifting in space characters<br />The end-of-line shift left of *{n}* chars from cursor position | char_delete, char_delete80 |
+| \ESC[*{n}*X	| Erase *{n}* Characters on the right of cursor (cursor position included), erased char are replace with space character.   | char_erase, char_erase80   |
+| \ESC[*{n}*A | Move the cursor up *{n}* lines                                           | cursor_move        |
+| \ESC[*{n}*B | Move the cursor down *{n}* lines                                         | cursor_move        |
+| \ESC[*{n}*C | Move the cursor forward *{n}* characters                                 | cursor_move        |
+| \ESC[*{n}*D | Move the cursor backward *{n}* characters                                | cursor_move        |
+| \ESC[*{n}*d	| Move the cursor to an absolute *{n}* line                                | cursor_at_line     |
+| \ESC[*{n}*E	| Move the cursor to beginning of next line, *{n}* lines down              | cursor_down_bol    |
+| \ESC[*{n}*F	| Move the cursor to beginning of previous line, *{n}* lines up            | cursor_up_bol      |
+| \ESC[*{n}*G	| Move the cursor to column *{n}*                                          | cursor_at_col      |
+| \ESC[0m     | normal text (should also set foreground & background colours to normal)  | back_to_normal     |
+| \ESC[5m	  | Blink ON                                                                   | blink              |
+| \ESC[7m   | reverse text                                                               | reverse            |
+| \ESC[25m	| Blink OFF                                                                  | blink              |
+| \ESC[27m	| reset inverse/reverse mode                                                 | reverse            |
 | \ESC[0J   | clear screen from cursor                                                   | clearscr           |
-| \ESC[1J   | clear screen to cursor                                                     |                    |
-| \ESC[3J   | same as \ESC[2J                                                            |                    |
-| \ESC[nS   | scroll whole page up by n rows (default 1 if n missing)                    |                    |
-| \ESC[*{n}*T	| scroll up *{n}* lines                                                    |                    |
-| \ESCF     | Enter graphic mode (special graphic charset, NuPetScii). [Sample](docs/using-nupetscii.md).        |  nupetscii    |
+| \ESC[nS   | scroll whole page up by n rows (default 1 if n missing). No cursor move.<br />(Look for "CSI Ps S" in [XTerm Control Sequences](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Functions-using-CSI-_-ordered-by-the-final-character_s), VT420)  | scroll_up, scroll_up3 |
+| \ESC[*{n}*T	| scroll down *{n}* lines (default 1 if n missing). No cursor move.<br />(Look for "CSI Ps T" in [XTerm Control Sequences](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Functions-using-CSI-_-ordered-by-the-final-character_s), VT420)  | scroll_down, scroll_down3 |
+| \ESCF     | Enter graphic mode (special graphic charset, NuPetScii). [Sample](docs/using-nupetscii.md). |  nupetscii, nupetscii2   |
 | \ESCG     | Exit graphic mode (ASCII charset)                                          |  ascii             |
 
 Cursor Style
 
-| Escape sequence             | Description                                              | Test name          |
+| Escape sequence             | Description                                              | [Test name](test-suite/readme.md)  |
 |-----------------------------|----------------------------------------------------------|--------------------|
-| \ESC[0 q	| Default cursor shape configured by the user                                |                    |
-| \ESC[1 q	| Blinking block cursor shape                                                |                    |
-| \ESC[2 q	| Steady block cursor shape                                                  |                    |
-| \ESC[3 q	| Blinking underline cursor shape                                            |                    |
-| \ESC[4 q	| Steady underline cursor shape                                              |                    |
-| \ESC[5 q	| Blinking bar cursor shape                                                  |                    |
-| \ESC[6 q	| Steady bar cursor shape                                                    |                    |
+| \ESC[0 q	| Default cursor shape configured by the user                                | cursor_style       |
+| \ESC[1 q	| Blinking block cursor shape                                                | cursor_style       |
+| \ESC[2 q	| Steady block cursor shape                                                  | cursor_style       |
+| \ESC[3 q	| Blinking underline cursor shape                                            | cursor_style       |
+| \ESC[4 q	| Steady underline cursor shape                                              | cursor_style       |
+| \ESC[5 q	| Blinking bar cursor shape                                                  | cursor_style       |
+| \ESC[6 q	| Steady bar cursor shape                                                    | cursor_style       |
 
 DEC Line Drawing
 
-| Escape sequence             | Description                                              | Test name          |
+| Escape sequence             | Description                                              | [Test name](test-suite/readme.md)  |
 |-----------------------------|----------------------------------------------------------|--------------------|
-| \ESC(0   | Enables DEC Line Drawing Mode - single line                                 |                    |
-| \ESC(2   | Enables DEC Line Drawing Mode - double line                                 |                    |
-| \ESC(B   | Enables ASCII Mode (Default)                                                |                    |
+| \ESC(0   | Enables DEC Line Drawing Mode - single line                                 | dec_lines          |
+| \ESC(2   | Enables DEC Line Drawing Mode - double line                                 | dec_lines          |
+| \ESC(B   | Enables ASCII Mode (Default)                                                | dec_lines          |
 
 | Hex     | ASCII    | DEC Line Drawing      |
 |---------|----------|-----------------------|
