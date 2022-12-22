@@ -31,7 +31,11 @@ List of material:
 
 In the future, the buzzer will be controlled via an I2C GPIO expander. For this reason, it must be an active buzzer because Pico will not feed it with PWM signal!
 
-__Under construction: check buzzer current at 3.3V before wiring__
+__Under construction__
+
+![picoterm buzzer](_static/picoterm-conn-buzzer.jpg)
 
 List of material:
-* [Active Piezo Buzzer](https://www.adafruit.com/product/1536) @ Adafruit - indicating as working at 3.3V
+* [Active Piezo Buzzer](https://www.adafruit.com/product/1536) @ Adafruit - indicating as working at 5V & 3.3V
+* BC547
+* R1K 
