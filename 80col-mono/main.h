@@ -54,6 +54,8 @@
 #define USB_POWER_GPIO 26 // this GPIO can be used with a MOSFET to power-up USB
 #define USB_POWER_DELAY 5000 // ms
 
+#define BUZZER_GPIO 27 // active buzzer
+
 static uint32_t start_time;
 
 static void pico_key_down(int scancode, int keysym, int modifiers);

@@ -1,0 +1,512 @@
+#!/usr/bin/env python3
+""" test_esc.py - send various escape sequence over the serial line to
+                  test the picoterm capability.
+"""
+
+__version__ = '0.1'
+
+import sys
+import serial
+import time
+from random import choice
+
+def show_help():
+	print( '                  by Meurisse D.')
+	print( 'USAGE:')
+	print( '  ./test_esc.py <device> -h' )
+	print( '' )
+	print( '<device>  : serial device connected to PicoTerm' )
+	print( '-h        : display this help.')
+	print( '' )
+
+def get_args( argv ):
+	""" Process argv and extract: output, source, device, user parameters """
+	r = { 'device' : None } # unamed, -r, -hex 0x0000
+	used = [] # list of used entries in argv
+	used.append(0) # item #0 is the script name
+	unamed = [] # unamed parameters
+	# Locate the named parameter
+	#for i in range( len(argv) ):
+	#	if argv[i] == '-hex':
+	#		sAddr = argv[i+1]
+	#		try:
+	#			if '0x' in sAddr:
+	#				r['hex']=eval(sAddr)
+	#			else:
+	#				r['hex']=int(sAddr)
+	#		except:
+	#			raise Exception('Invalid interger/hex value for address' % sAddr )
+	#		used.append(i)
+	#		used.append(i+1)
+	#	elif argv[i] == '-r':
+	#		r['raw'] = True
+	#		used.append(i)
+
+	# Locate the unamed parameter
+	for i in range( len(argv) ):
+		if i in used:
+			continue
+		else:
+			unamed.append( argv[i] )
+	# First unamed is the device
+	if len(unamed) > 0:
+		r['device'] = unamed[0]
+
+	# Sanity check
+	if r['device']==None:
+		raise Exception('missing device')
+
+	return r
+
+
+class SerialHelper:
+	def __init__( self, args ):
+		self.args = args
+		self.ser = serial.Serial(args['device'], 115200, timeout=0 )
+
+	def write_str( self, str ):
+		""" Generic write that replaces \ESC and \0x1b in unicode string """
+		self.ser.write( str.replace('\ESC',chr(27)).encode('ASCII') )
+
+	def write_byte( self, val ):
+		assert 0<= val <= 255, "Byte value %s out-of-scope" % val
+		self.ser.write( bytes([val]) )
+
+	def run_test( self, test_name ):
+		""" Call a test function and display information locally and remotely """
+		print( "Run: %s" % test_name )
+		print( get_docstring( test_name ))
+		ser.write_str( "Run: %s\r\n" % test_name )
+		eval( 'test_%s(ser)' % test_name )
+
+def get_test_names():
+	""" List the available test names in the script """
+	_names = [ _name.replace('test_','') for _name in globals() if ('test_' in _name) and (_name.index('test_')==0) ]
+	return _names
+
+def get_docstring( test_name ):
+	""" Extract the documentation of a function """
+	_r = ""
+	fct_name = 'test_%s' % test_name
+	if fct_name in globals():
+		_r = globals()[fct_name].__doc__.strip()
+	return _r
+
+# --- VARIOUS TESTS ------------------------------------------------------------
+def test_nupetscii( ser ):
+	""" switch to NupetScii and display full charset """
+	ser.write_str( "\ESCF" )
+	for row in range( 0x20, 0xFF, 0xF+1 ):
+		ser.write_str( "%0x : " % row )
+		for col in range( 0x0, 0x0F ):
+			ser.write_byte( row+col )
+			ser.write_byte( 0x20 ) #space
+		ser.write_byte( 13 )
+		ser.write_byte( 10 )
+
+def test_nupetscii2( ser ):
+	""" switch to NupetScii and display a range for characters in normal, blink, reverse and return to normal """
+	def draw_serie():
+		for _char in range( 0xD0, 0xDF+1 ):
+			ser.write_byte( _char )
+			ser.write_byte( 0x20 ) #space
+		ser.write_str( "\r\n\r\n" )
+
+	ser.write_str( "\ESCF" ) # Switch to NuPetScii
+	# Normal Drawing
+	draw_serie()
+	ser.write_str( "\ESC[5m" ) # Set Blinking
+	draw_serie()
+	ser.write_str( "\ESC[25m" ) # Reset Blinking
+	# Inverted
+	ser.write_str( "\ESC[7m" ) # inverted
+	draw_serie()
+	# ser.write_str( "\ESC[27m" ) # reset inverse/reverse mode
+
+	ser.write_str( "\ESC[0m" ) # BAck to normal
+	ser.write_str( "\r\nBack to normal" )
+
+
+def test_ascii( ser ):
+	""" switch to ASCII and display full charset """
+	ser.write_str( "\ESCG" )
+	for row in range( 0x20, 0xFF, 0xF+1 ):
+		ser.write_str( "%0x : " % row )
+		for col in range( 0x0, 0x0F ):
+			ser.write_byte( row+col )
+			ser.write_byte( 0x20 ) #space
+		ser.write_byte( 13 )
+		ser.write_byte( 10 )
+
+def test_lorem( ser ):
+	""" Send several paragraphs of Lorem Ipsum """
+	sentences = []
+	a = "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+	b = "Quisque vitae varius ex, eu volutpat orci."
+	c = "Aenean ullamcorper orci et vulputate fermentum."
+	d = "Cras erat dui, finibus vel lectus ac, pharetra dictum odio."
+	e = "Nullam tempus scelerisque purus, sed mattis elit condimentum nec."
+	f = "Etiam risus sapien, auctor eu volutpat sit amet, porta in nunc."
+	g = "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas."
+	h = "Proin ipsum purus, laoreet quis dictum a, laoreet sed ligula."
+	i = "Integer ultricies malesuada quam."
+	j = "Cras vel elit sed mi placerat pharetra eget vel odio."
+	k = "Duis ac nulla varius diam ultrices rutrum."
+
+	sentences.append(a)
+	sentences.append(b)
+	sentences.append(c)
+	sentences.append(d)
+	sentences.append(e)
+	sentences.append(f)
+	sentences.append(g)
+	sentences.append(h)
+	sentences.append(i)
+	sentences.append(j)
+	sentences.append(k)
+
+	n = 2 # number of paragraphs
+	length = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+	paragraphs = []
+
+	for i in range(1, n + 1):
+	    paragraph = ''
+	    numofsentences = choice(length)
+	    for j in range(1, len(sentences) + 1):
+	        sentence = choice(sentences)
+	        paragraph = paragraph + sentence
+	    paragraphs.append(paragraph)
+
+	for x in paragraphs:
+		ser.write_str(x)
+		ser.write_str("\r\n") # @ end of paragraph
+		ser.write_str("\r\n") # empty line between paragraphs
+
+def test_clearscr( ser ):
+	""" Fill screen with content, then clear it from cursor to end of screen"""
+	test_lorem( ser )
+	ser.write_str( "\ESC[H" ) # move cursor to 0,0
+	ser.write_str( "\ESC[0J" ) # clear from cursor to end of screen
+
+def test_cursor_blink( ser ):
+	""" Disable cursor blinking to 5 seconds then reactivate it """
+	ser.write_str( "Blink OFF\r\n" )
+	ser.write_str( "\ESC[?12l" )
+	ser.write_str( "Wait 5 sec...\r\n" )
+	time.sleep( 5 )
+	ser.write_str( "Blink ON\r\n" )
+	ser.write_str( "\ESC[?12h" )
+
+def test_cursor_hide( ser ):
+	""" Hide the cursor (make it invisible) for 5 seconds then make it visible again """
+	ser.write_str( "Hide cursor\r\n" )
+	ser.write_str( "\ESC[?25l" )
+	ser.write_str( "Wait 5 sec...\r\n" )
+	time.sleep( 5 )
+	ser.write_str( "Show cursor\r\n" )
+	ser.write_str( "\ESC[?25h" )
+
+def test_no_warp( ser ):
+	""" Disable WarpAround and send a Lorem Ipsum """
+	ser.write_str( "\ESC[?7l" )
+	test_lorem( ser )
+
+def test_do_warp( ser ):
+	""" complement of no_warp test. Reactivate warp_around and send a Lorem Ipsum """
+	ser.write_str( "\ESC[?7h" )
+	test_lorem( ser )
+
+def test_clear( ser ):
+	""" Write few characters then clear the screen """
+	ser.write_str( "Yo man! You should not see this text because screen will be erased :-)")
+	ser.write_str("\ESC[2J") # Clear the screen
+
+def test_cursor_save( ser ):
+	""" Send Lorem Ipsum. Save cursor position. write 3 lines, restore cursor position. """
+	test_clear( ser )
+	test_lorem( ser )
+	ser.write_str("\ESC[s") # Save the cursor position
+	ser.write_str("I will write 3 lines\r\nof text before restoring\r\n" )
+	ser.write_str("the cursor position on the first line!" );
+	ser.write_str("\ESC[u" ) # Move cursor to previously saved position
+
+def test_move_at_2_3( ser ):
+	""" Send Lorem Ipsum, go second line at third character, overwrite with '<The quick brown fox jumps over the lazy dog>' """
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[2;3H") # Line 2, Col 3
+	ser.write_str("<The quick brown fox jumps over the lazy dog>")
+
+def test_move_at_2_3_v2( ser ):
+	""" Send Lorem Ipsum, go second line at third character, overwrite with '<The quick brown fox jumps over the lazy dog>' """
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[2;3f") # Line 2, Col 3 (alternate ESC sequence)
+	ser.write_str("<The quick brown fox jumps over the lazy dog>")
+
+def test_char_insert( ser ):
+	""" Send Lorem Ipsum, go second line at third character, insert 8 spaces """
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[2;3H") # Line 2, Col 3
+	ser.write_str("\ESC[8@") # Line 2, Col 3
+
+def test_blink( ser ):
+	""" Display text with blinking parts and no blinking parts  """
+	ser.write_str("This text should NOT BLINK!\r\n")
+	ser.write_str("\ESC[5m") # Blink on
+	ser.write_str("This text should be blinking!")
+	ser.write_str("\ESC[25m") # Blink Off
+	ser.write_str(" Except the end of the line.\r\n")
+	ser.write_str("This text should NOT BLINK!\r\n")
+
+def test_clear_to_cursor( ser ):
+	""" Send Lorem Ipsum, set cursor to 5th line & 5th char, clear up to cursor """
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[5;5H") # Line 5, Col 5
+	ser.write_str("\ESC[1J") # Clear to cursor
+
+def test_scroll_up( ser ):
+	""" Send message + Lorem Ipsum, wait 5 sec, set cursor to 5th line & 5th char, move whole screen
+	    up of 1 line. Cursor not move with scrolling."""
+	test_clear(ser)
+	ser.write_str( 'This first line should not be visible because\r\n' )
+	ser.write_str( 'of scroll 1 lineup. BUT THIS LINE SHOULD STAY VISIBLE.\r\n')
+	test_lorem(ser)
+	ser.write_str( 'Wait 5 sec before scroll up.')
+	ser.write_str("\ESC[5;5H") # Line 5, Col 5
+	time.sleep(5)
+	ser.write_str("\ESC[S") # Scroll whole screen 1 line up.
+
+def test_scroll_up3( ser ):
+	""" Send message + Lorem Ipsum, wait 5 sec, set cursor to 5th line & 5th char, move whole screen
+	    up of 3 lines up. Cursor not move with scrolling."""
+	test_clear(ser)
+	ser.write_str( 'First line with "Run: xxx" should not be visible because\r\n' )
+	ser.write_str( 'of scroll 1 lineup (THIS LINE SHOULD NOT BE VISIBLE).\r\n')
+	ser.write_str( 'And this additionnal line LINE SHOULD NOT BE VISIBLE EITHER!.\r\n')
+	test_lorem(ser)
+	ser.write_str( 'Wait 5 sec before scroll up.')
+	ser.write_str("\ESC[5;5H") # Line 5, Col 5
+	time.sleep(5)
+	ser.write_str("\ESC[3S") # Scroll whole screen 3 lines up.
+
+def test_scroll_down( ser ):
+	""" Send message + Lorem Ipsum, wait 5 sec, set cursor to 5th line & 5th char, move whole screen
+	    down of 1 line. Cursor not move with scrolling."""
+	test_clear(ser)
+	ser.write_str( 'This is the first line of screen.\r\n' )
+	test_lorem(ser)
+	ser.write_str( 'Wait 5 sec before scroll down.')
+	ser.write_str("\ESC[5;5H") # Line 5, Col 5
+	time.sleep(5)
+	ser.write_str("\ESC[T") # Scroll whole screen 1 line down.
+
+def test_scroll_down3( ser ):
+	""" Send message + Lorem Ipsum, wait 5 sec, set cursor to 5th line & 5th char, move whole screen
+	    down of 3 lines up. Cursor not move with scrolling."""
+	test_clear(ser)
+	test_clear(ser)
+	ser.write_str( 'This is the first line of screen.\r\n' )
+	test_lorem(ser)
+	ser.write_str( 'Wait 5 sec before scroll down.')
+	ser.write_str("\ESC[5;5H") # Line 5, Col 5
+	time.sleep(5)
+	ser.write_str("\ESC[3T") # Scroll whole screen 3 line down.
+
+def test_clear_to_eol( ser ):
+	""" Send Lorem Ipsum, set cursor to 5th line & 5th char, clear up from cursor to end-of-line."""
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[5;5H") # Line 5, Col 5
+	ser.write_str("\ESC[0K") # clear from cursor to end of line
+
+def test_clear_from_bol( ser ):
+	""" Send Lorem Ipsum, set cursor to 5th line & 50th char, clear up from begin of line to cursor."""
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[5;50H") # Line 5, Col 5
+	ser.write_str("\ESC[1K") # clear from begin of line to cursor
+
+def test_clear_line( ser ):
+	""" Send Lorem Ipsum, set cursor to 5th line & 50th char, clear the whole line."""
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[5;50H") # Line 5, Col 5
+	ser.write_str("\ESC[2K") # clear the while line
+
+def test_char_delete( ser ):
+	""" Send Lorem Ipsum, set cursor to 5th line & 50th char, delete 10 chars.
+	The end-of-line should shift left of 10 chars from cursor (cursor position included)."""
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[5;50H") # Line 5, Col 5
+	ser.write_str("\ESC[10P") # delete 10 characters
+
+def test_char_delete80( ser ):
+	""" Send Lorem Ipsum, set cursor to 5th line & 80th char, delete 10 chars.
+	The end-of-line should shift left of 10 chars from cursor. Side effect test, only position 80 must be cleared."""
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[5;80H") # Line 5, Col 5
+	ser.write_str("\ESC[10P") # delete 10 characters
+
+def test_char_erase( ser ):
+	""" Send Lorem Ipsum, set cursor to 5th line & 50th char, Erase 10 chars on the right of cursor (cursor position included).
+	The erase chars are replaced with space."""
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[5;50H") # Line 5, Col 5
+	ser.write_str("\ESC[10X") # erase 10 characters
+
+def test_char_erase80( ser ):
+	""" Send Lorem Ipsum, set cursor to 5th line & 80th char, Erase 10 chars on the right of cursor (cursor position included).
+	The erase chars are replaced with space. Side effect test, only position 80 must be cleared."""
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[5;80H") # Line 5, Col 5
+	ser.write_str("\ESC[10X") # erase 10 characters
+
+def test_cursor_move( ser ):
+	""" Place a X at 10, 10. Move back cursor at 10, 10 (movement center). Wait 2 sec, Move up 5 char, wait 2, return to center. Repeat movement for right, down, left. """
+	test_clear(ser)
+	ser.write_str("\ESC[10;10H") # Line 10, Col 10
+	ser.write_str("X")
+	ser.write_str("\ESC[10;10H") # Line 10, Col 10
+	time.sleep(2)
+
+	ser.write_str("\ESC[5A") # Move up 5 char
+	time.sleep(2)
+	ser.write_str("\ESC[10;10H") # Line 10, Col 10
+	time.sleep(2)
+
+	ser.write_str("\ESC[5C") # Move right/forward 5 char
+	time.sleep(2)
+	ser.write_str("\ESC[10;10H") # Line 10, Col 10
+	time.sleep(2)
+
+	ser.write_str("\ESC[5B") # Move down 5 char
+	time.sleep(2)
+	ser.write_str("\ESC[10;10H") # Line 10, Col 10
+	time.sleep(2)
+
+	ser.write_str("\ESC[5D") # Move left/backward 5 char
+	time.sleep(2)
+	ser.write_str("\ESC[10;10H") # Line 10, Col 10
+	time.sleep(2)
+
+def test_cursor_at_line( ser ):
+	""" Send Lorem Ipsum, place cursor to 3th line & 5th char, move at absolute line 10. Cursor still at 5th char."""
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[3;5H") # Line 3, Col 5
+	ser.write_str("\ESC[10d") # Move absolute line 10
+
+def test_cursor_down_bol( ser ):
+	""" Send Lorem Ipsum, place cursor to 3th line & 5th char, move cursor 6 lines down (at begin of line). Cursor must be on line 9. """
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[3;5H") # Line 3, Col 5
+	ser.write_str("\ESC[6E") # move 6 line down at begin-of-line
+
+def test_cursor_up_bol( ser ):
+	""" Send Lorem Ipsum, place cursor to 10th line & 5th char, move cursor 2 lines up (at begin of line). Cursor must be at line 8."""
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[10;5H") # Line 3, Col 5
+	time.sleep(2)
+	ser.write_str("\ESC[2F") # move 2 lines up at begin-of-line
+
+def test_reverse( ser ):
+	""" Send Lorem Ipsum, set reverse, write some text, reset reverse, Lorem Ipsum."""
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str( "\ESC[7m" ) # reverse text
+	ser.write_str( "This text should be displayed in reverse.\r\n" )
+	ser.write_str( "\ESC[27m" ) # reset inverse/reverse mode
+	test_lorem(ser)
+
+def test_back_to_normal( ser ):
+	""" Write some inverted text, some blink text, some inverted+blink. Finally, return to normal text."""
+	test_clear(ser)
+	ser.write_str( "\ESC[7m" ) # inverted
+	ser.write_str("some inverted text.\r\n")
+	ser.write_str( "\ESC[27m" ) # reset inverse/reverse mode
+	ser.write_str( "\ESC[5m" ) # Blink ON
+	ser.write_str("some Blinking text.\r\n")
+	ser.write_str( "\ESC[25m" ) # Blink OFF
+
+	ser.write_str( "\ESC[7m" ) # inverted
+	ser.write_str( "\ESC[5m" ) # Blink ON
+	ser.write_str( "some Blinking Inverted text.\r\n" )
+
+	ser.write_str( "\ESC[0m" ) # Back to normal
+	ser.write_str( "This must be back to normal :-)" )
+
+def test_cursor_style( ser ):
+	""" cycle throught the 6 type of cursor. Display its name and wait 5 sec for each."""
+	cursors = [ ( "\ESC[1 q", "Blinking block cursor shape"),
+				( "\ESC[2 q", "Steady block cursor shape"),
+				( "\ESC[3 q", "Blinking underline cursor shape"),
+				( "\ESC[4 q", "Steady underline cursor shape"),
+				( "\ESC[5 q", "Blinking bar cursor shape"),
+				( "\ESC[6 q", "Steady bar cursor shape"),
+				( "\ESC[0 q", "Default cursor shape configured by the user ") ]
+	for _esc, _label in cursors:
+		test_clear(ser)
+		ser.write_str( "%s then wait 5 sec." % _label )
+		ser.write_str( _esc )
+		time.sleep( 5 )
+	ser.write_str( "\r\nDone!" )
+
+def test_dec_lines( ser, line_style=None ):
+	""" Draw DEC lines (simple, double and normal chars). Pause of 5 sec between series."""
+	entries = ( 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x71, 0x74, 0x75, 0x76, 0x77, 0x78 )
+
+	def draw_serie():
+		for _c in entries:
+			ser.write_byte( _c )
+			ser.write_byte( 0x20 ) # Space
+
+	test_clear( ser )
+	for _esc, _label in ((None    , "Default        : "),
+						("\ESC(0", "Simple line    : "),
+						("\ESC(2", "Double line    : "),
+						("\ESC(B", "ASCII mode     : " ) ):
+		ser.write_str( "\ESC(B" ) # Ascii Mode
+		ser.write_str( _label )
+		if _esc != None:
+			ser.write_str( _esc )
+		draw_serie()
+		ser.write_str( "\r\n" )
+		time.sleep(5)
+
+	ser.write_str( "\ESC(B" ) # Ascii Mode
+	ser.write_str( "Back to Ascii" )
+
+
+if __name__ == '__main__':
+	print( '== PicoTerm Escape Sequence tester %s ==' % __version__ )
+	print( 'Series of test to call on demand to check specific escape ')
+	print( 'sequence handling on PicoTerm.')
+
+	if (len( sys.argv )==1) or ('-h' in sys.argv):
+		show_help()
+		exit(1)
+
+	args = get_args( sys.argv ) # gets 'source', 'raw', 'hex'
+	# print( args )
+	ser = SerialHelper( args )
+
+	# List of tests
+	_names = get_test_names()
+	print( "type test name to execute it or exit to quit!")
+	print( "test names: %s" % ", ".join(_names) )
+	_cmd = 'none'
+	while _cmd != 'exit':
+		_cmd = input("Which test? ")
+		if _cmd in _names:
+			ser.run_test( _cmd )
+			print('') # add a spacer
+	print( "That's all folks!" )

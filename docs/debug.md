@@ -26,7 +26,7 @@ _Remark:_ Trust it or not but I'm using a simple text editor and a command line 
 ## Wire it to your computer
 We will use a FTDI Friend (Adafruit 284) to convert serial line (rx) to an USB-Serial.
 
-![PicoTerm debug uart](docs/_static/picoterm-debug-uart.jpg)
+![PicoTerm debug uart](_static/picoterm-debug-uart.jpg)
 
 ## Reading the messages
 
@@ -36,7 +36,7 @@ Start a terminal on the USB-Serial connection of the FTDI Friend.
 minicom -b 115200 -o -D /dev/ttyUSB0
 ```
 
-![minicom on debug uart](docs/_static/debug-minicom.jpg)
+![minicom on debug uart](_static/debug-minicom.jpg)
 
 And see the incoming messages when your PicoTerm starts:
 

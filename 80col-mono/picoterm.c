@@ -230,6 +230,7 @@ void slip_character(unsigned char ch,int x,int y){
                     ptr[y]->slot[x] = 0xe8;
                 break;
                 case 'u':    //0x75	u	┤
+
                     ptr[y]->slot[x] = 0xe9;
                 break;
                 case 'v':    //0x76	v	┴
@@ -295,7 +296,7 @@ void slip_character(unsigned char ch,int x,int y){
     else{
         ptr[y]->slot[x] = ch;
     }
-    
+
 	if(rvs)
 		ptr[y]->inv[x] = 1;
 	else
@@ -304,7 +305,7 @@ void slip_character(unsigned char ch,int x,int y){
 	if(blk)
 		ptr[y]->blk[x] = 1;
 	else
-		ptr[y]->blk[x] = 0;        
+		ptr[y]->blk[x] = 0;
 
 //#ifdef	WRAP_TEXT
  	if (just_wrapped) just_wrapped = false;
@@ -378,7 +379,7 @@ void delete_line(){
     for(int i=0;i<COLUMNS;i++){
         ptr[ROWS-1]->slot[i] = 0;
         ptr[ROWS-1]->inv[i] = 0;
-        ptr[ROWS-1]->blk[i] = 0;        
+        ptr[ROWS-1]->blk[i] = 0;
     }
 
 }
@@ -540,7 +541,7 @@ void clear_cursor(){
     //slip_character(chr_under_csr,csr.x,csr.y); // fix 191121
     // can't use slip, because it applies reverse
     ptr[csr.y]->slot[csr.x] = chr_under_csr;
-	ptr[csr.y]->inv[csr.x] = inv_under_csr;
+    ptr[csr.y]->inv[csr.x] = inv_under_csr;
     ptr[csr.y]->blk[csr.x] = blk_under_csr;
 }
 
@@ -572,7 +573,7 @@ void clear_line_to_cursor(){
     memset(sl, 0, csr.x);
 
 	sl = &ptr[csr.y]->blk[0];
-    memset(sl, 0, csr.x);    
+    memset(sl, 0, csr.x);
 
 }
 void clear_entire_line(){
@@ -587,7 +588,7 @@ void clear_entire_line(){
     memset(sl, 0, COLUMNS);
 
 	sl = &ptr[csr.y]->blk[0];
-    memset(sl, 0, COLUMNS);    
+    memset(sl, 0, COLUMNS);
 }
 
 void clear_entire_screen(){
@@ -602,7 +603,7 @@ void clear_entire_screen(){
         memset(sl, 0, COLUMNS);
 
 		sl = &ptr[r]->blk[0];
-        memset(sl, 0, COLUMNS);        
+        memset(sl, 0, COLUMNS);
     }
 }
 
@@ -740,6 +741,7 @@ if(mode==VT100){
             if(m == 0) m = 1;
 
             cmd_csr_position(n,m);
+
         break;
 
         case 'E':
@@ -917,7 +919,6 @@ if(mode==VT100){
                 }
             }
         break;
-
 
         case 'm':
             //SGR
@@ -1188,6 +1189,7 @@ if(mode==VT100){
     }
     else{
         // ignore everything else
+
     }
 }
 else if(mode==VT52){ // VT52
@@ -1729,7 +1731,7 @@ void handle_new_character(unsigned char asc){
                   if(parameter_p){
                     // final byte. Log and handle
                     esc_final_byte = asc;
-                    esc_sequence_received();                    
+                    esc_sequence_received();
                   }
                   else{
                     // parameter value
@@ -1770,7 +1772,7 @@ void handle_new_character(unsigned char asc){
   else {
       // === regular characters ==============================================
       if(asc>=0x20 && asc<=0xFF){
-          
+
           //if insert mode shift chars to the right
           if(insert_mode) insert_chars(1);
 
