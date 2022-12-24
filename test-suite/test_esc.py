@@ -62,7 +62,7 @@ def get_args( argv ):
 class SerialHelper:
 	def __init__( self, args ):
 		self.args = args
-		self.ser = serial.Serial(args['device'], 115200, timeout=0 )
+		self.ser = serial.Serial(args['device'], 115200, timeout=0.100 ) # 100ms
 
 	def write_str( self, str ):
 		""" Generic write that replaces \ESC and \0x1b in unicode string """
@@ -72,12 +72,16 @@ class SerialHelper:
 		assert 0<= val <= 255, "Byte value %s out-of-scope" % val
 		self.ser.write( bytes([val]) )
 
+	def readline( self ):
+		return self.ser.readline()
+
 	def run_test( self, test_name ):
 		""" Call a test function and display information locally and remotely """
 		print( "Run: %s" % test_name )
 		print( get_docstring( test_name ))
 		ser.write_str( "Run: %s\r\n" % test_name )
 		eval( 'test_%s(ser)' % test_name )
+
 
 def get_test_names():
 	""" List the available test names in the script """
@@ -396,6 +400,74 @@ def test_cursor_move( ser ):
 	ser.write_str("\ESC[10;10H") # Line 10, Col 10
 	time.sleep(2)
 
+def test_clear_eos_vt52( ser ):
+	""" vt52: Lorem ipsum, go home, move 2 lines down+1 char right, clear until the end of screen """
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[?2l") # enter vt52 mode
+	ser.write_str("\ESCH") # go home
+	ser.write_str("\ESCB\ESCB\ESCC") # enter vt52 mode
+	ser.write_str("\ESCJ") # Clear end of screen
+	ser.write_str("\ESC<") # enter vt100 mode
+
+def test_clear_eol_vt52( ser ):
+	""" vt52: Lorem ipsum, go home, move 2 lines down+1 char right, clear until the end of line """
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[?2l") # enter vt52 mode
+	ser.write_str("\ESCH") # go home
+	ser.write_str("\ESCB\ESCB\ESCC") # enter vt52 mode
+	ser.write_str("\ESCK") # Clear end of line
+	ser.write_str("\ESC<") # enter vt100 mode
+
+def test_cursor_move_vt52( ser ):
+	""" vt52. Place a X at 10, 10. Move back cursor at 10, 10 (movement center). Wait 2 sec, Move up 3 char, wait 2, return to center. Repeat movement for right, down, left. """
+	test_clear(ser)
+	ser.write_str("\ESC[10;10H") # Line 10, Col 10
+	ser.write_str("X")
+	ser.write_str("\ESC[10;10H") # Line 10, Col 10
+	time.sleep(2)
+
+	ser.write_str("\ESC[?2l") # enter vt52 mode
+	for i in range(3):
+		ser.write_str("\ESCA") # Move up 3 char
+	ser.write_str("\ESC<") # enter vt100 mode
+	time.sleep(2)
+	ser.write_str("\ESC[10;10H") # Line 10, Col 10
+	time.sleep(2)
+
+	ser.write_str("\ESC[?2l") # enter vt52 mode
+	for i in range(3):
+		ser.write_str("\ESCC") # Move right/forward 3 char
+	ser.write_str("\ESC<") # enter vt100 mode
+	time.sleep(2)
+	ser.write_str("\ESC[10;10H") # Line 10, Col 10
+	time.sleep(2)
+
+	ser.write_str("\ESC[?2l") # enter vt52 mode
+	for i in range(3):
+		ser.write_str("\ESCB") # Move down 3 char
+	ser.write_str("\ESC<") # enter vt100 mode
+	time.sleep(2)
+	ser.write_str("\ESC[10;10H") # Line 10, Col 10
+	time.sleep(2)
+
+	ser.write_str("\ESC[?2l") # enter vt52 mode
+	for i in range(3):
+		ser.write_str("\ESCD") # Move left/backward 3 char
+	ser.write_str("\ESC<") # enter vt100 mode
+	time.sleep(2)
+	ser.write_str("\ESC[10;10H") # Line 10, Col 10
+	time.sleep(2)
+
+def test_home_vt52( ser ):
+	""" vt52: Send Lorem Ipsum. move to 0-0 (home) """
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[?2l") # enter vt52 mode
+	ser.write_str("\ESCH") # go Home
+	ser.write_str("\ESC<") # enter vt100 mode
+
 def test_cursor_at_line( ser ):
 	""" Send Lorem Ipsum, place cursor to 3th line & 5th char, move at absolute line 10. Cursor still at 5th char."""
 	test_clear(ser)
@@ -484,6 +556,76 @@ def test_dec_lines( ser, line_style=None ):
 
 	ser.write_str( "\ESC(B" ) # Ascii Mode
 	ser.write_str( "Back to Ascii" )
+
+def test_vt100_status( ser ):
+	""" Request the VT100ID (two different way) and display it. Ask VT100 Status and display it"""
+	ser.write_str( "\ESC[0c" ) # Ask VT100ID
+	data = ser.readline() # rely on the CR time-out for the end of reading
+	if (data != None) and len(data)>0 :
+		print( "VT100ID : \ESC[0c response: \ESC%s  (expecting something like \ESC[?1;0c , where 1 is the is ID)" % data[1:].decode("ASCII") )
+	else:
+		print( "VT100ID : Oups! no response!  (expecting something like \ESC[?1;0c , where 1 is the is ID)")
+
+	ser.write_str( "\ESC[c" ) # Ask VT100ID
+	data = ser.readline() # rely on the CR time-out for the end of reading
+	if (data != None) and len(data)>0 :
+		print( "VT100ID : \ESC[c response: \ESC%s  (expecting something like \ESC[?1;0c , where 1 is the is ID)" % data[1:].decode("ASCII") )
+	else:
+		print( "VT100ID : Oups! no response!  (expecting something like \ESC[?1;0c , where 1 is the is ID)")
+
+	ser.write_str( "\ESC[5n" ) # Ask VT100 status
+	data = ser.readline() # rely on the CR time-out for the end of reading
+	if (data != None) and len(data)>0 :
+		print( "VT100 status : \ESC[5n response: \ESC%s  (expecting something like \ESC[0n ; where 0 is the is the status)" % data[1:].decode("ASCII") )
+	else:
+		print( "VT100 status : Oups! no response!  (expecting something like \ESC[0n , where 0 is the is the status)")
+
+def test_term_id_vt52( ser ):
+	""" vt52: Request the Terminal ID and display it """
+	ser.write_str("\ESC[?2l") # enter vt52 mode
+	ser.write_str( "\ESCZ" ) # Ask Term_ID
+	data = ser.readline() # rely on the CR time-out for the end of reading
+	if (data != None) and len(data)>0 :
+		print( "TerminalID : \ESCZ response: \ESC%s  (expecting something like ??????????)" % data[1:].decode("ASCII") )
+	else:
+		print( "TerminalID : Oups! no response!  (expecting something like ???????)")
+	ser.write_str("\ESC<") # enter vt100 mode
+	print( data ) # debug
+
+def test_term_id2_vt52( ser ):
+	""" vt52: Request the Terminal ID and display it """
+	ser.write_str("\ESC[?2l") # enter vt52 mode
+	ser.write_str( "\ESC[Z" ) # Ask Term_ID
+	data = ser.readline() # rely on the CR time-out for the end of reading
+	if (data != None) and len(data)>0 :
+		print( "TerminalID : \ESC[Z response: \ESC%s  (expecting something like \ESC[/Z)" % data[1:].decode("ASCII") )
+	else:
+		print( "TerminalID : Oups! no response!  (expecting something like \ESC[/Z)")
+	ser.write_str("\ESC<") # enter vt100 mode
+	print( data ) # debug
+
+def test_reverse_lf_vt52( ser ):
+	""" vt52: Send Lorem, set cursor at line 3, char 5, wait 2sec, reverse line feed. Result: cursor should move at line 2. """
+	test_clear( ser )
+	test_lorem( ser )
+	ser.write_str("\ESC[3;5H") # Line 3, Col 5
+	ser.write_str("\ESC[?2l") # enter vt52 mode
+	time.sleep( 2 )
+	ser.write_str( "\ESCI" )  # reverse LF
+	ser.write_str("\ESC<") # enter vt100 mode
+
+def test_reset_settings( ser ):
+	""" Write some reverse text, write some blink text. Wait 3 seconds. send reset setting,
+	send additional text. Result: text should be in plain text on a cleared screen. """
+	test_clear( ser )
+	ser.write_str( "\ESC[7m" ) # inverted
+	ser.write_str("some inverted text.\r\n")
+	ser.write_str( "\ESC[5m" ) # Blink ON
+	ser.write_str("some Blinking inverted text.\r\n")
+	time.sleep( 3 )
+	ser.write_str( "\ESCc" ) # Reset setting (including screen)
+	for i in range(10):
+		ser.write_str( "This text should be plain display %s / 10\r\n" % (i+1) )
 
 
 if __name__ == '__main__':

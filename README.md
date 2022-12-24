@@ -11,6 +11,7 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 
 | Escape sequence             | Description                                              | [Test name](test-suite/readme.md)  |
 |-----------------------------|----------------------------------------------------------|--------------------|
+| \ESC[?2l	| Enter VT52 mode                                                            | cursor_move_vt52   |
 | \ESC[?7l	| Wraparound OFF                                                             | no_warp            |
 | \ESC[?7h	| Wraparound ON                                                              | do_warp            |
 | \ESC[?12l	| Text Cursor Disable Blinking (but still visible)                           | cursor_blink       |
@@ -18,6 +19,8 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 | \ESC[?25l | Cursor invisible                                                           | cursor_hide        |
 | \ESC[?25h | Cursor visible                                                             | cursor_hide        |
 | \ESC[H    | Move to 0-0                                                                | clearscr           |
+| \ESCc     | reset settings                                                             | reset_settings     |
+| \ESC[0c   | Ask VT100 ID                                                               | vt100_status       |
 | \ESC[s    | Save the cursor position                                                   | cursor_save        |
 | \ESC[u    | Move cursor to previously saved position                                   | cursor_save        |
 | \ESC[*{row}*;*{col}*H | Move to *{row}*,*{col}*                                        | move_at_2_3        |
@@ -48,8 +51,23 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 | \ESC[0J   | clear screen from cursor                                                   | clearscr           |
 | \ESC[nS   | scroll whole page up by n rows (default 1 if n missing). No cursor move.<br />(Look for "CSI Ps S" in [XTerm Control Sequences](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Functions-using-CSI-_-ordered-by-the-final-character_s), VT420)  | scroll_up, scroll_up3 |
 | \ESC[*{n}*T	| scroll down *{n}* lines (default 1 if n missing). No cursor move.<br />(Look for "CSI Ps T" in [XTerm Control Sequences](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Functions-using-CSI-_-ordered-by-the-final-character_s), VT420)  | scroll_down, scroll_down3 |
-| \ESCF     | Enter graphic mode (special graphic charset, NuPetScii). [Sample](docs/using-nupetscii.md). |  nupetscii, nupetscii2   |
-| \ESCG     | Exit graphic mode (ASCII charset)                                          |  ascii             |
+| \ESCF     | Enter graphic mode - special graphic charset, NuPetScii. (vt52, vt100) <br/>[Sample](docs/using-nupetscii.md). |  nupetscii, nupetscii2   |
+| \ESCG     | Exit graphic mode - ASCII charset (vt52, vt100)                            |  ascii             |
+
+VT52 escape (available onb VT100 **but is currently VT52 only**)
+
+| \ESCA       | Move the cursor up 1 line (vt52, not vt100)                              | cursor_move_vt52   |
+| \ESCB       | Move the cursor down 1 line (vt52, not vt100)                            | cursor_move_vt52   |
+| \ESCC       | Move the cursor right 1 col (vt52, not vt100)                            | cursor_move_vt52   |
+| \ESCD       | Move the cursor left 1 col (vt52, not vt100)                             | cursor_move_vt52   |
+| \ESCH       | Move to 0-0 (vt52, not vt100)                                            | home_vt52          |
+| \ESCI       | Reverse Line-Feed (vt52, not vt100)                                      | reverse_lf_vt52    |
+| \ESCJ	      | Clear the screen from cursor until end of screen (vt52, not vt100)       | clear_eos_vt52     |
+| \ESCK	      | Clear from cursor until end of line (vt52, not vt100)                    | clear_eol_vt52     |
+| \ESC<	      | Enter vt100 mode                                                         | cursor_move_vt52   |
+| \ESCZ	      | Identify/return Terminal ID (DECID is 0x9a). (vt52, not vt100) **defect**| term_id_vt52       |
+| \ESC[Z	    | Identify/return Terminal ID (DECID is 0x9a). (vt52, not vt100)           | term_id2_vt52      |
+
 
 Cursor Style
 
