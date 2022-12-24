@@ -18,6 +18,8 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 | \ESC[?12h	| Text Cursor Enable Blinking                                                | cursor_blink       |
 | \ESC[?25l | Cursor invisible                                                           | cursor_hide        |
 | \ESC[?25h | Cursor visible                                                             | cursor_hide        |
+| \ESC[?47l | Secondary screen buffer: Restore screen (but not cursor).<br />Also with \ESC[?1047l, \ESC[?1049l for Linux | screen_save, screen_save_1047 screen_save_1049 |
+| \ESC[?47h | Secondary screen buffer: Save screen.<br />Also with \ESC[?1047h, \ESC[?1049h for Linux                     | screen_save, screen_save_1047 screen_save_1049 |
 | \ESC[H    | Move to 0-0                                                                | clearscr           |
 | \ESCc     | reset settings                                                             | reset_settings     |
 | \ESC[0c   | Ask VT100 ID                                                               | vt100_status       |
@@ -56,6 +58,8 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 
 VT52 escape (available onb VT100 **but is currently VT52 only**)
 
+| Escape sequence             | Description                                              | [Test name](test-suite/readme.md)  |
+|-----------------------------|----------------------------------------------------------|--------------------|
 | \ESCA       | Move the cursor up 1 line (vt52, not vt100)                              | cursor_move_vt52   |
 | \ESCB       | Move the cursor down 1 line (vt52, not vt100)                            | cursor_move_vt52   |
 | \ESCC       | Move the cursor right 1 col (vt52, not vt100)                            | cursor_move_vt52   |

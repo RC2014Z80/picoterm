@@ -627,6 +627,55 @@ def test_reset_settings( ser ):
 	for i in range(10):
 		ser.write_str( "This text should be plain display %s / 10\r\n" % (i+1) )
 
+def screen_save( ser, seq_id ):
+	test_clear(ser)
+	ser.write_str( "\ESC[7m" ) # inverted
+	ser.write_str("some inverted text.\r\n")
+	ser.write_str( "\ESC[27m" ) # reset inverse/reverse mode
+	ser.write_str( "\ESC[5m" ) # Blink ON
+	ser.write_str("some Blinking text.\r\n")
+	ser.write_str( "\ESC[25m" ) # Blink OFF
+
+	ser.write_str( "\ESC[7m" ) # inverted
+	ser.write_str( "\ESC[5m" ) # Blink ON
+	ser.write_str( "some Blinking Inverted text.\r\n" )
+
+	ser.write_str( "\ESC[0m" ) # Back to normal
+	ser.write_str( "This must be back to normal :-)\r\n" )
+	ser.write_str( "Wait 5 second before save and change screen\r\n" )
+	time.sleep( 5 )
+
+	ser.write_str( "\ESC[?%ih" % seq_id ) # Save screen
+
+	test_clear( ser )
+	for row in range( 0x20, 0xFF, 0xF+1 ):
+		ser.write_str( "%0x : " % row )
+		for col in range( 0x0, 0x0F ):
+			ser.write_byte( row+col )
+			ser.write_byte( 0x20 ) #space
+		ser.write_byte( 13 )
+		ser.write_byte( 10 )
+
+	ser.write_str( "Wait 5 second before restoring the screen\r\n" )
+	time.sleep(5)
+
+	ser.write_str( "\ESC[?%il" % seq_id ) # Restore the screen
+
+def test_screen_save( ser ):
+	""" Write some text, save the screen. Display,	Ascii table, wait 5 sec
+	then restore initial screen """
+	screen_save( ser, seq_id=47 )
+
+def test_screen_save_1047( ser ):
+	""" Linux version with 1047: Write some text, save the screen. Display,	Ascii table, wait 5 sec
+	then restore initial screen """
+	screen_save( ser, seq_id=1047 )
+
+def test_screen_save_1049( ser ):
+	""" Linux version with 1049: Write some text, save the screen. Display,	Ascii table, wait 5 sec
+	then restore initial screen """
+	screen_save( ser, seq_id=1049 )
+
 
 if __name__ == '__main__':
 	print( '== PicoTerm Escape Sequence tester %s ==' % __version__ )
