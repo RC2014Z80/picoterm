@@ -17,7 +17,36 @@ From version 1.2 any publication will includes all U2F firmware files for 40 & 8
 
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
 
-## Version 1.5.1 - (on going)
+## Version 1.5.2 - (on going)
+* support ESC( with one parameter togheter with ESC[
+* include DEC line drawing (redirected to NupetScii)
+* Add new ANSI escape by [abaffa](https://github.com/abaffa) for 80col for VT100
+ * ESCc : reset settings
+ * ESC[?47l	: restore screen
+ * ESC[?47h	: save screen
+ * ESC[c : ask VT100ID
+ * ESC[0c :	ask VT100ID
+ * ESC[5n :	ask VT100 Status
+ * ESC[?2l : enter VT52 mode
+* VT52 escapes not available for VT100  by [abaffa](https://github.com/abaffa) for 80col
+ * ESCA           Cursor up
+ * ESCB           Cursor down
+ * ESCC           Cursor right
+ * ESCD           Cursor left
+ * ESCH           Cursor to home
+ * ESCI           Reverse line feed
+ * ESCJ           Erase to end of screen
+ * ESCK           Erase to end of line
+ * ESCZ           Identify
+ * ESC[Z          Identify
+ * ESC<           enter VT100 mode
+* move ESCF & ESCG back to global scope VT100/VT52 to activate NupetScii
+ * ESCF : Special graphics character set (can be overseen by DEC Drawing lines)
+ * ESCG : Select ASCII character set (can be overseen by DEC Drawing lines)
+* Support ESC(0 and ESC(2 (over NupetScii font) for DEC line drawing. The for ESC(B exit DEC line drawing.
+* writing additional tests.
+
+## Version 1.5.1
 * reorganize documentation
 * Append /test-suite for testing escape sequences on PicoTerm
 * activate GPIO 26 five seconds after reset/power-up. This is used to activate external USB power (for keyboard).

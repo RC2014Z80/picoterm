@@ -9,11 +9,15 @@ Once wired to the UART of the RC2014 (or any retro-computer) your get an autonom
 
 __PicoTerm is a terminal emulator__ written specifically for this module. Currently it runs 80 columns by 30 lines in black and white mode. Switching to 40 column colour version will be available shortly. It can use VT100 style escape codes, with support for the following
 
+# Supported escape sequence
+
+## Common sequences
+
 | Escape sequence             | Description                                              | [Test name](test-suite/readme.md)  |
 |-----------------------------|----------------------------------------------------------|--------------------|
 | \ESC[?2l	| Enter VT52 mode                                                            | cursor_move_vt52   |
-| \ESC[?7l	| Wraparound OFF                                                             | no_warp            |
-| \ESC[?7h	| Wraparound ON                                                              | do_warp            |
+| \ESC[?7l	| Wraparound OFF                                                             | no_wrap            |
+| \ESC[?7h	| Wraparound ON                                                              | do_wrap            |
 | \ESC[?12l	| Text Cursor Disable Blinking (but still visible)                           | cursor_blink       |
 | \ESC[?12h	| Text Cursor Enable Blinking                                                | cursor_blink       |
 | \ESC[?25l | Cursor invisible                                                           | cursor_hide        |
@@ -21,7 +25,7 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 | \ESC[?47l | Secondary screen buffer: Restore screen (but not cursor).<br />Also with \ESC[?1047l, \ESC[?1049l for Linux | screen_save, screen_save_1047 screen_save_1049 |
 | \ESC[?47h | Secondary screen buffer: Save screen.<br />Also with \ESC[?1047h, \ESC[?1049h for Linux                     | screen_save, screen_save_1047 screen_save_1049 |
 | \ESC[H    | Move to 0-0                                                                | clearscr           |
-| \ESCc     | reset settings                                                             | reset_settings     |
+| \ESCc     | reset settings                                                             | reset_settings,reset  |
 | \ESC[0c   | Ask VT100 ID                                                               | vt100_status       |
 | \ESC[s    | Save the cursor position                                                   | cursor_save        |
 | \ESC[u    | Move cursor to previously saved position                                   | cursor_save        |
@@ -45,18 +49,32 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 | \ESC[*{n}*E	| Move the cursor to beginning of next line, *{n}* lines down              | cursor_down_bol    |
 | \ESC[*{n}*F	| Move the cursor to beginning of previous line, *{n}* lines up            | cursor_up_bol      |
 | \ESC[*{n}*G	| Move the cursor to column *{n}*                                          | cursor_at_col      |
-| \ESC[0m     | normal text (should also set foreground & background colours to normal)  | back_to_normal     |
+| \ESC[0m     | Normal text (should also set foreground & background colours to normal)  | back_to_normal     |
 | \ESC[5m	  | Blink ON                                                                   | blink              |
 | \ESC[7m   | reverse text                                                               | reverse            |
 | \ESC[25m	| Blink OFF                                                                  | blink              |
 | \ESC[27m	| reset inverse/reverse mode                                                 | reverse            |
 | \ESC[0J   | clear screen from cursor                                                   | clearscr           |
-| \ESC[nS   | scroll whole page up by n rows (default 1 if n missing). No cursor move.<br />(Look for "CSI Ps S" in [XTerm Control Sequences](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Functions-using-CSI-_-ordered-by-the-final-character_s), VT420)  | scroll_up, scroll_up3 |
+| \ESC[nS   | scroll whole page up by n rows (default 1 if n missing). No cursor move.<br />(Look for "CSI Ps S" in [XTerm Control Sequences](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Functions-using-CSI-_-ordered-by-the-final-character_s), VT420)<br />>NupetScii font is overseed by DEC lines when issuing a "DEC line drawing" escape sequence after graphical mode. | scroll_up, scroll_up3 |
 | \ESC[*{n}*T	| scroll down *{n}* lines (default 1 if n missing). No cursor move.<br />(Look for "CSI Ps T" in [XTerm Control Sequences](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Functions-using-CSI-_-ordered-by-the-final-character_s), VT420)  | scroll_down, scroll_down3 |
 | \ESCF     | Enter graphic mode - special graphic charset, NuPetScii. (vt52, vt100) <br/>[Sample](docs/using-nupetscii.md). |  nupetscii, nupetscii2   |
 | \ESCG     | Exit graphic mode - ASCII charset (vt52, vt100)                            |  ascii             |
 
-VT52 escape (available onb VT100 **but is currently VT52 only**)
+## Cursor Style
+
+| Escape sequence             | Description                                              | [Test name](test-suite/readme.md)  |
+|-----------------------------|----------------------------------------------------------|--------------------|
+| \ESC[0 q	| Default cursor shape configured by the user                                | cursor_style       |
+| \ESC[1 q	| Blinking block cursor shape                                                | cursor_style       |
+| \ESC[2 q	| Steady block cursor shape                                                  | cursor_style       |
+| \ESC[3 q	| Blinking underline cursor shape                                            | cursor_style       |
+| \ESC[4 q	| Steady underline cursor shape                                              | cursor_style       |
+| \ESC[5 q	| Blinking bar cursor shape                                                  | cursor_style       |
+| \ESC[6 q	| Steady bar cursor shape                                                    | cursor_style       |
+
+## VT52 sequences
+
+VT52 escape are not available in VT100 mode. Switch to VT52 mode to use them.
 
 | Escape sequence             | Description                                              | [Test name](test-suite/readme.md)  |
 |-----------------------------|----------------------------------------------------------|--------------------|
@@ -73,39 +91,37 @@ VT52 escape (available onb VT100 **but is currently VT52 only**)
 | \ESC[Z	    | Identify/return Terminal ID (DECID is 0x9a). (vt52, not vt100)           | term_id2_vt52      |
 
 
-Cursor Style
+## DEC Line Drawing
 
-| Escape sequence             | Description                                              | [Test name](test-suite/readme.md)  |
-|-----------------------------|----------------------------------------------------------|--------------------|
-| \ESC[0 q	| Default cursor shape configured by the user                                | cursor_style       |
-| \ESC[1 q	| Blinking block cursor shape                                                | cursor_style       |
-| \ESC[2 q	| Steady block cursor shape                                                  | cursor_style       |
-| \ESC[3 q	| Blinking underline cursor shape                                            | cursor_style       |
-| \ESC[4 q	| Steady underline cursor shape                                              | cursor_style       |
-| \ESC[5 q	| Blinking bar cursor shape                                                  | cursor_style       |
-| \ESC[6 q	| Steady bar cursor shape                                                    | cursor_style       |
+Should be called after a Graphic mode activation with ESC F (DEC line drawing is built on the top of NupetScii).
 
-DEC Line Drawing
+The escape sequence here below allow to switch between ASCII display (under NupetScii) to Line Drawing (under NupetScii) and Vice-versa.
+
+Use the ESC G to exit graphical mode (NupetScii & DEC line drawing).
+
+__Remarks:__ DEC line drawing is designed for VT52 only. However this has been made available for VT52 & VT100 because it can also offers the best for VT100.
 
 | Escape sequence             | Description                                              | [Test name](test-suite/readme.md)  |
 |-----------------------------|----------------------------------------------------------|--------------------|
 | \ESC(0   | Enables DEC Line Drawing Mode - single line                                 | dec_lines          |
 | \ESC(2   | Enables DEC Line Drawing Mode - double line                                 | dec_lines          |
-| \ESC(B   | Enables ASCII Mode (Default)                                                | dec_lines          |
+| \ESC(B   | Enables ASCII Mode (Default, return to NupetScii)                           | dec_lines          |
 
-| Hex     | ASCII    | DEC Line Drawing      |
-|---------|----------|-----------------------|
-| 0x6a    | j        | ┘                     |
-| 0x6b    | k        | ┐                     |
-| 0x6c    | l        | ┌                     |
-| 0x6d    | m        | └                     |
-| 0x6e    | n        | ┼                     |
-| 0x71    | q        | ─                     |
-| 0x74    | t        | ├                     |
-| 0x75    | u        | ┤                     |
-| 0x76    | v        | ┴                     |
-| 0x77    | w        | ┬                     |
-| 0x78    | x        | │                     |
+| Hex     | ASCII    | DEC Line Drawing      | NupetScii single line | NupetScii double line |
+|---------|----------|-----------------------|-----------------------|-----------------------|
+| 0x6a    | j        | ┘                     | 0xDB |  |
+| 0x6b    | k        | ┐                     | 0xAE |  |
+| 0x6c    | l        | ┌                     | 0xB0 |  |
+| 0x6d    | m        | └                     | 0xAD |  |
+| 0x6e    | n        | ┼                     | 0xDB |  |
+| 0x71    | q        | ─                     | 0xC3 |  |
+| 0x74    | t        | ├                     | 0xAB |  |
+| 0x75    | u        | ┤                     | 0xC3 |  |
+| 0x76    | v        | ┴                     | 0xB1 |  |
+| 0x77    | w        | ┬                     | 0xB2 |  |
+| 0x78    | x        | │                     | 0xDD |  |
+
+## 40 col mode only
 
 40 col colour only: (sequence is ignored, no effect in 80 col b/w)
 

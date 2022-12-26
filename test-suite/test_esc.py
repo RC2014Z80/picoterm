@@ -210,7 +210,7 @@ def test_cursor_hide( ser ):
 	ser.write_str( "Show cursor\r\n" )
 	ser.write_str( "\ESC[?25h" )
 
-def test_no_warp( ser ):
+def test_no_wrap( ser ):
 	""" Disable WarpAround and send a Lorem Ipsum """
 	ser.write_str( "\ESC[?7l" )
 	test_lorem( ser )
@@ -358,7 +358,7 @@ def test_char_delete80( ser ):
 
 def test_char_erase( ser ):
 	""" Send Lorem Ipsum, set cursor to 5th line & 50th char, Erase 10 chars on the right of cursor (cursor position included).
-	The erase chars are replaced with space."""
+	The erased chars are replaced with space."""
 	test_clear(ser)
 	test_lorem(ser)
 	ser.write_str("\ESC[5;50H") # Line 5, Col 5
@@ -366,7 +366,7 @@ def test_char_erase( ser ):
 
 def test_char_erase80( ser ):
 	""" Send Lorem Ipsum, set cursor to 5th line & 80th char, Erase 10 chars on the right of cursor (cursor position included).
-	The erase chars are replaced with space. Side effect test, only position 80 must be cleared."""
+	The erased chars are replaced with space. Side effect test, only position 80 must be cleared."""
 	test_clear(ser)
 	test_lorem(ser)
 	ser.write_str("\ESC[5;80H") # Line 5, Col 5
@@ -475,6 +475,13 @@ def test_cursor_at_line( ser ):
 	ser.write_str("\ESC[3;5H") # Line 3, Col 5
 	ser.write_str("\ESC[10d") # Move absolute line 10
 
+def test_cursor_at_col( ser ):
+	""" Send Lorem Ipsum, place cursor to 3th line & 5th char, move at absolute column 50."""
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[3;5H") # Line 3, Col 5
+	ser.write_str("\ESC[50G") # Move absolute column 10
+
 def test_cursor_down_bol( ser ):
 	""" Send Lorem Ipsum, place cursor to 3th line & 5th char, move cursor 6 lines down (at begin of line). Cursor must be on line 9. """
 	test_clear(ser)
@@ -497,7 +504,7 @@ def test_reverse( ser ):
 	ser.write_str( "\ESC[7m" ) # reverse text
 	ser.write_str( "This text should be displayed in reverse.\r\n" )
 	ser.write_str( "\ESC[27m" ) # reset inverse/reverse mode
-	test_lorem(ser)
+	ser.write_str( "But this line should not be displayed in Reverse\r\n")
 
 def test_back_to_normal( ser ):
 	""" Write some inverted text, some blink text, some inverted+blink. Finally, return to normal text."""
@@ -525,8 +532,9 @@ def test_cursor_style( ser ):
 				( "\ESC[5 q", "Blinking bar cursor shape"),
 				( "\ESC[6 q", "Steady bar cursor shape"),
 				( "\ESC[0 q", "Default cursor shape configured by the user ") ]
+	test_clear(ser)
 	for _esc, _label in cursors:
-		test_clear(ser)
+		ser.write_str("\r\n")
 		ser.write_str( "%s then wait 5 sec." % _label )
 		ser.write_str( _esc )
 		time.sleep( 5 )
@@ -541,21 +549,23 @@ def test_dec_lines( ser, line_style=None ):
 			ser.write_byte( _c )
 			ser.write_byte( 0x20 ) # Space
 
-	test_clear( ser )
-	for _esc, _label in ((None    , "Default        : "),
-						("\ESC(0", "Simple line    : "),
-						("\ESC(2", "Double line    : "),
-						("\ESC(B", "ASCII mode     : " ) ):
-		ser.write_str( "\ESC(B" ) # Ascii Mode
-		ser.write_str( _label )
-		if _esc != None:
-			ser.write_str( _esc )
-		draw_serie()
-		ser.write_str( "\r\n" )
-		time.sleep(5)
+	ser.write_str( "\ESCF" ) # Switch to graphic mode
+	ser.write_str( "We are in Graphic mode\r\n")
+	ser.write_str( "We switch in simple line mode\r\n")
+	ser.write_str( "\ESC(0" )
+	draw_serie()
+	ser.write_str( "\ESC(B" ) # back to ASCII
+	ser.write_str( "\r\n" )
+	ser.write_str( "We switch in double line mode\r\n")
+	ser.write_str( "\ESC(2" )
+	draw_serie()
+	ser.write_str( "\ESC(B" ) # back to ASCII
+	ser.write_str( "\r\n" )
 
-	ser.write_str( "\ESC(B" ) # Ascii Mode
-	ser.write_str( "Back to Ascii" )
+	ser.write_str( "We are now back ASCII (exit DEC Line Drawing)\r\n")
+	ser.write_str( "Graphic mode is still active (NupetScii),\r\n")
+	ser.write_str( "Anyway we should read this entire line.\r\n\r\n")
+	return
 
 def test_vt100_status( ser ):
 	""" Request the VT100ID (two different way) and display it. Ask VT100 Status and display it"""
@@ -626,6 +636,10 @@ def test_reset_settings( ser ):
 	ser.write_str( "\ESCc" ) # Reset setting (including screen)
 	for i in range(10):
 		ser.write_str( "This text should be plain display %s / 10\r\n" % (i+1) )
+
+def test_reset( ser ):
+	"""Just reset the terminal (not really a test, just an helper). """
+	ser.write_str( "\ESCc" ) # Reset setting (including screen)
 
 def screen_save( ser, seq_id ):
 	test_clear(ser)
