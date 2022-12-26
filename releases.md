@@ -29,21 +29,22 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
  * ESC[5n :	ask VT100 Status
  * ESC[?2l : enter VT52 mode
 * VT52 escapes not available for VT100  by [abaffa](https://github.com/abaffa) for 80col
- * ESCA           Cursor up
- * ESCB           Cursor down
- * ESCC           Cursor right
- * ESCD           Cursor left
- * ESCH           Cursor to home
- * ESCI           Reverse line feed
- * ESCJ           Erase to end of screen
- * ESCK           Erase to end of line
- * ESCZ           Identify
- * ESC[Z          Identify
- * ESC<           enter VT100 mode
-* move ESCF & ESCG back to global scope VT100/VT52 to activate NupetScii
+ * ESCA : Cursor up
+ * ESCB : Cursor down
+ * ESCC : Cursor right
+ * ESCD : Cursor left
+ * ESCH : Cursor to home
+ * ESCI : Reverse line feed
+ * ESCJ : Erase to end of screen
+ * ESCK : Erase to end of line
+ * ESCZ : Identify
+ * ESC[Z : Identify
+ * ESC< : enter VT100 mode
+* move ESCF & ESCG back to global scope (VT100 & VT52) to activate NupetScii
  * ESCF : Special graphics character set (can be overseen by DEC Drawing lines)
  * ESCG : Select ASCII character set (can be overseen by DEC Drawing lines)
-* Support ESC(0 and ESC(2 (over NupetScii font) for DEC line drawing. The for ESC(B exit DEC line drawing.
+* Support ESC(0 and ESC(2 (over NupetScii font) for DEC line drawing. The for ESC(B exit DEC line drawing for ascii print (under Nupetscii).
+* cursor style supported under ASCII & NupetScii.
 * writing additional tests.
 
 ## Version 1.5.1

@@ -402,12 +402,12 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
 
 
     char ch = 0;
-	char inv = 0;
+    char inv = 0;
     char blk = 0;
 
     int tr = (y/FONT_HEIGHT);
     unsigned char *rowslots = slotsForRow(tr); // I want a better word for slots. (Character positions).
-	unsigned char *rowinv = slotsForInvRow(tr);
+    unsigned char *rowinv = slotsForInvRow(tr);
     unsigned char *rowblk = slotsForBlkRow(tr);
 
     for (int i = 0; i < COUNT; i++) {
@@ -418,13 +418,13 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
       inv = *rowinv;
       rowinv++;
 
-	  blk = *rowblk;
+      blk = *rowblk;
       rowblk++;
-    
+
       if(blk == 1 && is_blinking){
         if(inv == 1)
             *output32++ = host_safe_hw_ptr(dbase + ((max_char) * FONT_HEIGHT * FONT_WIDTH_WORDS));
-        
+
         else
             *output32++ = host_safe_hw_ptr(&block);
       }
@@ -597,7 +597,6 @@ int main(void) {
           // no button
           load_config();
           break;
-
       case 1:
           config.colour_preference = GREEN1;     // A
           save_config();
@@ -607,7 +606,7 @@ int main(void) {
           save_config();
           break;
       case 4:
-                                          // C
+          // C
           break;
       case 3:
           config.colour_preference = GREEN2;     // A+B
@@ -627,7 +626,7 @@ int main(void) {
 
       default:
           break;
-      }
+  }
 
   // AFTER   reading and writing
   stdio_init_all();
@@ -658,9 +657,10 @@ int main(void) {
   keybd_init( pico_key_down, pico_key_up );
 
   prepare_text_buffer();
-  reset_terminal();
-  display_terminal(); // display terminal entry screen
-  video_main();
+
+  video_main();       // also build the font
+	reset_terminal();
+	display_terminal(); // display terminal entry screen
   tusb_init(); // initialize tinyusb stack
 
   char _ch = 0;
@@ -756,10 +756,10 @@ void csr_blinking_task() {
   if ( board_millis() - start_ms_csr > interval_ms_csr) {
 
 	start_ms_csr += interval_ms_csr;
-	
+
 	is_blinking = !is_blinking;
 	set_csr_blink_state(1 - get_csr_blink_state());
-	
+
 	refresh_cursor();
   }
 

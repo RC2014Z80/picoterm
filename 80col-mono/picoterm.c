@@ -158,10 +158,6 @@ void reset_terminal(){
 
     mode = VT100;
 
-    cursor_blinking = false;
-    cursor_blinking_mode = true;
-    cursor_symbol = 143;
-
     insert_mode = false;
 
     wrap_text = true;
@@ -174,11 +170,16 @@ void reset_terminal(){
     inv_under_csr = 0;
     blk_under_csr = 0;
 
-    if( config.nupetscii==1 ){
-      config.nupetscii=0; // Enter back ASCII charset
-      build_font( false );
-    }
-    dec_mode = DEC_MODE_NONE;
+    // --- reset to current font!
+    //if( config.nupetscii==1 ){
+    //  config.nupetscii=0; // Enter back ASCII charset
+    //  build_font( false );
+    //}
+    dec_mode = DEC_MODE_NONE; // single/double lines
+
+    cursor_blinking = false;
+    cursor_blinking_mode = true;
+    cursor_symbol = config.nupetscii==1 ? 0x8F : 0x3F;
 
     make_cursor_visible(true);
     clear_cursor();  // so we have the character
@@ -208,7 +209,6 @@ void slip_character(unsigned char ch,int x,int y){
     //decmode on
     if(dec_mode != DEC_MODE_NONE){
         ch = ch + 32; // going from array_index to ASCII code
-        debug_print("sclip_charater() for DEC mode drawing");
         if(ch >= 'j' && ch <= 'x')
         {
             if(dec_mode == DEC_MODE_SINGLE_LINE){
@@ -298,8 +298,6 @@ void slip_character(unsigned char ch,int x,int y){
         ptr[y]->slot[x] = ptr[y]->slot[x] - 32;
     }
     else{
-        if( ch > 0x20 )
-          debug_print("slip_character() Normal char");
         ptr[y]->slot[x] = ch;
     }
 
@@ -509,15 +507,15 @@ void refresh_cursor(){
   print_cursor();
 }
 
-void print_cursor(){
 
-    chr_under_csr = slop_character(csr.x,csr.y);
+void print_cursor(){
+  chr_under_csr = slop_character(csr.x,csr.y);
   inv_under_csr = inv_character(csr.x,csr.y);
-    blk_under_csr = blk_character(csr.x,csr.y);
+  blk_under_csr = blk_character(csr.x,csr.y);
 
     if(cursor_visible==false || (cursor_blinking_mode && cursor_blinking)) return;
 
-  if(config.nupetscii && chr_under_csr == 0)
+  if(chr_under_csr == 0) // config.nupetscii &&
     ptr[csr.y]->slot[csr.x] = cursor_symbol;
 
   else if(inv_under_csr == 1)
@@ -714,10 +712,7 @@ void esc_sequence_received(){
 */
 
   int n,m;
-  sprintf( debug_msg, "esc_sequence_received for %c\r\n", esc_c1 );
-  debug_print( debug_msg );
   if(mode==VT100){
-
       //ESC H           Set tab at current column
       //ESC [ g         Clear tab at current column
       //ESC [ 0g        Same
@@ -748,8 +743,7 @@ void esc_sequence_received(){
               if(m == 0) m = 1;
 
               cmd_csr_position(n,m);
-
-          break;
+              break;
 
           case 'E':
               // ESC[#E  moves cursor to beginning of next line, # lines down
@@ -772,30 +766,25 @@ void esc_sequence_received(){
               csr.x = 0;
               csr.y -= n;
               constrain_cursor_values();
-          break;
-
+              break;
 
           case 'd':
               // ESC[#d  moves cursor to an absolute # line
-
               n = esc_parameters[0];
               n--;
-
               // these are zero based
               csr.y = n;
               constrain_cursor_values();
-          break;
+              break;
 
           case 'G':
               // ESC[#G  moves cursor to column #
-
               n = esc_parameters[0];
               n--;
-
               // these are zero based
               csr.x = n;
               constrain_cursor_values();
-          break;
+              break;
 
           case 'h':
               //[ 2 h    Keyboard locked
@@ -818,7 +807,6 @@ void esc_sequence_received(){
               //[ ? 50 h    Cursor ON
               //[ ? 75 h    Screen display ON
               //[ ? 1049 h  enables the alternative buffer
-
               if(parameter_q){
                   if(esc_parameters[0]==25 || esc_parameters[0]==50){
                       // show csr
@@ -858,7 +846,8 @@ void esc_sequence_received(){
                       insert_mode = true;
                   }
               }
-            break;
+              break;
+
           case 'l':
               //[ 2 l    Keyboard unlocked
               //[ 4 l    Replacement mode selected
@@ -924,7 +913,7 @@ void esc_sequence_received(){
                       insert_mode = false;
                   }
               }
-          break;
+              break;
 
           case 'm':
               //SGR
@@ -942,7 +931,6 @@ void esc_sequence_received(){
               //[ 24 m    Underline OFF
               //[ 25 m    Blink OFF
               //[ 27 m    Inverse Video OFF
-
               for(int param_idx = 0; param_idx <= esc_parameter_count && param_idx <= MAX_ESC_PARAMS; param_idx++){ //allows multiple parameters
                   int param = esc_parameters[param_idx];
                   if(param==0){
@@ -966,155 +954,154 @@ void esc_sequence_received(){
                   else if(param>=40 && param<=49){ //Background
                   }
               }
-          break;
+             break;
 
           case 's':
               // save cursor position
               saved_csr.x = csr.x;
               saved_csr.y = csr.y;
-          break;
+              break;
+
           case 'u':
               // move to saved cursor position
               csr.x = saved_csr.x;
               csr.y = saved_csr.y;
-          break;
+              break;
 
           case 'J':
-          // Clears part of the screen. If n is 0 (or missing), clear from cursor to end of screen.
-          // If n is 1, clear from cursor to beginning of the screen. If n is 2, clear entire screen
-          // (and moves cursor to upper left on DOS ANSI.SYS).
-          // If n is 3, clear entire screen and delete all lines saved in the scrollback buffer
-          // (this feature was added for xterm and is supported by other terminal applications).
+              // Clears part of the screen. If n is 0 (or missing), clear from cursor to end of screen.
+              // If n is 1, clear from cursor to beginning of the screen. If n is 2, clear entire screen
+              // (and moves cursor to upper left on DOS ANSI.SYS).
+              // If n is 3, clear entire screen and delete all lines saved in the scrollback buffer
+              // (this feature was added for xterm and is supported by other terminal applications).
               switch(esc_parameters[0]){
-                  case 0:
+                case 0:
                   // clear from cursor to end of screen
                   clear_screen_from_csr();
-              break;
-                  case 1:
+                  break;
+                case 1:
                   // clear from cursor to beginning of the screen
                   clear_screen_to_csr();
-              break;
-                  case 2:
+                  break;
+                case 2:
                   // clear entire screen
                   clear_entire_screen();
                   csr.x=0; csr.y=0;
-              break;
-              case 3:
+                  break;
+                case 3:
                   // clear entire screen
                   clear_entire_screen();
                   csr.x=0; csr.y=0;
-              break;
+                  break;
               }
-
-          break;
-
-
-
+              break;
 
           case 'K':
-          // Erases part of the line. If n is 0 (or missing), clear from cursor to the end of the line.
-          // If n is 1, clear from cursor to beginning of the line. If n is 2, clear entire line.
-          // Cursor position does not change.
+              // Erases part of the line. If n is 0 (or missing), clear from cursor to the end of the line.
+              // If n is 1, clear from cursor to beginning of the line. If n is 2, clear entire line.
+              // Cursor position does not change.
               switch(esc_parameters[0]){
-                  case 0:
+                case 0:
                   // clear from cursor to the end of the line
                   clear_line_from_cursor();
-              break;
-                  case 1:
+                  break;
+                case 1:
                   // clear from cursor to beginning of the line
                   clear_line_to_cursor();
-              break;
-                  case 2:
+                  break;
+                case 2:
                   // clear entire line
                   clear_entire_line();
-              break;
+                  break;
               }
-          break;
-
+              break;
 
           case 'A':
-          // Cursor Up
-          //Moves the cursor n (default 1) cells
+              // Cursor Up
+              //Moves the cursor n (default 1) cells
               n = esc_parameters[0];
               cmd_csr_up(n);
-          break;
+              break;
+
           case 'B':
-          // Cursor Down
-          //Moves the cursor n (default 1) cells
+              // Cursor Down
+              //Moves the cursor n (default 1) cells
               n = esc_parameters[0];
               cmd_csr_down(n);
-          break;
+              break;
+
           case 'C':
-          // Cursor Forward
-          //Moves the cursor n (default 1) cells
+              // Cursor Forward
+              //Moves the cursor n (default 1) cells
               n = esc_parameters[0];
               cmd_csr_forward(n);
-          break;
+              break;
+
           case 'D':
-          // Cursor Backward
-          //Moves the cursor n (default 1) cells
+              // Cursor Backward
+              //Moves the cursor n (default 1) cells
               n = esc_parameters[0];
               cmd_csr_backward(n);
-          break;
+              break;
+
           case 'S':
-          // Scroll whole page up by n (default 1) lines. New lines are added at the bottom. (not ANSI.SYS)
+              // Scroll whole page up by n (default 1) lines. New lines are added at the bottom. (not ANSI.SYS)
               n = esc_parameters[0];
               if(n==0)n=1;
               for(int i=0;i<n;i++){
                   shuffle_down();
               }
-          break;
+             break;
 
           case 'T':
-          // Scroll whole page down by n (default 1) lines. New lines are added at the top. (not ANSI.SYS)
+              // Scroll whole page down by n (default 1) lines. New lines are added at the top. (not ANSI.SYS)
               n = esc_parameters[0];
               if(n==0)n=1;
               for(int i=0;i<n;i++){
                   shuffle_up();
               }
-          break;
+              break;
 
           // MORE
 
 
 
           case 'L':
-          // 'INSERT LINE' - scroll rows down from and including cursor position. (blank the cursor's row??)
+              // 'INSERT LINE' - scroll rows down from and including cursor position. (blank the cursor's row??)
               n = esc_parameters[0];
               if(n==0)n=1;
               insert_lines(n);
-          break;
+              break;
 
           case 'M':
-          // 'DELETE LINE' - delete row at cursor position, scrolling everything below, up to fill. Leaving blank line at bottom.
+              // 'DELETE LINE' - delete row at cursor position, scrolling everything below, up to fill. Leaving blank line at bottom.
               n = esc_parameters[0];
               if(n==0)n=1;
               delete_lines(n);
-          break;
+              break;
 
           case 'P':
-          // 'DELETE CHARS' - delete <n> characters at the current cursor position, shifting in space characters from the right edge of the screen.
+              // 'DELETE CHARS' - delete <n> characters at the current cursor position, shifting in space characters from the right edge of the screen.
               n = esc_parameters[0];
               if(n==0)n=1;
               delete_chars(n);
-          break;
+              break;
 
           case 'X':
-          // 'ERASE CHARS' - erase <n> characters from the current cursor position by overwriting them with a space character.
+              // 'ERASE CHARS' - erase <n> characters from the current cursor position by overwriting them with a space character.
               n = esc_parameters[0];
               if(n==0)n=1;
               erase_chars(n);
-          break;
+              break;
 
           case '@':
-          // 'Insert Character' - insert <n> spaces at the current cursor position, shifting all existing text to the right. Text exiting the screen to the right is removed.
+              // 'Insert Character' - insert <n> spaces at the current cursor position, shifting all existing text to the right. Text exiting the screen to the right is removed.
               n = esc_parameters[0];
               if(n==0)n=1;
               insert_chars(n);
-          break;
+              break;
 
           case 'q':
-
               if(parameter_sp){
                   parameter_sp = false;
 
@@ -1125,43 +1112,42 @@ void esc_sequence_received(){
                   //ESC [ 4 SP q  Steady Underline  Steady underline cursor shape
                   //ESC [ 5 SP q  Blinking Bar  Blinking bar cursor shape
                   //ESC [ 6 SP q  Steady Bar  Steady bar cursor shape
-
                   switch(esc_parameters[0]){
-                      case 0:
-                      cursor_symbol = 143;
+                    case 0: // default configuration (underline blinking)
+                      cursor_symbol = config.nupetscii==1 ? 0x8F : 0x3F;
                       cursor_blinking_mode = true;
-                  break;
-                      case 1:
-                      cursor_symbol = 121; //95;
+                      break;
+                    case 1: // block blinking
+                      cursor_symbol = config.nupetscii==1 ? 0x79 : 0x5F; //95;
                       cursor_blinking_mode = true;
-                  break;
-                      case 2:
-                      cursor_symbol = 121; //95;
+                      break;
+                    case 2: // block steady
+                      cursor_symbol = config.nupetscii==1 ? 0x79 : 0x5F; //95;
                       cursor_blinking_mode = false;
-                  break;
-                      case 3:
-                      cursor_symbol = 143;
+                      break;
+                    case 3: // underline blinking
+                      cursor_symbol = config.nupetscii==1 ? 0x8F : 0x3F;
                       cursor_blinking_mode = true;
-                  break;
-                      case 4:
-                      cursor_symbol = 143;
+                      break;
+                    case 4: // underline steady
+                      cursor_symbol = config.nupetscii==1 ? 0x8F : 0x3F;
                       cursor_blinking_mode = false;
-                  break;
-                      case 5:
-                      cursor_symbol = 148;
+                      break;
+                    case 5: // Bar Blinking
+                      cursor_symbol = config.nupetscii==1 ? 0x94 : 0x3B;
                       cursor_blinking_mode = true;
-                  break;
-                      case 6:
-                      cursor_symbol = 148;
+                      break;
+                    case 6: // bar steady
+                      cursor_symbol = config.nupetscii==1 ? 0x94 : 0x3B;
                       cursor_blinking_mode = false;
-                  break;
-                  }
+                      break;
+                  } // switch esc_parameter
               }
-          break;
+              break; // case q
 
           case 'c':
               response_VT100ID();
-          break;
+              break;
 
           case 'n':
               if (esc_parameters[0]==5){
@@ -1170,13 +1156,12 @@ void esc_sequence_received(){
               else if (esc_parameters[0]==6){
                   response_csr();
               }
-          break;
+              break;
           }
 
-      }
+      } // if( esc_c1=='[' )
       else{
           // ignore everything else
-
       }
   }
   else if(mode==VT52){ // VT52
@@ -1195,28 +1180,23 @@ void esc_sequence_received(){
       }
   }
 
-	// Both VT52 & VT100
+  // Both VT52 & VT100
   if(esc_c1=='('){
-      debug_print("esc_c1 is (");
       // CSI
       switch(esc_final_byte){
       case 'B':
           // display ascii chars (not letter) but stays in NupetScii font
           // to allow swtich back to DEC "single/double line" drawing.
           dec_mode = DEC_MODE_NONE;
-          debug_print("Switch dec_mode NONE (deactivation)");
           break;
       case '0':
           dec_mode = DEC_MODE_SINGLE_LINE;
-          debug_print("Switch dec_mode SINGLE");
           break;
       case '2':
           dec_mode = DEC_MODE_DOUBLE_LINE;
-          debug_print("Switch dec_mode DOUBLE");
           break;
       default:
           dec_mode = DEC_MODE_NONE;
-          debug_print("Switch dec_mode NONE");
           break;
       }
   }
@@ -1614,14 +1594,13 @@ void handle_new_character(unsigned char asc){
                       esc_c1 = asc;
                       esc_state=ESC_PARAMETER_READY; // Lets wait for parameter
                       clear_escape_parameters();
-											// number of expected parameter depends on next caracter.
+                      // number of expected parameter depends on next caracter.
                   }
                   else if(asc=='('){    // ESC+(
-										debug_print( "receiving ( escape sequence\r\n");
                       esc_c1 = asc;
                       esc_state=ESC_PARAMETER_READY; // Lets wait for parameter
                       clear_escape_parameters();
-											parameter_p=true; // we just expecty a single parameter.
+                      parameter_p=true; // we just expecty a single parameter.
                   }
                   // other type Fe sequences go here
                   else
@@ -1742,6 +1721,7 @@ void handle_new_character(unsigned char asc){
                   // unrecognised character after escape.
                   reset_escape_sequence();
               break;
+
           case ESC_PARAMETER_READY:
               // waiting on parameter character, semicolon or final byte
               if(asc>='0' && asc<='9'){
@@ -1749,7 +1729,7 @@ void handle_new_character(unsigned char asc){
                   if(parameter_p){
                     // final byte. Log and handle
                     esc_final_byte = asc;
-                    esc_sequence_received();
+                    esc_sequence_received(); // execute esc sequence
                   }
                   else{
                     // parameter value
@@ -1774,7 +1754,7 @@ void handle_new_character(unsigned char asc){
               else if(asc>=0x40 && asc<0x7E){
                   // final byte. Log and handle
                   esc_final_byte = asc;
-                  esc_sequence_received();
+                  esc_sequence_received(); // execute esc sequence
               }
               else{
                   // unexpected value, undefined

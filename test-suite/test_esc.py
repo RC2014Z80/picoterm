@@ -102,7 +102,7 @@ def test_nupetscii( ser ):
 	ser.write_str( "\ESCF" )
 	for row in range( 0x20, 0xFF, 0xF+1 ):
 		ser.write_str( "%0x : " % row )
-		for col in range( 0x0, 0x0F ):
+		for col in range( 0x0, 0x0F+1 ):
 			ser.write_byte( row+col )
 			ser.write_byte( 0x20 ) #space
 		ser.write_byte( 13 )
@@ -136,7 +136,7 @@ def test_ascii( ser ):
 	ser.write_str( "\ESCG" )
 	for row in range( 0x20, 0xFF, 0xF+1 ):
 		ser.write_str( "%0x : " % row )
-		for col in range( 0x0, 0x0F ):
+		for col in range( 0x0, 0x0F+1 ):
 			ser.write_byte( row+col )
 			ser.write_byte( 0x20 ) #space
 		ser.write_byte( 13 )

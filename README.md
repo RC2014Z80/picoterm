@@ -62,15 +62,17 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 
 ## Cursor Style
 
-| Escape sequence             | Description                                              | [Test name](test-suite/readme.md)  |
-|-----------------------------|----------------------------------------------------------|--------------------|
-| \ESC[0 q	| Default cursor shape configured by the user                                | cursor_style       |
-| \ESC[1 q	| Blinking block cursor shape                                                | cursor_style       |
-| \ESC[2 q	| Steady block cursor shape                                                  | cursor_style       |
-| \ESC[3 q	| Blinking underline cursor shape                                            | cursor_style       |
-| \ESC[4 q	| Steady underline cursor shape                                              | cursor_style       |
-| \ESC[5 q	| Blinking bar cursor shape                                                  | cursor_style       |
-| \ESC[6 q	| Steady bar cursor shape                                                    | cursor_style       |
+Cursor style can be altered under ASCII and NupetSCII.
+
+| Escape sequence             | Description                              | [Test name](test-suite/readme.md)  |
+|-----------------------------|------------------------------------------|--------------------|
+| \ESC[0 q	| Default cursor shape (not yet configured by the user).     | cursor_style       |
+| \ESC[1 q	| Blinking block cursor shape                                | cursor_style       |
+| \ESC[2 q	| Steady block cursor shape                                  | cursor_style       |
+| \ESC[3 q	| Blinking underline cursor shape                            | cursor_style       |
+| \ESC[4 q	| Steady underline cursor shape                              | cursor_style       |
+| \ESC[5 q	| Blinking bar cursor shape, [ in ASCII.                     | cursor_style       |
+| \ESC[6 q	| Steady bar cursor shape, [ in ASCII.                       | cursor_style       |
 
 ## VT52 sequences
 
