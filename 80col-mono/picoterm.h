@@ -52,8 +52,8 @@ void display_config();
 void display_help();
 void display_nupetscii();
 
-bool get_csr_blink_state();
-void set_csr_blink_state(bool state);
+// bool get_csr_blink_state(); moved to picoterm_cursor 
+// void set_csr_blink_state(bool state);
 void refresh_cursor();
 void clear_cursor();
 void print_cursor();

@@ -15,6 +15,8 @@ message("PicoTerm 80Col version = ${CMAKE_PROJECT_VERSION}")
 list( APPEND sources main.c picoterm.c nupetscii.c )
 list( APPEND sources ../common/picoterm_config.c )
 list( APPEND sources ../common/picoterm_debug.c )
+list( APPEND sources ../common/picoterm_stddef.c )
+list( APPEND sources ../common/picoterm_cursor.c )
 list( APPEND sources ../common/keybd.c )
 
 # Define the library to includes at compile time

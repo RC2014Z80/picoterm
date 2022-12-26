@@ -48,6 +48,8 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 * writing additional tests.
 
 ## Version 1.5.1
+
+### Features
 * reorganize documentation
 * Append /test-suite for testing escape sequences on PicoTerm
 * activate GPIO 26 five seconds after reset/power-up. This is used to activate external USB power (for keyboard).
@@ -75,6 +77,8 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
  * ESC(2 Designate Character Set – DEC Line Drawing Enables DEC Line Drawing Mode - double line
  * see also the "Hex	ASCII	DEC Line Drawing" (in the ESC Seq documentation)
 * ESC(B Designate Character Set – US ASCII Enables ASCII Mode (Default)
+
+### Fix & Improvement
 
 ## Version 1.5 - Dec 18 2022
 

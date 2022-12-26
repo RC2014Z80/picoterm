@@ -52,6 +52,8 @@
 #include "picoterm.h"
 #include "../common/picoterm_config.h"
 #include "../common/picoterm_debug.h"
+#include "../common/picoterm_cursor.h"
+#include "../common/picoterm_stddef.h"
 #include "../common/keybd.h"
 //#include "hardware/structs/bus_ctrl.h"
 

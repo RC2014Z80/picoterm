@@ -21,6 +21,8 @@
 #include "picoterm.h"
 #include "../common/pmhid.h"
 #include "../common/picoterm_config.h"
+#include "../common/picoterm_cursor.h"
+#include "../common/picoterm_stddef.h"
 #include "tusb_option.h"
 #include <stdio.h>
 #include "main.h"
@@ -30,7 +32,7 @@
 #define COLUMNS     80
 #define ROWS        34
 #define VISIBLEROWS 30
-#define CSRCHAR     128
+/* #define CSRCHAR     128 */
 
 // wrap text
 #define WRAP_TEXT
@@ -56,10 +58,12 @@ static unsigned char esc_final_byte;
 #define BOTH    3
 int mode = VT100;
 
-bool cursor_visible;
-bool cursor_blinking = false;
-bool cursor_blinking_mode = true;
-char cursor_symbol = 143;
+/* picoterm_cursor.c */
+extern bool cursor_visible;
+extern bool cursor_blinking;
+extern bool cursor_blinking_mode;
+extern char cursor_symbol;
+
 
 #define DEC_MODE_NONE         0
 #define DEC_MODE_SINGLE_LINE  1
@@ -85,24 +89,15 @@ typedef struct row_of_text {
   unsigned char inv[COLUMNS];
     unsigned char blk[COLUMNS];
 } row_of_text;
-//struct row_of_text rows[ROWS];  // make 100 of our text rows
-//static struct row_of_text *p = &rows[0];  // pointer p assigned the address of the first row
-    // then p[y].slot[x] = ch;
-    // and return p[y].slot[x];
-    // and to scroll p += 1; // 1 row of text
 
 // array of pointers, each pointer points to a row structure
 static struct row_of_text *ptr[ROWS];
 static struct row_of_text *secondary_ptr[ROWS];
 
 
-typedef struct point {
-  int x;
-  int y;
-} point;
-
-struct point csr = {0,0};
-struct point saved_csr = {0,0};
+/* picoterm_cursor.c */
+extern point_t csr;
+extern point_t saved_csr;
 
 void clear_entire_screen();
 void clear_secondary_screen();
@@ -127,9 +122,7 @@ void cmd_lf();
 
 
 
-void make_cursor_visible(bool v){
-    cursor_visible=v;
-}
+
 
 void clear_escape_parameters(){
     for(int i=0;i<MAX_ESC_PARAMS;i++){
@@ -170,16 +163,12 @@ void reset_terminal(){
     inv_under_csr = 0;
     blk_under_csr = 0;
 
-    // --- reset to current font!
-    //if( config.nupetscii==1 ){
-    //  config.nupetscii=0; // Enter back ASCII charset
-    //  build_font( false );
-    //}
     dec_mode = DEC_MODE_NONE; // single/double lines
 
+    cursor_visible = true;
     cursor_blinking = false;
     cursor_blinking_mode = true;
-    cursor_symbol = config.nupetscii==1 ? 0x8F : 0x3F;
+    cursor_symbol = get_cursor_char( config.nupetscii, CURSOR_TYPE_DEFAULT ) - 0x20;
 
     make_cursor_visible(true);
     clear_cursor();  // so we have the character
@@ -196,7 +185,6 @@ void constrain_cursor_values(){
 
 
 void slip_character(unsigned char ch,int x,int y){
-
     if(csr.x>=COLUMNS || csr.y>=VISIBLEROWS){
         return;
     }
@@ -499,8 +487,7 @@ void wrap_constrain_cursor_values(){
   }
 }
 
-bool get_csr_blink_state() { return cursor_blinking; }
-void set_csr_blink_state(bool state) { cursor_blinking = state; }
+
 
 void refresh_cursor(){
   clear_cursor();
@@ -551,84 +538,70 @@ void clear_cursor(){
 
 
 void clear_line_from_cursor(){
-    //for(int c=csr.x;c<COLUMNS;c++){
-    //    slip_character(0,c,csr.y);
-    //}
     // new faster method
     void *sl = &ptr[csr.y]->slot[csr.x];
     memset(sl, 0, COLUMNS-csr.x);
 
-  sl = &ptr[csr.y]->inv[csr.x];
+    sl = &ptr[csr.y]->inv[csr.x];
     memset(sl, 0, COLUMNS-csr.x);
 
-  sl = &ptr[csr.y]->blk[csr.x];
+    sl = &ptr[csr.y]->blk[csr.x];
     memset(sl, 0, COLUMNS-csr.x);
-
 }
+
 void clear_line_to_cursor(){
-    //for(int c=csr.x;c>=0;c--){
-    //    slip_character(0,c,csr.y);
-    //}
-    // new faster method
     void *sl = &ptr[csr.y]->slot[0];
     memset(sl, 0, csr.x);
 
-  sl = &ptr[csr.y]->inv[0];
+    sl = &ptr[csr.y]->inv[0];
     memset(sl, 0, csr.x);
 
-  sl = &ptr[csr.y]->blk[0];
+    sl = &ptr[csr.y]->blk[0];
     memset(sl, 0, csr.x);
-
 }
+
 void clear_entire_line(){
-    //for(int c=0;c<COLUMNS;c++){
-    //    slip_character(0,c,csr.y);
-    //}
-    // new faster method
     void *sl = &ptr[csr.y]->slot[0];
     memset(sl, 0, COLUMNS);
 
-  sl = &ptr[csr.y]->inv[0];
+    sl = &ptr[csr.y]->inv[0];
     memset(sl, 0, COLUMNS);
 
-  sl = &ptr[csr.y]->blk[0];
+    sl = &ptr[csr.y]->blk[0];
     memset(sl, 0, COLUMNS);
 }
 
 void clear_entire_screen(){
-
     for(int r=0;r<ROWS;r++){
         //slip_character(0,c,r);
         // tighter method, as too much of a delay here can cause dropped characters
         void *sl = &ptr[r]->slot[0];
         memset(sl, 0, COLUMNS);
 
-    sl = &ptr[r]->inv[0];
+        sl = &ptr[r]->inv[0];
         memset(sl, 0, COLUMNS);
 
-    sl = &ptr[r]->blk[0];
+        sl = &ptr[r]->blk[0];
         memset(sl, 0, COLUMNS);
     }
 }
 
 void clear_secondary_screen(){
-
     for(int r=0;r<ROWS;r++){
         //slip_character(0,c,r);
         // tighter method, as too much of a delay here can cause dropped characters
         void *sl = &secondary_ptr[r]->slot[0];
         memset(sl, 0, COLUMNS);
 
-    sl = &secondary_ptr[r]->inv[0];
+        sl = &secondary_ptr[r]->inv[0];
         memset(sl, 0, COLUMNS);
 
-    sl = &secondary_ptr[r]->blk[0];
+        sl = &secondary_ptr[r]->blk[0];
         memset(sl, 0, COLUMNS);
     }
 }
 
 void copy_secondary_to_main_screen(){
-
     for(int r=0;r<ROWS;r++){
         memcpy(ptr[r]->slot,
                 secondary_ptr[r]->slot,
@@ -645,17 +618,16 @@ void copy_secondary_to_main_screen(){
 }
 
 void copy_main_to_secondary_screen(){
-
     for(int r=0;r<ROWS;r++){
         void *src = &ptr[r]->slot[0];
         void *dst = &secondary_ptr[r]->slot[0];
         memcpy(dst, src, sizeof(secondary_ptr[r]->slot));
 
-    src = &ptr[r]->inv[0];
+        src = &ptr[r]->inv[0];
         dst =  &secondary_ptr[r]->inv[0];
         memcpy(dst, src, sizeof(secondary_ptr[r]->inv));
 
-    src = &ptr[r]->blk[0];
+        src = &ptr[r]->blk[0];
         dst =  &secondary_ptr[r]->blk[0];
         memcpy(dst, src, sizeof(secondary_ptr[r]->blk));
     }
@@ -1112,36 +1084,8 @@ void esc_sequence_received(){
                   //ESC [ 4 SP q  Steady Underline  Steady underline cursor shape
                   //ESC [ 5 SP q  Blinking Bar  Blinking bar cursor shape
                   //ESC [ 6 SP q  Steady Bar  Steady bar cursor shape
-                  switch(esc_parameters[0]){
-                    case 0: // default configuration (underline blinking)
-                      cursor_symbol = config.nupetscii==1 ? 0x8F : 0x3F;
-                      cursor_blinking_mode = true;
-                      break;
-                    case 1: // block blinking
-                      cursor_symbol = config.nupetscii==1 ? 0x79 : 0x5F; //95;
-                      cursor_blinking_mode = true;
-                      break;
-                    case 2: // block steady
-                      cursor_symbol = config.nupetscii==1 ? 0x79 : 0x5F; //95;
-                      cursor_blinking_mode = false;
-                      break;
-                    case 3: // underline blinking
-                      cursor_symbol = config.nupetscii==1 ? 0x8F : 0x3F;
-                      cursor_blinking_mode = true;
-                      break;
-                    case 4: // underline steady
-                      cursor_symbol = config.nupetscii==1 ? 0x8F : 0x3F;
-                      cursor_blinking_mode = false;
-                      break;
-                    case 5: // Bar Blinking
-                      cursor_symbol = config.nupetscii==1 ? 0x94 : 0x3B;
-                      cursor_blinking_mode = true;
-                      break;
-                    case 6: // bar steady
-                      cursor_symbol = config.nupetscii==1 ? 0x94 : 0x3B;
-                      cursor_blinking_mode = false;
-                      break;
-                  } // switch esc_parameter
+                  cursor_symbol = get_cursor_char( config.nupetscii, esc_parameters[0] ) - 0x20; // parameter correspond to picoterm_cursor.h::CURSOR_TYPE_xxx
+                  cursor_blinking_mode = get_cursor_blinking( config.nupetscii, esc_parameters[0] );
               }
               break; // case q
 
