@@ -60,7 +60,6 @@
 #include "bsp/board.h"
 #include "tusb.h"
 
-
 // This is 4 for the font we're using
 #define FRAGMENT_WORDS 4
 
@@ -123,6 +122,10 @@ uint32_t block[] = {
 
 
 extern picoterm_config_t config; // Issue #13, awesome contribution of Spock64
+
+extern const lv_font_t nupetscii_mono8; // Declare the available fonts
+extern const lv_font_t cp437_mono8;
+const lv_font_t *font = &nupetscii_mono8;
 
 
 // to make sure only one core updates the state when the frame number changes
@@ -193,18 +196,32 @@ uint8_t pad[65536];
 uint32_t *font_raw_pixels;
 
 #define FONT_WIDTH_WORDS FRAGMENT_WORDS
-#if FRAGMENT_WORDS == 5
-  const lv_font_t *font = &ubuntu_mono10;
-#elif FRAGMENT_WORDS == 4
-  const lv_font_t *font = &ubuntu_mono8;
-#else
-  const lv_font_t *font = &ubuntu_mono6;
-#endif
+//#if FRAGMENT_WORDS == 5
+//  const lv_font_t *font = &ubuntu_mono10;
+//#elif FRAGMENT_WORDS == 4
+//  const lv_font_t *font = &ubuntu_mono8;
+//#else
+//  const lv_font_t *font = &ubuntu_mono6;
+//#endif
 
-#define FONT_HEIGHT (font->line_height)
+#define FONT_HEIGHT (font->line_height) // Should be identical accross all fonts.
 #define FONT_SIZE_WORDS (FONT_HEIGHT * FONT_WIDTH_WORDS)
 
-void build_font( bool extended_font ){
+void select_graphic_font( uint8_t font_id ){
+  /* Assign GRAPHICAL font (nupetscii, cp437) by reassigning the `font` pointer */
+  if(font_id == FONT_ANSI) // ignore for ANSI
+    return;
+	if(font_id == FONT_NUPETSCII){
+		font = &nupetscii_mono8;
+		return;
+	}
+	if(font_id == FONT_CP437){
+		font = &cp437_mono8;
+	}
+}
+
+void build_font( uint8_t font_id ){
+    /* Build/fill internal structure for drawing font with PIO */
     uint16_t colors[16];
     // Free up previous font (Issue #14  , Thanks Spock64)
     if(font_raw_pixels)
@@ -212,7 +229,7 @@ void build_font( bool extended_font ){
 
     // extended_font (NuPetScii) doesn't required inverted char
     // non extended_font (default font) just reduce the initial charset to 95 THEN compute the reverse value
-    char max_char = extended_font ? font->dsc->cmaps->range_length : 95;
+    char max_char = font_id!=FONT_ANSI ? font->dsc->cmaps->range_length : 95;
 
     for (int i = 0; i < count_of(colors); i++) {
         colors[i] = PICO_SCANVIDEO_PIXEL_FROM_RGB5(1, 1, 1) * ((i * 3) / 2);
@@ -342,8 +359,8 @@ void build_font( bool extended_font ){
 
 int video_main(void) {
     mutex_init(&frame_logic_mutex);
-
-    build_font( config.nupetscii==1 );
+		select_graphic_font( config.font_id );
+    build_font( config.font_id );
     sem_init(&video_setup_complete, 0, 1);
 
     setup_video();
@@ -400,7 +417,7 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
     *output32++ = host_safe_hw_ptr(beginning_of_line);
     uint32_t *dbase = font_raw_pixels + FONT_WIDTH_WORDS * (y % FONT_HEIGHT);
 
-    int max_char = config.nupetscii==1 ?  font->dsc->cmaps->range_length : 95;
+    int max_char = config.font_id>0 ?  font->dsc->cmaps->range_length : 95;
 
 
     char ch = 0;
@@ -683,8 +700,8 @@ int main(void) {
         case MENU_CONFIG:
           display_config();
           break;
-        case MENU_NUPETSCII:
-          display_nupetscii();
+        case MENU_CHARSET:
+          display_charset();
           break;
         case MENU_HELP:
           display_help();
@@ -779,24 +796,25 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
       uint8_t ch = keycode2ascii[scancode][0];
       // Is there a modifier key under use while pressing the key?
       if( (ch=='m') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
-    id_menu = MENU_CONFIG;
+        id_menu = MENU_CONFIG;
         is_menu = !(is_menu);
         return; // do not add key to "Keyboard buffer"
       }
       if( (ch=='n') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
-    id_menu = MENU_NUPETSCII;
+        id_menu = MENU_CHARSET;
         is_menu = !(is_menu);
         return; // do not add key to "Keyboard buffer"
       }
 
       if( (ch=='h') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
-    id_menu = MENU_HELP;
+        id_menu = MENU_HELP;
         is_menu = !(is_menu);
         return; // do not add key to "Keyboard buffer"
       }
       if( (ch=='l') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
-        config.nupetscii = (config.nupetscii == 0 ? 1 : 0);
-        build_font( config.nupetscii );
+        // toggle between graphical font and ANSI font
+        config.font_id = (config.font_id == 0 ? config.graph_id : 0);
+        build_font( config.font_id );
         return; // do not add key to "Keyboard buffer"
       }
       if( modifiers & WITH_SHIFT ){

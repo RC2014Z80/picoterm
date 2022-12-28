@@ -2,6 +2,7 @@
 #include "picoterm_debug.h"
 #include "string.h"
 #include <stdio.h>
+#include "picoterm_stddef.h"
 
 // once written, we can access our data at flash_target_contents
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
@@ -42,7 +43,10 @@ void set_default_config( struct PicotermConfig *c ){
   c->parity = UART_PARITY_NONE;
   c->stopbits = 1;
 	// version 3
-	c->nupetscii = 0;
+	c->font_id = FONT_ANSI; // current font to use
+	// version 4
+	c->graph_id = FONT_NUPETSCII; // prefered graphical font.
+
 }
 
 void upgrade_config( struct PicotermConfig *c ){
@@ -57,15 +61,20 @@ void upgrade_config( struct PicotermConfig *c ){
     c->version  = 2;
 	}
 	if( c->version == 2 ){ // upgrade to version 3 with defaults
-		c->nupetscii = 0;
+		c->font_id = 0; // ANSI
 		// Ok for version 3
 		c->version  = 3;
   }
+	if( c->version == 3 ){ // Upgrade to version 4 with defaults
+		c->graph_id = FONT_NUPETSCII;
+    // Ok for version 4
+    c->version  = 4;
+  }
 
   /*
-  if( c->version == 3 ){ // Upgrade to version 4 with defaults
+  if( c->version == 4 ){ // Upgrade to version 5 with defaults
     // blabla
-    c->version  = 4;
+    c->version  = 5;
   }
   */
 }
@@ -98,7 +107,9 @@ void debug_print_config( struct PicotermConfig *c ){
   debug_print( debug_msg );
   sprintf( debug_msg, "  stopbits=%u", c->stopbits );
   debug_print( debug_msg );
-	sprintf( debug_msg, "  nupetscii=%u", c->nupetscii );
+	sprintf( debug_msg, "  font_id=%u", c->font_id );
+  debug_print( debug_msg );
+	sprintf( debug_msg, "  graph_id=%u", c->graph_id );
   debug_print( debug_msg );
 }
 

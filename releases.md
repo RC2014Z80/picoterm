@@ -18,6 +18,8 @@ From version 1.2 any publication will includes all U2F firmware files for 40 & 8
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
 
 ## Version 1.5.2 - (on going)
+
+### Features
 * support ESC( with one parameter togheter with ESC[
 * include DEC line drawing (redirected to NupetScii)
 * Add new ANSI escape by [abaffa](https://github.com/abaffa) for 80col for VT100
@@ -44,8 +46,14 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
  * ESCF : Special graphics character set (can be overseen by DEC Drawing lines)
  * ESCG : Select ASCII character set (can be overseen by DEC Drawing lines)
 * Support ESC(0 and ESC(2 (over NupetScii font) for DEC line drawing. The for ESC(B exit DEC line drawing for ascii print (under Nupetscii).
-* cursor style supported under ASCII & NupetScii.
-* writing additional tests.
+* Config : select the graphical font (NupetSCII / CP437) & store it into flash
+
+### Fix & Improvement
+* Additional tests writing.
+* Multiple graphical font support.
+* Cursor style supported under ASCII & NupetScii.
+* picoterm_cursor.h : move cursor definition
+* picoterm_stddef.h : create standard definition (like point, font_id, ...)
 
 ## Version 1.5.1
 

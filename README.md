@@ -109,19 +109,19 @@ __Remarks:__ DEC line drawing is designed for VT52 only. However this has been m
 | \ESC(2   | Enables DEC Line Drawing Mode - double line                                 | dec_lines          |
 | \ESC(B   | Enables ASCII Mode (Default, return to NupetScii)                           | dec_lines          |
 
-| Hex     | ASCII    | DEC Line Drawing      | NupetScii single line | NupetScii double line |
-|---------|----------|-----------------------|-----------------------|-----------------------|
-| 0x6a    | j        | ┘                     | 0xDB |  |
-| 0x6b    | k        | ┐                     | 0xAE |  |
-| 0x6c    | l        | ┌                     | 0xB0 |  |
-| 0x6d    | m        | └                     | 0xAD |  |
-| 0x6e    | n        | ┼                     | 0xDB |  |
-| 0x71    | q        | ─                     | 0xC3 |  |
-| 0x74    | t        | ├                     | 0xAB |  |
-| 0x75    | u        | ┤                     | 0xC3 |  |
-| 0x76    | v        | ┴                     | 0xB1 |  |
-| 0x77    | w        | ┬                     | 0xB2 |  |
-| 0x78    | x        | │                     | 0xDD |  |
+| Hex   | ASCII | DEC Line Drawing | NupetScii single line | NupetScii double line |
+|-------|-------|------------------|-----------------------|-----------------------|
+| 0x6a  | j     | ┘                | 0xDB | 0xE7 |
+| 0x6b  | k     | ┐                | 0xAE | 0xE4 |
+| 0x6c  | l     | ┌                | 0xB0 | 0xE2 |
+| 0x6d  | m     | └                | 0xAD | 0xE5 |
+| 0x6e  | n     | ┼                | 0xDB | 0xEA |
+| 0x71  | q     | ─                | 0xC3 | 0xE1 |
+| 0x74  | t     | ├                | 0xAB | 0xE8 |
+| 0x75  | u     | ┤                | 0xB3 | 0xE9 |
+| 0x76  | v     | ┴                | 0xB1 | 0xE6 |
+| 0x77  | w     | ┬                | 0xB2 | 0xE3 |
+| 0x78  | x     | │                | 0xDD | 0xE0 |
 
 ## 40 col mode only
 
@@ -136,16 +136,16 @@ USB keyboards are supported via a USB OTG adapter – however, not all keyboards
 
 PicoTerm provides:
 * VT100 ASCII: default, the 8th bit is for reverse video character.
-* [advanced NuPetSCII charset](nupetscii-font/readme.md): that charset defines entry from 128 to 255 to display semi-graphical characters (like Commodore C64 or CodePage 437).
+* [advanced graphical charset](font-suite/readme.md): NupetSCII and CP437 charsets defines entry from 128 to 255 to display semi-graphical characters (like Commodore C64 or CodePage 437).
 
-![Characters added to the font8.c](nupetscii-font/nupet-ascii-reduced.png)
+![NupetSCII characters added to the font8.c](font-suite/nupet-ascii-reduced.png)<br />Nupetscii graphical font.
 
 Big thanks to Tom Wilson and its [Character-Editor](https://github.com/tomxp411/Character-Editor) for autorising the NuPet ASCII charset inclusion.
 
 ![NuPetScii Demo example](docs/_static/NupetSciiDemo-result.jpg)
 
 If you are interested in Drawing & Rendering NuPetScii ressource in PicoTerm you can read:
-* [NupetScii-Font readme](nupetscii-font/readme.md): explains how to create ressource and extract data
+* [Graphical Font readme](font-suite/readme.md): explains how to create ressource and extract data
 * [Using NupetScii readme](docs/using-nupetscii.md): some RC2014 assembly & codes related to NuPetScii usage on RC2014.
 
 ## How PicoTerm works
@@ -164,7 +164,8 @@ The Pi Pico uses a UF2 bootloader to appear as a mass storage device so that new
 See the file [releases.md](releases.md) .
 
 ## Know issues
-1. USB keyboard is not detected if already connected at power-up. Disconnect and reconnect it! __Hardware workaround available see the [picoterm-port](docs/picoterm-port.md)__.
+1. USB keyboard is not detected if already connected at power-up. Disconnect and reconnect it! __Hardware workaround available see the [picoterm-port](docs/picoterm-conn.md)__.
+2. Changing Graphical font configuration (eg: from NupetScii to CP437) would requires to save the configuration and restart.
 2. VGA rendering sometime hangs when connecting a keyboard (rare). Press reset button (on PicoTerm) and try again.
 3. Saving the configuration into Flash fails from time to time (rare). Just press reset button (on PicoTerm) and try again.
 
@@ -175,7 +176,7 @@ The picoterm projet contains a wide variety of documentation and ressources abou
 | Document                    | Description                                              |
 |-----------------------------|----------------------------------------------------------|
 | [Release notes](releases.md)       | History of changes                                |
-| [NupetScii](nupetscii-font/readme.md) | Discovering the NuppetScii alternative font and coding. Discover Playscii a software to draw screen with NuPetScii. |
+| [Graphical font](font-suite/readme.md) | Discovering the NuppetScii & CP437 graphical font and coding. Discover Playscii a software to draw screen with NuPetScii. |
 | [Using-NupetScii](docs/_static/using-nupetscii.md) | How to activate NuPetScii from RC2014. |
 | [Compiling](compiling.md)          | Building firmware from source<br />How to setup the compilation environment to compile PicoTerm on your computer |
 | [Debug](docs/debug.md)             | Poor man serial debugger for PicoTerm.<br />Need to debug and troubleshoot? This document describes the picoterm _debug uart_. |

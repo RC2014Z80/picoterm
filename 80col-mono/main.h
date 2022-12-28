@@ -31,6 +31,7 @@
 #include "font.h" // Looks in under comment for 40 columns version
 #include "hardware/uart.h"
 #include "hardware/irq.h"
+#include <stdint.h>
 
 
 //#include "bsp/board.h"
@@ -48,7 +49,7 @@
 #define UART_RX_PIN     21
 
 #define MENU_CONFIG    0x01 // support several menu
-#define MENU_NUPETSCII 0x02 // display NuPet ASCII charset
+#define MENU_CHARSET   0x02 // display current charset
 #define MENU_HELP      0x03 // display the HELP menu
 
 #define USB_POWER_GPIO 26 // this GPIO can be used with a MOSFET to power-up USB
@@ -61,7 +62,8 @@ static uint32_t start_time;
 static void pico_key_down(int scancode, int keysym, int modifiers);
 static void pico_key_up(int scancode, int keysym, int modifiers);
 
-void build_font( bool extended_font );
+void select_graphic_font( uint8_t font_id );
+void build_font( uint8_t font_id );
 // void read_data_from_flash();
 // void write_data_to_flash();
 void render_on_core1();

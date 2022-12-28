@@ -12,7 +12,7 @@
 
 #define FLASH_TARGET_OFFSET (256 * 1024)  // from start of flash
 #define MAGIC_KEY "PTCFG\0"
-#define CONFIG_VERSION 3
+#define CONFIG_VERSION 4
 
 #define WHITE 0
 #define LIGHTAMBER 1
@@ -36,7 +36,13 @@ typedef struct PicotermConfig {
   uint8_t databits;
   uint8_t parity;
   uint8_t stopbits; // 1, 2
-	uint8_t nupetscii; // use the extedned NuPetScii font (otherwise the inverted font)
+	// version 3
+	//    STARTUP FONT_ID. Was initially named `nupetscii` (0=ANSI, 1=NUPETSCII) in version 3.
+	//    since version 4, it has been renamed font_id and contains the font_id to
+	//    use at startup (0 ANSI, 1 Nupetscii, .... and more)
+	uint8_t font_id;
+	// version 4
+	uint8_t graph_id; // Font_ID to use when switching to graphical font.
 } picoterm_config_t; // Issue #13, conversion to typedef required, awesome contribution of Spock64
 
 void load_config(); // try to load config otherwise init with defaults

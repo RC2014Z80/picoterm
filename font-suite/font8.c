@@ -8,10 +8,7 @@
  ******************************************************************************/
 
 #ifndef UBUNTU_MONO
-#define UBUNTU_MONO 1
-#endif
-
-#if UBUNTU_MONO
+#define UBUNTU_MONO
 
 /*-----------------
  *    BITMAPS
@@ -711,4 +708,3 @@ const lv_font_t ubuntu_mono8 = {
 };
 
 #endif /*#if UBUNTU_MONO*/
-

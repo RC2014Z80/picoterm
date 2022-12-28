@@ -50,9 +50,9 @@ void prepare_text_buffer();
 void display_terminal();
 void display_config();
 void display_help();
-void display_nupetscii();
+void display_charset();
 
-// bool get_csr_blink_state(); moved to picoterm_cursor 
+// bool get_csr_blink_state(); moved to picoterm_cursor
 // void set_csr_blink_state(bool state);
 void refresh_cursor();
 void clear_cursor();

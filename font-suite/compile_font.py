@@ -111,7 +111,18 @@ def load_extensions( filename ):
 					_ext_data.add_4bits( eval('0x%s'%c) )
 	return _l
 
-def inject_extension( font_source, font_destin, exts ):
+def inject_extension( font_source, font_destin, exts, subs ):
+	""" font_source : source filename (usually font8.c).
+	    font_destin : destination file (eg: cp431.c).
+		ext : the collection of extension to be injected in the destination file.
+		subs : a list of tuples ( source_string, replacement string ). """
+
+	def substitute( line ):
+		for s,d in subs:
+			if s in line:
+				return line.replace(s,d)
+		return line
+
 	_r = []
 	_r.append( '/* generated with compile_font.py on %s */\r\n' % datetime.datetime.now().strftime("%B %d, %Y  %H:%M:%S" ) )
 
@@ -121,7 +132,7 @@ def inject_extension( font_source, font_destin, exts ):
 	while True:
 		line = _l.pop(0)
 		if not( "};" in line ):
-			_r.append( line )
+			_r.append( substitute( line ) )
 		else:
 			break
 
@@ -138,15 +149,15 @@ def inject_extension( font_source, font_destin, exts ):
 		_r.append( '\r\n' )
 
 	# Append the structure closure (we already read)
-	_r.append( line )
+	_r.append( substitute( line ) )
 
 	# Locate start of Glyph description section
 	while True:
 		line = _l.pop(0)
 		if 'lv_font_fmt_txt_glyph_dsc_t' in line:
-			_r.append( line )
+			_r.append( substitute(line) )
 			break
-		_r.append( line )
+		_r.append( substitute(line) )
 	# from now, we capture the bitmap_index value while copying the line
 	# to the destination
 	last_index = 0
@@ -157,7 +168,7 @@ def inject_extension( font_source, font_destin, exts ):
 		# detect the end of Glyph structure
 		if "};" in line:
 			break
-		_r.append( line )
+		_r.append( substitute(line) )
 		# capture the last "bitmap_index" value
 		if '.bitmap_index' in line:
 			last_index = int( get_c_def( line, 'bitmap_index', -1 ) )
@@ -178,7 +189,7 @@ def inject_extension( font_source, font_destin, exts ):
 		if (last_box_h*last_box_w)%2 !=0:
 			raise Exception( "Error on %s : box_h * box_w is not a EVEN number!" % ext.remark )
 	# Close the data structure
-	_r.append( line )
+	_r.append( substitute(line) )
 
 	# Locate the lv_font_fmt_txt_cmap_t declaration
 	# we must change the value of .range_length
@@ -186,7 +197,7 @@ def inject_extension( font_source, font_destin, exts ):
 		line = _l.pop(0)
 		if 'range_length' in line:
 			break
-		_r.append( line )
+		_r.append( substitute(line) )
 	# Now update the line to add the extra items we have
 	_new_items = []
 	_items = line.split(',')
@@ -197,14 +208,14 @@ def inject_extension( font_source, font_destin, exts ):
 			_new_items.append( _item )
 	line = ','.join(_new_items) # recompose the line
 	# write the updated line
-	_r.append( line )
+	_r.append( substitute(line) )
 
 	# We finish the source file copy
 	while len(_l)>0:
 		line = _l.pop(0)
 		if line == None:
 			break
-		_r.append( line )
+		_r.append( substitute(line) )
 
 	# save the destination file
 	with open( font_destin, 'w' ) as f:
@@ -214,7 +225,18 @@ def inject_extension( font_source, font_destin, exts ):
 
 if __name__ == '__main__':
 	exts = load_extensions( 'nupetscii.data' )
-	for item in exts:
-		item.print_it()
-	inject_extension( 'font8.c', 'nupetscii.c', exts )
+	#for item in exts:
+	#	item.print_it()
+	inject_extension( 'font8.c', 'nupetscii.c', exts,
+	  [ ("#ifndef UBUNTU_MONO" , "#ifndef NUPETSCII"),
+	    ("#define UBUNTU_MONO" , "#define NUPETSCII"),
+		("const lv_font_t ubuntu_mono8 = {", "const lv_font_t nupetscii_mono8 = {"),
+		("#endif /*#if UBUNTU_MONO*/", "#endif /*#if NUPETSCII*/") ] )
 	print( 'nupetscii.c created!')
+	exts = load_extensions( 'cp437.data' )
+	inject_extension( 'font8.c', 'cp437.c', exts,
+	  [ ("#ifndef UBUNTU_MONO" , "#ifndef CP437"),
+	    ("#define UBUNTU_MONO" , "#define CP437"),
+		("const lv_font_t ubuntu_mono8 = {", "const lv_font_t cp437_mono8 = {"),
+		("#endif /*#if UBUNTU_MONO*/", "#endif /*#if CP437*/") ] )
+	print( 'cp437.c created!')
