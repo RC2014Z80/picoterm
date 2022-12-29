@@ -65,6 +65,8 @@ extern bool cursor_blinking;
 extern bool cursor_blinking_mode;
 extern char cursor_symbol;
 
+char bell_state = 0;
+
 /* picoterm_dec.c */
 extern uint8_t dec_mode;
 
@@ -399,6 +401,8 @@ void wrap_constrain_cursor_values(){
 }
 
 
+char get_bell_state() { return bell_state; }
+void set_bell_state(char state) { bell_state = state; }
 
 void refresh_cursor(){
   clear_cursor();
@@ -1677,6 +1681,10 @@ void handle_new_character(unsigned char asc){
       else {
           // --- return, backspace etc ---
           switch (asc){
+              case BEL:
+              bell_state = 1;
+              break;
+
               case BSP:
                 if(csr.x>0){
                   csr.x--;

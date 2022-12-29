@@ -52,6 +52,8 @@ void display_config();
 void display_help();
 void display_charset();
 
+char get_bell_state();
+void set_bell_state(char state);
 // bool get_csr_blink_state(); moved to picoterm_cursor
 // void set_csr_blink_state(bool state);
 void refresh_cursor();
