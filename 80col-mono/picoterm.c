@@ -22,6 +22,7 @@
 #include "../common/pmhid.h"
 #include "../common/picoterm_config.h"
 #include "../common/picoterm_cursor.h"
+#include "../common/picoterm_dec.h" // DEC kines
 #include "../common/picoterm_stddef.h"
 #include "tusb_option.h"
 #include <stdio.h>
@@ -64,11 +65,8 @@ extern bool cursor_blinking;
 extern bool cursor_blinking_mode;
 extern char cursor_symbol;
 
-
-#define DEC_MODE_NONE         0
-#define DEC_MODE_SINGLE_LINE  1
-#define DEC_MODE_DOUBLE_LINE  2
-int dec_mode = DEC_MODE_NONE; // single or double line
+/* picoterm_dec.c */
+extern uint8_t dec_mode;
 
 bool insert_mode = false;
 bool wrap_text = true;
@@ -82,6 +80,7 @@ static unsigned char chr_under_csr;
 static bool inv_under_csr;
 static bool blk_under_csr;
 
+/* picoterm_config.c */
 extern picoterm_config_t config; // Issue #13, awesome contribution of Spock64
 
 typedef struct row_of_text {
@@ -119,9 +118,6 @@ void cmd_csr_home();
 void cmd_csr_position(int y, int x);
 void cmd_rev_lf();
 void cmd_lf();
-
-
-
 
 
 void clear_escape_parameters(){
@@ -194,96 +190,11 @@ void slip_character(unsigned char ch,int x,int y){
     }
   */
 
-    //decmode on
+    //decmode on DOMEU
     if(dec_mode != DEC_MODE_NONE){
-        ch = ch + 32; // going from array_index to ASCII code
-        if(ch >= 'j' && ch <= 'x')
-        {
-            if(dec_mode == DEC_MODE_SINGLE_LINE){
-                switch(ch){
-                case 'j':    //0x6a  j  ┘  NupetScii-equivament  Originel-DEC-CODE
-                    ptr[y]->slot[x] = 0xBD; //0xe7;
-                    break;
-                case 'k':    //0x6b  k  ┐
-                    ptr[y]->slot[x] = 0xAE; //0xe4;
-                    break;
-                case 'l':    //0x6c  l  ┌
-                    ptr[y]->slot[x] = 0xB0; //0xe2;
-                    break;
-                case 'm':    //0x6d  m  └
-                    ptr[y]->slot[x] = 0xAD; // 0xe5;
-                    break;
-                case 'n':    //0x6e  n  ┼
-                    ptr[y]->slot[x] = 0xDB; // 0xea;
-                    break;
-                case 'q':    //0x71  q  ─
-                    ptr[y]->slot[x] = 0xC3; // 0xe1;
-                    break;
-                case 't':    //0x74  t  ├
-                    ptr[y]->slot[x] = 0xAB; // 0xe8;
-                    break;
-                case 'u':    //0x75  u  ┤
-                    ptr[y]->slot[x] = 0xB3; // 0xe9;
-                    break;
-                case 'v':    //0x76  v  ┴
-                    ptr[y]->slot[x] = 0xB1; // 0xe6;
-                    break;
-                case 'w':    //0x77  w  ┬
-                    ptr[y]->slot[x] = 0xB2; // 0xe3;
-                    break;
-                case 'x':    //0x78  x  │
-                    ptr[y]->slot[x] = 0xDD; // 0xe0;
-                    break;
-                default:
-                    ptr[y]->slot[x] = ch;
-                    break;
-                }
-            }
-            else{ // DEC_MODE_DOUBLE_LINE
-                switch(ch){
-                case 'j':    //0x6a  j  ┘  NupetScii-equivament  Originel-DEC-CODE
-                    ptr[y]->slot[x] = 0xE7; // 0xbd;
-                    break;
-                case 'k':    //0x6b  k  ┐
-                    ptr[y]->slot[x] = 0xE4; // 0xae;
-                    break;
-                case 'l':    //0x6c  l  ┌
-                    ptr[y]->slot[x] = 0xE2; // 0xb0;
-                    break;
-                case 'm':    //0x6d  m  └
-                    ptr[y]->slot[x] = 0xE5; // 0xad;
-                    break;
-                case 'n':    //0x6e  n  ┼
-                    ptr[y]->slot[x] = 0xEA; // 0xdb;
-                    break;
-                case 'q':    //0x71  q  ─
-                    ptr[y]->slot[x] = 0xE1; // 0xc3;
-                    break;
-                case 't':    //0x74  t  ├
-                    ptr[y]->slot[x] = 0xE8; // 0xab;
-                    break;
-                case 'u':    //0x75  u  ┤
-                    ptr[y]->slot[x] = 0xE9; // 0xb3;
-                    break;
-                case 'v':    //0x76  v  ┴
-                    ptr[y]->slot[x] = 0xE6; // 0xb1;
-                    break;
-                case 'w':    //0x77  w  ┬
-                    ptr[y]->slot[x] = 0xE3; // 0xb2;
-                    break;
-                case 'x':    //0x78  x  │
-                    ptr[y]->slot[x] = 0xE0; // 0xdd;
-                    break;
-                default:
-                    ptr[y]->slot[x] = ch;
-                    break;
-                }
-            }
-        }
-        else{
-            ptr[y]->slot[x] = ch;
-        }
-        ptr[y]->slot[x] = ptr[y]->slot[x] - 32;
+        //ch = ch + 32; // going from array_index to ASCII code
+        ch = get_dec_char( config.font_id, dec_mode, ch+32 ); // +32 to go from array_index to ASCII code
+        ptr[y]->slot[x] = ch-32;
     }
     else{
         ptr[y]->slot[x] = ch;
@@ -1322,9 +1233,9 @@ void display_help(){
   __print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Help \x0A6\x0A6\r\n", config.font_id!=FONT_NUPETSCII );
   __print_string("\x0B0\x0C3 Keyboard Shortcut \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n", config.font_id!=FONT_NUPETSCII );
   __print_string("\x0C2 \x083 Shift+Ctrl+H : Help screen                   \x0C2\r\n", config.font_id!=FONT_NUPETSCII ); // strip Nupetscii when not activated
-  __print_string("\x0C2 \x083 Shift+Ctrl+L : Toggle ASCII/ANSI charset\x0C2\r\n", config.font_id!=FONT_NUPETSCII );
+  __print_string("\x0C2 \x083 Shift+Ctrl+L : Toggle ASCII/ANSI charset     \x0C2\r\n", config.font_id!=FONT_NUPETSCII );
   __print_string("\x0C2 \x083 Shift+Ctrl+M : Configuration menu            \x0C2\r\n", config.font_id!=FONT_NUPETSCII );
-  __print_string("\x0C2 \x083 Shift+Ctrl+N : Display current charset     \x0C2\r\n", config.font_id!=FONT_NUPETSCII );
+  __print_string("\x0C2 \x083 Shift+Ctrl+N : Display current charset       \x0C2\r\n", config.font_id!=FONT_NUPETSCII );
   __print_string("\x0C2                                                \x0C2\r\n", config.font_id!=FONT_NUPETSCII );
   __print_string("\x0AD\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0BD\r\n", config.font_id!=FONT_NUPETSCII );
 
@@ -1585,7 +1496,7 @@ void handle_new_character(unsigned char asc){
                     reset_escape_sequence();
               }
               else if (asc=='F' ){
-                    config.font_id=FONT_NUPETSCII; // Enter graphic charset
+                    config.font_id=config.graph_id; // Enter graphic charset
                     build_font( config.font_id );
                     dec_mode = DEC_MODE_NONE; // use approriate ESC to enter DEC Line Drawing mode
                     reset_escape_sequence();

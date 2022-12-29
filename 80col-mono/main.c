@@ -217,6 +217,7 @@ void select_graphic_font( uint8_t font_id ){
 	}
 	if(font_id == FONT_CP437){
 		font = &cp437_mono8;
+		return;
 	}
 }
 

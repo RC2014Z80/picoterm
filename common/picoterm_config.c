@@ -70,7 +70,12 @@ void upgrade_config( struct PicotermConfig *c ){
     // Ok for version 4
     c->version  = 4;
   }
-
+	// Small sanity check
+	// if graphical ANSI font activated (in saved data), just override it with
+	// the currently graphical ANSI font selected by the user.
+	if( c->font_id!=FONT_ASCII )
+		c->font_id = c->graph_id;
+	
   /*
   if( c->version == 4 ){ // Upgrade to version 5 with defaults
     // blabla

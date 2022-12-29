@@ -540,8 +540,8 @@ def test_cursor_style( ser ):
 		time.sleep( 5 )
 	ser.write_str( "\r\nDone!" )
 
-def test_dec_lines( ser, line_style=None ):
-	""" Draw DEC lines (simple, double and normal chars). Pause of 5 sec between series."""
+def test_dec_lines( ser, switch_ansi=True ):
+	""" Switch to Graphical ANSI font, Draw DEC lines (simple, double and normal chars). """
 	entries = ( 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x71, 0x74, 0x75, 0x76, 0x77, 0x78 )
 
 	def draw_serie():
@@ -549,23 +549,40 @@ def test_dec_lines( ser, line_style=None ):
 			ser.write_byte( _c )
 			ser.write_byte( 0x20 ) # Space
 
-	ser.write_str( "\ESCF" ) # Switch to graphic mode
-	ser.write_str( "We are in Graphic mode\r\n")
-	ser.write_str( "We switch in simple line mode\r\n")
+	if switch_ansi:
+		ser.write_str( "\ESCF" ) # Switch to graphic mode
+		ser.write_str( "We are in Graphic ANSI mode\r\n")
+	else:
+		ser.write_str( "\ESCG" ) # Switch to graphic mode
+		ser.write_str( "Ensure we are ASCII mode\r\n")
+
+	ser.write_str( "We switch in simple DEC line mode\r\n")
 	ser.write_str( "\ESC(0" )
 	draw_serie()
-	ser.write_str( "\ESC(B" ) # back to ASCII
+	ser.write_str( "\ESC(B" ) # we exit DEC line mode
 	ser.write_str( "\r\n" )
-	ser.write_str( "We switch in double line mode\r\n")
+	ser.write_str( "We switch in double DEC line mode\r\n")
 	ser.write_str( "\ESC(2" )
 	draw_serie()
-	ser.write_str( "\ESC(B" ) # back to ASCII
-	ser.write_str( "\r\n" )
+	ser.write_str( "\ESC(B" ) # we exit DEC line mode
 
-	ser.write_str( "We are now back ASCII (exit DEC Line Drawing)\r\n")
-	ser.write_str( "Graphic mode is still active (NupetScii),\r\n")
+	if switch_ansi:
+		ser.write_str( "\r\n" )
+
+		ser.write_str( "We are now exit DEC Line Drawing.\r\n")
+		ser.write_str( "Graphic ANSI mode is still active (NupetScii/cp437).\r\n")
+	else:
+		ser.write_str( "\r\n" )
+		ser.write_str( "We never exit ASCII (but exited the DEC Line Drawing)\r\n")
+		ser.write_str( "ASCII mode is still active.\r\n")
+
 	ser.write_str( "Anyway we should read this entire line.\r\n\r\n")
 	return
+
+def test_dec_lines2( ser, switch_ansi=True ):
+	""" Switch to ASCII, Draw DEC lines (simple, double and normal chars). """
+	test_dec_lines( ser, switch_ansi=False )
+
 
 def test_vt100_status( ser ):
 	""" Request the VT100ID (two different way) and display it. Ask VT100 Status and display it"""
@@ -714,4 +731,6 @@ if __name__ == '__main__':
 		if _cmd in _names:
 			ser.run_test( _cmd )
 			print('') # add a spacer
+		else:
+			print("Unknown command %s" % _cmd )
 	print( "That's all folks!" )

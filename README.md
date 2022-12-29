@@ -95,33 +95,35 @@ VT52 escape are not available in VT100 mode. Switch to VT52 mode to use them.
 
 ## DEC Line Drawing
 
-Should be called after a Graphic mode activation with ESC F (DEC line drawing is built on the top of ANSI graphical charset).
+Should be called after a Graphic ANSI mode activation with __ESC F__. DEC line rendering offers the best result under graphical ANSI charset (like NupetScii and CP437).
 
-The escape sequence here below allow to switch between text display (under NupetScii/cp437) to Line Drawing (under NupetScii/cp437) and Vice-versa.
+The escape sequences here below allow to switch between text drawing and DEC Line Drawing (and Vice-versa).
 
-Use the ESC G to exit ANSI graphical mode (NupetScii & DEC line drawing).
+Please note that exiting the DEC line drawing does not exit the graphical ANSI charset (this can be done with __ESC G__).
 
-__Remarks:__ DEC line drawing is designed for VT52 only. However this has been made available for VT52 & VT100 because it can also offers the best for VT100.
+__Remarks:__
+* DEC line drawing is designed for VT52 only. However this has been made available for VT52 & VT100 because it can also offers the best for VT100.
+* Even if not designed for ASCII mode, the Picoterm implementation of "DEC line drawing" can be used under ASCII mode. It is effective but not as nice than ANSI mode DEC line drawing. Under ASCII, the double line is drawed inverted.
 
 | Escape sequence             | Description                                              | [Test name](test-suite/readme.md)  |
 |-----------------------------|----------------------------------------------------------|--------------------|
-| \ESC(0   | Enables DEC Line Drawing Mode - single line                                 | dec_lines          |
-| \ESC(2   | Enables DEC Line Drawing Mode - double line                                 | dec_lines          |
-| \ESC(B   | Exit DEC line drawing mode, enables ASCII Mode (stays in graphic charset NupetScii/cp437) | dec_lines          |
+| \ESC(0   | Enables DEC Line Drawing Mode - single line                                 | dec_lines, dec_lines2    |
+| \ESC(2   | Enables DEC Line Drawing Mode - double line                                 | dec_lines, dec_lines2    |
+| \ESC(B   | Exit DEC line drawing mode, enables ASCII Mode (stays in graphic charset NupetScii/cp437) | dec_lines , dec_lines2  |
 
-| Hex   | ASCII | DEC Line Drawing | NupetScii single/double line(s) | NupetScii double line |
-|-------|-------|------------------|-----------------------|-----------------------|
-| 0x6a  | j     | ┘                | 0xDB / 0xE7 | |
-| 0x6b  | k     | ┐                | 0xAE / 0xE4 | |
-| 0x6c  | l     | ┌                | 0xB0 / 0xE2 | |
-| 0x6d  | m     | └                | 0xAD / 0xE5 | |
-| 0x6e  | n     | ┼                | 0xDB / 0xEA | |
-| 0x71  | q     | ─                | 0xC3 / 0xE1 | |
-| 0x74  | t     | ├                | 0xAB / 0xE8 | |
-| 0x75  | u     | ┤                | 0xB3 / 0xE9 | |
-| 0x76  | v     | ┴                | 0xB1 / 0xE6 | |
-| 0x77  | w     | ┬                | 0xB2 / 0xE3 | |
-| 0x78  | x     | │                | 0xDD / 0xE0 | |
+| Hex   | ASCII | DEC Line Drawing | NupetScii<br />simple/double line | CP437<br />simple/double line | ASCII |
+|-------|-------|------------------|-----------------------------------|-------------------------------|-------|
+| 0x6a  | j     | ┘                | 0xDB / 0xE7 | 0xD9 / 0xBC | +    |
+| 0x6b  | k     | ┐                | 0xAE / 0xE4 | 0xBF / 0xBB | +    |
+| 0x6c  | l     | ┌                | 0xB0 / 0xE2 | 0xDA / 0xC9 | +    |
+| 0x6d  | m     | └                | 0xAD / 0xE5 | 0xC0 / 0xC8 | +    |
+| 0x6e  | n     | ┼                | 0xDB / 0xEA | 0xC5 / 0xCE | +    |
+| 0x71  | q     | ─                | 0xC3 / 0xE1 | 0xC4 / 0xCD | -    |
+| 0x74  | t     | ├                | 0xAB / 0xE8 | 0xC3 / 0xCC | +    |
+| 0x75  | u     | ┤                | 0xB3 / 0xE9 | 0xB4 / 0xB9 | +    |
+| 0x76  | v     | ┴                | 0xB1 / 0xE6 | 0xC1 / 0xCA | +    |
+| 0x77  | w     | ┬                | 0xB2 / 0xE3 | 0xC2 / 0xCB | +    |
+| 0x78  | x     | │                | 0xDD / 0xE0 | 0xB3 / 0xBA | 0x7C |
 
 ## 40 col mode only
 
