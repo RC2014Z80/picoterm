@@ -85,6 +85,7 @@ class FontExtData:
 
 def load_extensions( filename ):
 	""" parse the '-ext.txt' file and return a list of FontExtData """
+	print( 'Loading extension %s' % filename )
 	_l = []
 	with open( filename, 'r' ) as f:
 		lines = f.readlines()
@@ -104,11 +105,24 @@ def load_extensions( filename ):
 			_ext_data.c_def = line.strip()
 		else:
 			# It is a string with F....F defining entry
-			for c in line.strip():
-				if c == '.':
-					_ext_data.add_4bits( 0x0 )
-				else:
-					_ext_data.add_4bits( eval('0x%s'%c) )
+			try:
+				for c in line.strip():
+					if c == '.':
+						_ext_data.add_4bits( 0x0 )
+					else:
+						_ext_data.add_4bits( eval('0x%s'%c) )
+			except Exception as err:
+				_txt = ""
+				if _ext_data.remark != None:
+					_txt = _ext_data.remark
+				raise Exception( "coding error for %s with %s %s" % (_txt, err.__class__, err ) )
+
+	# Sanity Check - box_h et box_w against data encoded
+	for _ext in _l:
+		_box_h = int( _ext.extract_c_def('box_h') )
+		_box_w = int( _ext.extract_c_def('box_w') )
+		if len(_ext.data) != (_box_h * _box_w)//2:
+			raise Exception( "Invalid box_h %i * box_w %i for %s. It doesn't fit the data size %i!" % (_box_h, _box_w, _ext.remark, len(_ext.data)) )
 	return _l
 
 def inject_extension( font_source, font_destin, exts, subs ):

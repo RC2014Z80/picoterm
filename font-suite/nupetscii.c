@@ -1,4 +1,4 @@
-/* generated with compile_font.py on December 27, 2022  01:14:55 */
+/* generated with compile_font.py on December 29, 2022  03:52:57 */
 #include "font.h"
 
 /*******************************************************************************
@@ -1009,7 +1009,7 @@ static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
 ,{.bitmap_index = 7052, .adv_w = 128, .box_h = 14, .box_w = 8, .ofs_x = 0, .ofs_y = -2}
 ,{.bitmap_index = 7108, .adv_w = 128, .box_h = 15, .box_w = 8, .ofs_x = 0, .ofs_y = -3}
 ,{.bitmap_index = 7168, .adv_w = 128, .box_h = 15, .box_w = 8, .ofs_x = 0, .ofs_y = -3}
-,{.bitmap_index = 7228, .adv_w = 128, .box_h = 14, .box_w = 8, .ofs_x = 0, .ofs_y = 0}
+,{.bitmap_index = 7228, .adv_w = 128, .box_h = 14, .box_w = 8, .ofs_x = 0, .ofs_y = -2}
 ,{.bitmap_index = 7284, .adv_w = 128, .box_h = 14, .box_w = 8, .ofs_x = 0, .ofs_y = -2}
 ,{.bitmap_index = 7340, .adv_w = 128, .box_h = 14, .box_w = 8, .ofs_x = 0, .ofs_y = -2}
 ,{.bitmap_index = 7396, .adv_w = 128, .box_h = 15, .box_w = 8, .ofs_x = 0, .ofs_y = -3}
