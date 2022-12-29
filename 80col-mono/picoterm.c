@@ -1525,6 +1525,7 @@ char handle_config_input(){
     }
     select_graphic_font( config.font_id );
     build_font(config.font_id);
+    cursor_symbol = get_cursor_char( config.font_id, CURSOR_TYPE_DEFAULT ) - 0x20;
     display_config();
   }
   // Select the Graphical font to be used
@@ -1540,6 +1541,7 @@ char handle_config_input(){
     if( config.font_id != FONT_ASCII ) {
       config.font_id = config.graph_id; // set the Graphic font to font_id
       select_graphic_font( config.font_id );
+      cursor_symbol = get_cursor_char( config.font_id, CURSOR_TYPE_DEFAULT ) - 0x20;
       build_font(config.font_id);
     }
     display_config();

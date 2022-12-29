@@ -14,30 +14,86 @@ char cursor_symbol = 143;         // index in charset for the cursor
 struct point csr = {0,0}; // Cursor position
 struct point saved_csr = {0,0};
 
-char get_cursor_char( uint8_t nupetscii, uint8_t cursor_type ){
+char get_cursor_char( uint8_t font_id, uint8_t cursor_type ){
   // return the ASCII char for a given cursor.
   // Remark: Cursor Symbol = Cursor Character - 0x20
   char cursor_char;
-  switch( cursor_type ){
-    case CURSOR_TYPE_DEFAULT: // default configuration (underline blinking)
-      cursor_char = nupetscii==1 ? 0xAF : 0x5F;
-      break;
-    case CURSOR_TYPE_BLOCK_BLINK:
-    case CURSOR_TYPE_BLOCK_STEADY: // block
-      cursor_char = nupetscii==1 ? 0x99 : 0x7F; //95;
-      break;
-    case CURSOR_TYPE_UNDERLINE_BLINK:
-    case CURSOR_TYPE_UNDERLINE_STEADY:
-      cursor_char = nupetscii==1 ? 0xAF : 0x5F;
-      break;
-    case CURSOR_TYPE_BAR_BLINK:
-    case CURSOR_TYPE_BAR_STEADY:
-      cursor_char = nupetscii==1 ? 0xB4 : 0x5B;
-      break;
-    default:
-      // return the CURSOR_TYPE_DEFAULT
-      cursor_char = nupetscii==1 ? 0xAF : 0x5F;
-  }
+  switch( font_id ){
+      case FONT_ASCII:
+          switch( cursor_type ){
+            case CURSOR_TYPE_DEFAULT: // default configuration (underline blinking)
+              cursor_char = 0x5F;
+              break;
+            case CURSOR_TYPE_BLOCK_BLINK:
+            case CURSOR_TYPE_BLOCK_STEADY: // block
+              cursor_char = 0x7F; //95;
+              break;
+            case CURSOR_TYPE_UNDERLINE_BLINK:
+            case CURSOR_TYPE_UNDERLINE_STEADY:
+              cursor_char = 0x5F;
+              break;
+            case CURSOR_TYPE_BAR_BLINK:
+            case CURSOR_TYPE_BAR_STEADY:
+              cursor_char = 0x5B;
+              break;
+            default:
+              // return the CURSOR_TYPE_DEFAULT
+              cursor_char = 0x5F;
+          } // switch cursor type
+          break;
+
+        case FONT_NUPETSCII:
+            switch( cursor_type ){
+              case CURSOR_TYPE_DEFAULT: // default configuration (underline blinking)
+                cursor_char = 0xAF;
+                break;
+              case CURSOR_TYPE_BLOCK_BLINK:
+              case CURSOR_TYPE_BLOCK_STEADY: // block
+                cursor_char = 0x99; //95;
+                break;
+              case CURSOR_TYPE_UNDERLINE_BLINK:
+              case CURSOR_TYPE_UNDERLINE_STEADY:
+                cursor_char = 0xAF;
+                break;
+              case CURSOR_TYPE_BAR_BLINK:
+              case CURSOR_TYPE_BAR_STEADY:
+                cursor_char = 0xB4;
+                break;
+              default:
+                // return the CURSOR_TYPE_DEFAULT
+                cursor_char = 0xAF;
+            } // switch cursor type
+            break;
+
+          case FONT_CP437:
+              switch( cursor_type ){
+                case CURSOR_TYPE_DEFAULT: // default configuration (underline blinking)
+                  cursor_char = 0x5F;
+                  break;
+                case CURSOR_TYPE_BLOCK_BLINK:
+                case CURSOR_TYPE_BLOCK_STEADY: // block
+                  cursor_char = 0xDB; //95;
+                  break;
+                case CURSOR_TYPE_UNDERLINE_BLINK:
+                case CURSOR_TYPE_UNDERLINE_STEADY:
+                  cursor_char = 0x5F;
+                  break;
+                case CURSOR_TYPE_BAR_BLINK:
+                case CURSOR_TYPE_BAR_STEADY:
+                  cursor_char = 0xB3;
+                  break;
+                default:
+                  // return the CURSOR_TYPE_DEFAULT
+                  cursor_char = 0x5F;
+              } // switch cursor type
+              break;
+
+        default:
+          // UNSUPPORTED font_id
+          // The # is used to identify this use-case. Do not modify it, just made
+          // a proper implementation in the switch case.
+          cursor_char = 0x23;
+  } // switch(font_id)
   return cursor_char;
 }
 
@@ -52,7 +108,7 @@ void make_cursor_visible(bool v){
 }
 
 bool get_csr_blink_state() {
-  return cursor_blinking; 
+  return cursor_blinking;
 }
 void set_csr_blink_state(bool state) {
   cursor_blinking = state;

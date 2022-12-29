@@ -23,8 +23,8 @@
 #define CURSOR_TYPE_BAR_BLINK 5
 #define CURSOR_TYPE_BAR_STEADY 6
 
-char get_cursor_char( uint8_t nupetscii, uint8_t cursor_type ); // return the ASCII char for a given type cursor
-bool get_cursor_blinking( uint8_t nupetscii, uint8_t cursor_type ); // return true/false for a given type cursor
+char get_cursor_char( uint8_t font_id, uint8_t cursor_type ); // return the ASCII char for a given type cursor
+bool get_cursor_blinking( uint8_t font_id, uint8_t cursor_type ); // return true/false for a given type cursor
 
 void make_cursor_visible(bool v);
 
