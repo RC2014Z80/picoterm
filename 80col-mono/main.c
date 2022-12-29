@@ -141,6 +141,7 @@ void init_render_state(int core);
 void led_blinking_task();
 void csr_blinking_task();
 void usb_power_task();
+void bell_task();
 
 void render_loop() {
     /* Multithreaded execution */
@@ -591,6 +592,10 @@ int main(void) {
   gpio_set_dir(USB_POWER_GPIO, GPIO_OUT);
   gpio_put(USB_POWER_GPIO,false);
 	start_time = board_millis();
+	
+  gpio_init(BUZZER_GPIO);
+  gpio_set_dir(BUZZER_GPIO, GPIO_OUT);
+  gpio_put(BUZZER_GPIO,false);
 
   uint8_t bootchoice = 0;
   gpio_init(BTN_A);
@@ -692,6 +697,7 @@ int main(void) {
     usb_power_task();
     led_blinking_task();
     csr_blinking_task();
+    bell_task();
 
     if( is_menu && !(old_menu) ){ // CRL+M : menu activated ?
       // empty the keyboard buffer
@@ -782,7 +788,23 @@ void csr_blinking_task() {
 
 	refresh_cursor();
   }
+}
 
+void bell_task() {
+  const uint32_t interval_ms_bell = 100;
+  static uint32_t start_ms_bell = 0; 
+
+  if(get_bell_state() == 1){
+    start_ms_bell = board_millis();
+    gpio_put(BUZZER_GPIO, true);
+    set_bell_state(2);
+  }
+
+  else if (get_bell_state() == 2 && board_millis() - start_ms_bell > interval_ms_bell) {
+    gpio_put(BUZZER_GPIO, false);
+    set_bell_state(0);
+  }
+  
 }
 
 //--------------------------------------------------------------------+
