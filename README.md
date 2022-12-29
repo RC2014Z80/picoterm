@@ -57,12 +57,12 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 | \ESC[0J   | clear screen from cursor                                                   | clearscr           |
 | \ESC[nS   | scroll whole page up by n rows (default 1 if n missing). No cursor move.<br />(Look for "CSI Ps S" in [XTerm Control Sequences](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Functions-using-CSI-_-ordered-by-the-final-character_s), VT420)<br />>NupetScii font is overseed by DEC lines when issuing a "DEC line drawing" escape sequence after graphical mode. | scroll_up, scroll_up3 |
 | \ESC[*{n}*T	| scroll down *{n}* lines (default 1 if n missing). No cursor move.<br />(Look for "CSI Ps T" in [XTerm Control Sequences](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Functions-using-CSI-_-ordered-by-the-final-character_s), VT420)  | scroll_down, scroll_down3 |
-| \ESCF     | Enter graphic mode - special graphic charset, NuPetScii. (vt52, vt100) <br/>[Sample](docs/using-nupetscii.md). |  nupetscii, nupetscii2   |
-| \ESCG     | Exit graphic mode - ASCII charset (vt52, vt100)                            |  ascii             |
+| \ESCF     | Enter graphic mode - special graphic charset, NuPetScii/CP437. (vt52, vt100) <br/>[Sample](docs/using-nupetscii.md). |  graph_charset, graph_charset2   |
+| \ESCG     | Exit graphic mode - ANSI/ASCII charset (vt52, vt100)                       |  ansi_charset      |
 
 ## Cursor Style
 
-Cursor style can be altered under ASCII and NupetSCII.
+Cursor style can be altered under ASCII and graphical charset (NupetSCII/CP437).
 
 | Escape sequence             | Description                              | [Test name](test-suite/readme.md)  |
 |-----------------------------|------------------------------------------|--------------------|
@@ -107,21 +107,21 @@ __Remarks:__ DEC line drawing is designed for VT52 only. However this has been m
 |-----------------------------|----------------------------------------------------------|--------------------|
 | \ESC(0   | Enables DEC Line Drawing Mode - single line                                 | dec_lines          |
 | \ESC(2   | Enables DEC Line Drawing Mode - double line                                 | dec_lines          |
-| \ESC(B   | Enables ASCII Mode (Default, return to NupetScii)                           | dec_lines          |
+| \ESC(B   | Exit DEC line drawing mode, enables ASCII Mode (stays in graphic charset NupetScii/cp437) | dec_lines          |
 
-| Hex   | ASCII | DEC Line Drawing | NupetScii single line | NupetScii double line |
+| Hex   | ASCII | DEC Line Drawing | NupetScii single/double line(s) | NupetScii double line |
 |-------|-------|------------------|-----------------------|-----------------------|
-| 0x6a  | j     | ┘                | 0xDB | 0xE7 |
-| 0x6b  | k     | ┐                | 0xAE | 0xE4 |
-| 0x6c  | l     | ┌                | 0xB0 | 0xE2 |
-| 0x6d  | m     | └                | 0xAD | 0xE5 |
-| 0x6e  | n     | ┼                | 0xDB | 0xEA |
-| 0x71  | q     | ─                | 0xC3 | 0xE1 |
-| 0x74  | t     | ├                | 0xAB | 0xE8 |
-| 0x75  | u     | ┤                | 0xB3 | 0xE9 |
-| 0x76  | v     | ┴                | 0xB1 | 0xE6 |
-| 0x77  | w     | ┬                | 0xB2 | 0xE3 |
-| 0x78  | x     | │                | 0xDD | 0xE0 |
+| 0x6a  | j     | ┘                | 0xDB / 0xE7 | |
+| 0x6b  | k     | ┐                | 0xAE / 0xE4 | |
+| 0x6c  | l     | ┌                | 0xB0 / 0xE2 | |
+| 0x6d  | m     | └                | 0xAD / 0xE5 | |
+| 0x6e  | n     | ┼                | 0xDB / 0xEA | |
+| 0x71  | q     | ─                | 0xC3 / 0xE1 | |
+| 0x74  | t     | ├                | 0xAB / 0xE8 | |
+| 0x75  | u     | ┤                | 0xB3 / 0xE9 | |
+| 0x76  | v     | ┴                | 0xB1 / 0xE6 | |
+| 0x77  | w     | ┬                | 0xB2 / 0xE3 | |
+| 0x78  | x     | │                | 0xDD / 0xE0 | |
 
 ## 40 col mode only
 
