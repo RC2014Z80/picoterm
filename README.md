@@ -57,12 +57,12 @@ __PicoTerm is a terminal emulator__ written specifically for this module. Curren
 | \ESC[0J   | clear screen from cursor                                                   | clearscr           |
 | \ESC[nS   | scroll whole page up by n rows (default 1 if n missing). No cursor move.<br />(Look for "CSI Ps S" in [XTerm Control Sequences](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Functions-using-CSI-_-ordered-by-the-final-character_s), VT420)<br />>NupetScii font is overseed by DEC lines when issuing a "DEC line drawing" escape sequence after graphical mode. | scroll_up, scroll_up3 |
 | \ESC[*{n}*T	| scroll down *{n}* lines (default 1 if n missing). No cursor move.<br />(Look for "CSI Ps T" in [XTerm Control Sequences](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Functions-using-CSI-_-ordered-by-the-final-character_s), VT420)  | scroll_down, scroll_down3 |
-| \ESCF     | Enter graphic mode - special graphic charset, NuPetScii/CP437. (vt52, vt100) <br/>[Sample](docs/using-nupetscii.md). |  graph_charset, graph_charset2   |
-| \ESCG     | Exit graphic mode - ANSI/ASCII charset (vt52, vt100)                       |  ansi_charset      |
+| \ESCF     | Enter graphic mode - special ANSI graphic charset, NuPetScii/CP437. (vt52, vt100) <br/>[Sample](docs/using-nupetscii.md). |  ansi_charset, ansi_charset2   |
+| \ESCG     | Exit graphic mode - ASCII charset (vt52, vt100)                       |  ascii_charset      |
 
 ## Cursor Style
 
-Cursor style can be altered under ASCII and graphical charset (NupetSCII/CP437).
+Cursor style can be altered under ASCII and ANSI graphical charset (NupetSCII/CP437).
 
 | Escape sequence             | Description                              | [Test name](test-suite/readme.md)  |
 |-----------------------------|------------------------------------------|--------------------|
@@ -95,11 +95,11 @@ VT52 escape are not available in VT100 mode. Switch to VT52 mode to use them.
 
 ## DEC Line Drawing
 
-Should be called after a Graphic mode activation with ESC F (DEC line drawing is built on the top of NupetScii).
+Should be called after a Graphic mode activation with ESC F (DEC line drawing is built on the top of ANSI graphical charset).
 
-The escape sequence here below allow to switch between ASCII display (under NupetScii) to Line Drawing (under NupetScii) and Vice-versa.
+The escape sequence here below allow to switch between text display (under NupetScii/cp437) to Line Drawing (under NupetScii/cp437) and Vice-versa.
 
-Use the ESC G to exit graphical mode (NupetScii & DEC line drawing).
+Use the ESC G to exit ANSI graphical mode (NupetScii & DEC line drawing).
 
 __Remarks:__ DEC line drawing is designed for VT52 only. However this has been made available for VT52 & VT100 because it can also offers the best for VT100.
 

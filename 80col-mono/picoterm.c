@@ -1196,8 +1196,11 @@ void display_terminal(){
     print_string("    S.Dixon & D.Meurisse                               Help : CTRL+SHIFT+H\r\n");
     sprintf(msg, "\r\nTinyUSB=%d.%d.%d, ", TUSB_VERSION_MAJOR, TUSB_VERSION_MINOR,TUSB_VERSION_REVISION);
     print_string(msg);
-    sprintf(msg, "Keymap=%s rev %d\r\n", KEYMAP, KEYMAP_REV ); // , Menu toggle: CTRL+SHIFT+M
+    sprintf(msg, "Keymap=%s rev %d, ", KEYMAP, KEYMAP_REV );
     print_string(msg);
+		sprintf(msg, "%s mode (ANSI=%s)\r\n", config.font_id==0 ? "ASCII" : "ANSI", "" ); //get_font_name(config.graph_id) );
+    print_string(msg);
+
     char _parity = '?';
     switch(config.parity){
       case UART_PARITY_NONE:
@@ -1248,11 +1251,11 @@ void display_config(){
     __print_string(msg, config.font_id!=FONT_NUPETSCII );
     sprintf(msg, "\x0E8\x0C3 Charset \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B3 %sx  2 bits  \x0E0\r\n", (config.stopbits==2)?"\xD1":" " );
     __print_string(msg, config.font_id!=FONT_NUPETSCII );
-    sprintf(msg, "\x0E0  %sl VT100 (7bits+reverse)    \x0C2             \x0E0\r\n", (config.font_id == FONT_ANSI)?"\x0D1":" " );
+    sprintf(msg, "\x0E0  %sl ASCII (7bits+reverse)    \x0C2             \x0E0\r\n", (config.font_id == FONT_ASCII)?"\x0D1":" " );
     __print_string(msg, config.font_id!=FONT_NUPETSCII );
-    sprintf(msg, "\x0E0  %sm Graphic Font (8bits)     \x0C2             \x0E0\r\n", (config.font_id > FONT_ANSI)?"\x0D1":" " );
+    sprintf(msg, "\x0E0  %sm ANSI Graphic (8bits)     \x0C2             \x0E0\r\n", (config.font_id > FONT_ASCII)?"\x0D1":" " );
     __print_string(msg, config.font_id!=FONT_NUPETSCII );
-    __print_string("\x0E8\x0C3 Graphic font \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B1\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0E9\r\n", config.font_id!=FONT_NUPETSCII );
+    __print_string("\x0E8\x0C3 ANSI Graphic font \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B1\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0E9\r\n", config.font_id!=FONT_NUPETSCII );
     sprintf(msg, "\x0E0  %sp NupetSCII   %sq CP437                   \x0E0\r\n", (config.graph_id==FONT_NUPETSCII)?"\x0D1":" ", (config.graph_id==FONT_CP437)?"\x0D1":" " );
     __print_string(msg, config.font_id!=FONT_NUPETSCII );
     __print_string("\x0E5\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E7\r\n", config.font_id!=FONT_NUPETSCII );
@@ -1332,7 +1335,7 @@ void display_help(){
 }
 
 void print_string(char str[] ){
-  __print_string( str, FONT_ANSI );
+  __print_string( str, FONT_ASCII );
 }
 
 void __print_string(char str[], bool strip_graphical ){
@@ -1514,7 +1517,7 @@ char handle_config_input(){
   if ( ( _ch >= 'l') && (_ch <= 'm') ) {
     switch( _ch ){
       case 'l':
-        config.font_id = FONT_ANSI; // normal font
+        config.font_id = FONT_ASCII; // normal font
         break;
       case 'm':
         config.font_id = config.graph_id; //FONT_NUPETSCII;
@@ -1534,7 +1537,7 @@ char handle_config_input(){
         config.graph_id = FONT_CP437;
         break;
     }
-    if( config.font_id != FONT_ANSI ) {
+    if( config.font_id != FONT_ASCII ) {
       config.font_id = config.graph_id; // set the Graphic font to font_id
       select_graphic_font( config.font_id );
       build_font(config.font_id);
@@ -1586,7 +1589,7 @@ void handle_new_character(unsigned char asc){
                     reset_escape_sequence();
               }
               else if (asc=='G'){
-                    config.font_id=FONT_ANSI; // Enter ASCII charset
+                    config.font_id=FONT_ASCII; // Enter ASCII charset
                     build_font( config.font_id );
                     dec_mode = DEC_MODE_NONE;
                     reset_escape_sequence();

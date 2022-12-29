@@ -209,7 +209,7 @@ uint32_t *font_raw_pixels;
 
 void select_graphic_font( uint8_t font_id ){
   /* Assign GRAPHICAL font (nupetscii, cp437) by reassigning the `font` pointer */
-  if(font_id == FONT_ANSI) // ignore for ANSI
+  if(font_id == FONT_ASCII) // ignore for ANSI
     return;
 	if(font_id == FONT_NUPETSCII){
 		font = &nupetscii_mono8;
@@ -229,7 +229,7 @@ void build_font( uint8_t font_id ){
 
     // extended_font (NuPetScii) doesn't required inverted char
     // non extended_font (default font) just reduce the initial charset to 95 THEN compute the reverse value
-    char max_char = font_id!=FONT_ANSI ? font->dsc->cmaps->range_length : 95;
+    char max_char = font_id!=FONT_ASCII ? font->dsc->cmaps->range_length : 95;
 
     for (int i = 0; i < count_of(colors); i++) {
         colors[i] = PICO_SCANVIDEO_PIXEL_FROM_RGB5(1, 1, 1) * ((i * 3) / 2);

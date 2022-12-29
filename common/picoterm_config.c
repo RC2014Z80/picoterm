@@ -43,7 +43,7 @@ void set_default_config( struct PicotermConfig *c ){
   c->parity = UART_PARITY_NONE;
   c->stopbits = 1;
 	// version 3
-	c->font_id = FONT_ANSI; // current font to use
+	c->font_id = FONT_ASCII; // current font to use
 	// version 4
 	c->graph_id = FONT_NUPETSCII; // prefered graphical font.
 

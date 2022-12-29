@@ -97,8 +97,8 @@ def get_docstring( test_name ):
 	return _r
 
 # --- VARIOUS TESTS ------------------------------------------------------------
-def test_graph_charset( ser ):
-	""" switch to graphical charset (NupetScii/CP437) and display full charset """
+def test_ansi_charset( ser ):
+	""" switch to ANSI graphical charset (NupetScii/CP437) and display full charset """
 	ser.write_str( "\ESCF" )
 	for row in range( 0x20, 0xFF, 0xF+1 ):
 		ser.write_str( "%0x : " % row )
@@ -108,8 +108,8 @@ def test_graph_charset( ser ):
 		ser.write_byte( 13 )
 		ser.write_byte( 10 )
 
-def test_graph_charset2( ser ):
-	""" switch to graphical charset (NupetScii/CP437) and display a range for characters in normal, blink, reverse and return to normal """
+def test_ansi_charset2( ser ):
+	""" switch to ANSI graphical charset (NupetScii/CP437) and display a range for characters in normal, blink, reverse and return to normal """
 	def draw_serie():
 		for _char in range( 0xD0, 0xDF+1 ):
 			ser.write_byte( _char )
@@ -131,8 +131,8 @@ def test_graph_charset2( ser ):
 	ser.write_str( "\r\nBack to normal" )
 
 
-def test_ansi_charset( ser ):
-	""" switch to ANSI/ASCII and display full charset """
+def test_ascii_charset( ser ):
+	""" switch to ASCII (7bit) and display full charset """
 	ser.write_str( "\ESCG" )
 	for row in range( 0x20, 0xFF, 0xF+1 ):
 		ser.write_str( "%0x : " % row )
