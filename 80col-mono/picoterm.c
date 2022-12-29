@@ -1253,7 +1253,7 @@ void display_config(){
     sprintf(msg, "\x0E0  %sm Graphic Font (8bits)     \x0C2             \x0E0\r\n", (config.font_id > FONT_ANSI)?"\x0D1":" " );
     __print_string(msg, config.font_id!=FONT_NUPETSCII );
     __print_string("\x0E8\x0C3 Graphic font \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B1\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0E9\r\n", config.font_id!=FONT_NUPETSCII );
-    sprintf(msg, "\x0E0  %sn NupetSCII   %so CP437                   \x0E0\r\n", (config.graph_id==FONT_NUPETSCII)?"\x0D1":" ", (config.graph_id==FONT_CP437)?"\x0D1":" " );
+    sprintf(msg, "\x0E0  %sp NupetSCII   %sq CP437                   \x0E0\r\n", (config.graph_id==FONT_NUPETSCII)?"\x0D1":" ", (config.graph_id==FONT_CP437)?"\x0D1":" " );
     __print_string(msg, config.font_id!=FONT_NUPETSCII );
     __print_string("\x0E5\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E7\r\n", config.font_id!=FONT_NUPETSCII );
     print_string("\r\n(S upcase=save / ESC=close) ? ");
@@ -1525,12 +1525,12 @@ char handle_config_input(){
     display_config();
   }
   // Select the Graphical font to be used
-  if ( ( _ch >= 'n') && (_ch <= 'o') ) {
+  if ( ( _ch >= 'p') && (_ch <= 'q') ) {
     switch( _ch ){
-      case 'n':
+      case 'p':
         config.graph_id = FONT_NUPETSCII;
         break;
-      case 'o':
+      case 'q':
         config.graph_id = FONT_CP437;
         break;
     }
