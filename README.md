@@ -179,10 +179,10 @@ The picoterm projet contains a wide variety of documentation and ressources abou
 |-----------------------------|----------------------------------------------------------|
 | [Release notes](releases.md)       | History of changes                                |
 | [Graphical font](font-suite/readme.md) | Discovering the NuppetScii & CP437 graphical font and coding. Discover Playscii a software to draw screen with NuPetScii. |
-| [Using-NupetScii](docs/_static/using-nupetscii.md) | How to activate NuPetScii from RC2014. |
-| [Compiling](compiling.md)          | Building firmware from source<br />How to setup the compilation environment to compile PicoTerm on your computer |
+| [Using-NupetScii](docs/using-nupetscii.md) | How to activate NuPetScii from RC2014. |
+| [Compiling](docs/compiling.md)     | Building firmware from source<br />How to setup the compilation environment to compile PicoTerm on your computer |
 | [Debug](docs/debug.md)             | Poor man serial debugger for PicoTerm.<br />Need to debug and troubleshoot? This document describes the picoterm _debug uart_. |
-| [Add keyboard layout](docs/add-keyboard-layout) | How to add a new keyboard layout to PicoTerm.                    |
+| [Add keyboard layout](docs/add-keyboard-layout.md) | How to add a new keyboard layout to PicoTerm.                    |
 | [test-suite](test-suite/readme.md) | How to test ESC sequence support of Picoterm and how to expand the tests.     |
 | [picoterm-conn](docs/picoterm-conn.md)  | Details about the PicoTerm expansion connector and available GPIOs.      |
 | [Resources](docs/resources.md)     | Useful ressource link used during development of PicoTerm                     |
