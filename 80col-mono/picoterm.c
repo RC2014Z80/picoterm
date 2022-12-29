@@ -1198,7 +1198,7 @@ void display_terminal(){
     print_string(msg);
     sprintf(msg, "Keymap=%s rev %d, ", KEYMAP, KEYMAP_REV );
     print_string(msg);
-		sprintf(msg, "%s mode (ANSI=%s)\r\n", config.font_id==0 ? "ASCII" : "ANSI", "" ); //get_font_name(config.graph_id) );
+    sprintf(msg, "%s (%s)\r\n", config.font_id==FONT_ASCII ? "ASCII" : "ANSI", get_font_name(config.graph_id) ); // ANSI graphical font name in parenthesis
     print_string(msg);
 
     char _parity = '?';
@@ -1322,9 +1322,9 @@ void display_help(){
   __print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Help \x0A6\x0A6\r\n", config.font_id!=FONT_NUPETSCII );
   __print_string("\x0B0\x0C3 Keyboard Shortcut \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n", config.font_id!=FONT_NUPETSCII );
   __print_string("\x0C2 \x083 Shift+Ctrl+H : Help screen                   \x0C2\r\n", config.font_id!=FONT_NUPETSCII ); // strip Nupetscii when not activated
-  __print_string("\x0C2 \x083 Shift+Ctrl+L : Toggle NupetSCII/VT100 charset\x0C2\r\n", config.font_id!=FONT_NUPETSCII );
+  __print_string("\x0C2 \x083 Shift+Ctrl+L : Toggle ASCII/ANSI charset\x0C2\r\n", config.font_id!=FONT_NUPETSCII );
   __print_string("\x0C2 \x083 Shift+Ctrl+M : Configuration menu            \x0C2\r\n", config.font_id!=FONT_NUPETSCII );
-  __print_string("\x0C2 \x083 Shift+Ctrl+N : Display NupetScii charset     \x0C2\r\n", config.font_id!=FONT_NUPETSCII );
+  __print_string("\x0C2 \x083 Shift+Ctrl+N : Display current charset     \x0C2\r\n", config.font_id!=FONT_NUPETSCII );
   __print_string("\x0C2                                                \x0C2\r\n", config.font_id!=FONT_NUPETSCII );
   __print_string("\x0AD\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0BD\r\n", config.font_id!=FONT_NUPETSCII );
 

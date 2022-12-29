@@ -20,8 +20,12 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 ## Version 1.5.2 - (on going)
 
 ### Features
-* support ESC( with one parameter togheter with ESC[
-* include DEC line drawing (redirected to NupetScii)
+* Display character rendering mode ASCII/ANSI on welcom screen.
+* Display the selected ANSI graphical font 'to be used' on welcom screen.
+* Include DEC line drawing (redirected to ANSI graphical font. Best with NupetScii).
+ * ESC(0 : single line Drawing
+ * ESC(2 : double line drawing
+ * ESC(B : return to Ascii print (exit line drawning, stays under ANSI font).
 * Add new ANSI escape by [abaffa](https://github.com/abaffa) for 80col for VT100
  * ESCc : reset settings
  * ESC[?47l	: restore screen
@@ -45,13 +49,13 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 * move ESCF & ESCG back to global scope (VT100 & VT52) to activate NupetScii
  * ESCF : Special graphics character set (can be overseen by DEC Drawing lines)
  * ESCG : Select ASCII character set (can be overseen by DEC Drawing lines)
-* Support ESC(0 and ESC(2 (over NupetScii font) for DEC line drawing. The for ESC(B exit DEC line drawing for ascii print (under Nupetscii).
 * Config : select the graphical font (NupetSCII / CP437) & store it into flash
 
 ### Fix & Improvement
+* support ESC( with one parameter togheter with ESC[
 * Additional tests writing.
-* Multiple graphical font support.
-* Cursor style supported under ASCII & NupetScii.
+* Multiple graphical ANSI font support.
+* Cursor style supported under ASCII & ANSI graphical font.
 * picoterm_cursor.h : move cursor definition
 * picoterm_stddef.h : create standard definition (like point, font_id, ...)
 

@@ -22,8 +22,6 @@
 #define GREEN3 5
 #define PURPLE 6
 
-//uint8_t colour_preference;
-
 /* The following structure is saved as IT into flash. So only append entries
    at the end of structure and do not modifies OLD ones. Reflashing does not
    always erase the Flash content */
@@ -37,12 +35,14 @@ typedef struct PicotermConfig {
   uint8_t parity;
   uint8_t stopbits; // 1, 2
 	// version 3
-	//    STARTUP FONT_ID. Was initially named `nupetscii` (0=ANSI, 1=NUPETSCII) in version 3.
-	//    since version 4, it has been renamed font_id and contains the font_id to
-	//    use at startup (0 ANSI, 1 Nupetscii, .... and more)
+	//    STARTUP FONT_ID. Was initially named `nupetscii` (0=ANSI, 1=NUPETSCII) before version 4.
+	//    Since version 4, it has been renamed font_id and contains the font_id to
+	//      use at startup (0 ASCII 7bit, 1 ANSI Nupetscii, 2 ANSI CP437....)
+	//    During execution, font_id contains the font currently used for rendering
+	//      the char on the screen.
 	uint8_t font_id;
 	// version 4
-	uint8_t graph_id; // Font_ID to use when switching to graphical font.
+	uint8_t graph_id;  // ANSI Font_ID to use when switching to graphical ANSI font.
 } picoterm_config_t; // Issue #13, conversion to typedef required, awesome contribution of Spock64
 
 void load_config(); // try to load config otherwise init with defaults

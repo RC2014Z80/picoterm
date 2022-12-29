@@ -1,6 +1,8 @@
 #ifndef _PICOTERM_STDDEF_H_
 #define _PICOTERM_STDDEF_H_
 
+#include <stdint.h>
+
 /* ==========================================================================
                    Standard definition for Picoterm
    ========================================================================== */
@@ -14,6 +16,6 @@ typedef struct point {
   int y;
 } point_t;
 
-//const char* get_font_name( uint8_t font_id );
+const char* get_font_name( uint8_t font_id );
 
 #endif // _PICOTERM_STDDEF_H_
