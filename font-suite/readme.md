@@ -4,11 +4,11 @@ Picoterm support 2 types of fonts:
 
 __Non graphical font__:
 
-ANSI/VT100 mode where only 7 bits are used. The 8Th bit is used to invert the character to be displayed. This feature is used a lot under CP/M and retro boards. This font is based on Ubuntu Mono and defines only the chars from 0x20 to 0x7E.<br />At any moment, the `\ESCG` allows the terminal to returns this mode.
+ASCII/VT100 mode where only 7 bits are used. The 8Th bit is used to invert the character to be displayed. This feature is used a lot under CP/M and retro boards. This font is based on Ubuntu Mono and defines only the chars from 0x20 to 0x7E.<br />At any moment, the `\ESCG` allows the terminal to returns this mode.
 
 __Graphical  font__:
 
-Where the 8th bit is used as part of charset encoding (mostly like ASCII does).<br/>When Picoterm receives a `\ESCF` it switch to graphical font.<br />This font is still based on Ubuntu Mono but includes lot additionnal chars. The font defines the chars from 0x20 to 0xFF.
+ANSI mode where the 8th bit is used as part of charset encoding.<br/>When Picoterm receives a `\ESCF` it switch to graphical font.<br />This font is still based on Ubuntu Mono but includes lot additionnal chars. The font defines the chars from 0x20 to 0xFF.
 
 Picoterm now support several graphical fonts (selected via the configuration screen).
 
@@ -18,14 +18,14 @@ Picoterm now support several graphical fonts (selected via the configuration scr
 | 2	  | CP437      | English IBM/MS-DOS Codepage used on a wide variety of computerized system  |
 
 
-## NuPetSCII - Expanding the font8.c with glyphs
+## NuPetSCII - ANSI font for semi-graphical rendering
 
 The `font8.c` used in the original PicoTerm 80 column only defines the ASCII charset
 (from 0 to 126. 127 is use for cursor display).
 
-`font8.c` leaks of of nice graphical interface (like Commodore 64 or Code Page 437 do have).
+`font8.c` leaks of of nice graphical tile to create interface/forms/map/character/ (like Commodore 64 or Code Page 437 do have).
 
-Extending ASCII charset would be a great idea to draw ASCII tables and rudimentary interface.
+Extending ASCII charset would be a great idea to draw semi-graphical tables and rudimentary interfaces.
 
 It is even possible to draw screen and maps by using the Playscii software (see further).
 
@@ -36,8 +36,14 @@ Here are the additionnal chars merged into the `font8.c` file.
 ![NuPET ASCII charset](nupet-ascii.png)
 
 ```
-font8.c + nupet-ascii.data ---( compile_font.py )---> nupetscii.c
+font8.c + nupet.data ---( compile_font.py )---> nupetscii.c
 ```
+
+If you are interested in Drawing & Rendering NuPetScii ressource in PicoTerm you can read:
+* [Graphical Font readme](font-suite/readme.md): explains how to create ressource and extract data
+* [Using NupetScii readme](docs/using-nupetscii.md): some RC2014 assembly & codes related to NuPetScii usage on RC2014.
+
+![NuPetScii Demo example](../docs/_static/NupetSciiDemo-result.jpg)
 
 ### Credit
 I discovered the NuPET font/charset designed by Tom Wilson on this [Stefany Allaire article](https://stefanyallaire.wixsite.com/website/forum/the-specifications/character-sets).
@@ -46,7 +52,21 @@ Tom did use its own [Character-Editor](https://github.com/tomxp411/Character-Edi
 
 Tom Wilson gracefuly authorise the usage of its NuPet font design in PicoTerm. Thanks to him for its sharing.
 
-## Drawing/Art with NuPetScii
+## CP437 - IBM/MS-DOS Codepage for english based computer
+
+English IBM/MS-DOS Codepage used on a wide variety of computerized system in the world.
+
+This character set remains the primary set in the core of any EGA and VGA-compatible graphics card. Many file formats developed at the time of the IBM PC are based on code page 437 as well (source: [wikipedia.org](https://en.wikipedia.org/wiki/Code_page_437)).
+
+![Codepage 437 on Picoterm](cp437-00.jpg)<br />Source: [Code page 437n wikipedia.org](https://en.wikipedia.org/wiki/Code_page_437)
+
+As NupetSCII, the `cp437.c` expand The `font8.c` (read details about NuPetScii to understand how it works).
+
+```
+font8.c + cp437.data ---( compile_font.py )---> cp437.c
+```
+
+## Drawing/Art with NuPetScii charset
 
 If you want to draw screen or art with NuPetScii, you can use the [Playscii from JP Lebreton](https://jp.itch.io/playscii), an open-source software written in Python3.
 
@@ -116,7 +136,7 @@ So, accessing the characters/tiles of our 49 x 15 art is done with the following
 screen = data['frames'][0]['layers'][0]['tiles']
 ```
 
-##"" Converting NupetScii to Raw & Hex
+### Converting NupetScii art to Raw data & Hex
 
 The [psci-extract.py](psci-extract.py) python script can be used to convert the Playscii file to something more appropriate for the RC2014 computer (or SCM).
 
@@ -167,19 +187,21 @@ file created @ ../docs/NupetSciiDemo.hex
 
 You can check the [NupetSciiDemo.hex](../docs/NupetSciiDemo.hex) file stored into the docs folder.
 
-# Activating Graphical Font (NuPetScii/CP437/..) with Escape Sequence
+# Activating Graphical ANSI font with Escape Sequence
 
 NuPetScii can be activated from PicoTerm menu and with [ESC sequence (see README.md)](../README.md). So an application can request the terminal to switch to semi-graphical font (AKA NuPetScii) when needed.
 
 See the examples described in the "[using-nupetscii.md](../docs/using-nupetscii.md)" document for more details.
 
-# About '.data' files used to create the '.c' font
+# data file encoding
+
+ The '.data' file is used to create the '.c' font compiled within Picoterm.
 
 The file `nupetscii.data` contains the definition of the additional chars. This file will be compiled with the `compile_font.py` python script to generate the expanded font charset named `nupetscii.c` .
 
 __Remarks__: the `compile_font.py` script will generates __locally__ all the '.c' font for picoterm. Then '.c' file must be __manually__ copied to the picoterm source code.
 
-The `nupetscii.c` file resulting from `compile_font.py` is the font file included within the PicoTerm sources.
+The `nupetscii.c` (and any other) file resulting from `compile_font.py` is the font file to be included within the PicoTerm sources.
 
 Characters have the size of:
 * 12px height * 8px wide (normal height)
@@ -216,13 +238,3 @@ The original font is coded with 4 bit per pixel (4 bpp), so with values from 0 t
 The hexadecimal notation (0 to F) are used in the data file (one letter for each 4bpp entry)!
 
 The dot is used inplace of "0" to improve the readability.
-
-## CP437 - IBM/MS-DOS Codepage for english base computer
-
-English IBM/MS-DOS Codepage used on a wide variety of computerized system in the world.
-
-This character set remains the primary set in the core of any EGA and VGA-compatible graphics card. Many file formats developed at the time of the IBM PC are based on code page 437 as well (source: [wikipedia.org](https://en.wikipedia.org/wiki/Code_page_437)).
-
-![Codepage 437 on Picoterm](cp437-00.jpg)<br />Source: [Code page 437n wikipedia.org](https://en.wikipedia.org/wiki/Code_page_437)
-
-As NupetSCII, the `cp437.c` expand The `font8.c` (read details about NuPetScii to understand how it works).

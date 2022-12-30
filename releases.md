@@ -22,7 +22,7 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 ### Features
 * Display character rendering mode ASCII/ANSI on welcom screen.
 * Display the selected ANSI graphical font 'to be used' on welcom screen.
-* Include DEC line drawing (redirected to ANSI graphical font. Best with NupetScii).
+* Include DEC line drawing (redirected to ANSI graphical font. Best with NupetScii, also supported in ASCII).
  * ESC(0 : single line Drawing
  * ESC(2 : double line drawing
  * ESC(B : return to Ascii print (exit line drawning, stays under ANSI font).
@@ -46,12 +46,14 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
  * ESCZ : Identify
  * ESC[Z : Identify
  * ESC< : enter VT100 mode
-* move ESCF & ESCG back to global scope (VT100 & VT52) to activate NupetScii
+* move ESCF & ESCG back to global scope (VT100 & VT52) to activate ANSI foont (NupetScii,CP437,..)
  * ESCF : Special graphics character set (can be overseen by DEC Drawing lines)
  * ESCG : Select ASCII character set (can be overseen by DEC Drawing lines)
 * Config : select the graphical font (NupetSCII / CP437) & store it into flash
 
 ### Fix & Improvement
+* Lighten documentation in readme file (moved it into /docs).
+* Rewrite the firmware upgrading.
 * support ESC( with one parameter togheter with ESC[
 * Additional tests writing.
 * Multiple graphical ANSI font support.

@@ -1,5 +1,6 @@
 # PicoTerm
-Pi Pico VGA Terminal Emulator For RC2014 supporting several keyboard layout.
+
+__PicoTerm is a VGA terminal emulator__ with several keyboard layout written specifically for the [RC2014 Pi Pico VGA Terminal](https://rc2014.co.uk/modules/pi-pico-vga-terminal/).<br />It runs 80 columns by 30 lines in monochrome mode. It also exists in basic 40 columns colour version as a separate firmware.
 
 ![PicoTerm to RC2014](docs/_static/picoterm-to-rc2014.jpg)
 
@@ -7,7 +8,48 @@ Once wired to the UART of the RC2014 (or any retro-computer) your get an autonom
 
 ![PicoTerm](docs/_static/picoterm.jpg)
 
-__PicoTerm is a terminal emulator__ written specifically for this module. Currently it runs 80 columns by 30 lines in black and white mode. Switching to 40 column colour version will be available shortly. It can use VT100 style escape codes, with support for the following
+## Features
+
+PicoTerm offers the following features:
+* Super easy firmware upgrade (see [firmware upgrading](docs/firmware-upgrade.md) doc)
+* VGA output with several color profiles (green, amber, yellow, ...)
+* 80 columns over 30 lines (40 columns color version also available)
+* USB Keyboard support (via OTG cable)
+* Multiple keyboard layout (US,UK,BE,FR,DE,...)
+* VT100 style escape codes terminal (listed below).
+* ASCII 7 bits mode (8th bit used for reverse video character like CP/M does).
+* ANSI 8 bits mode for semi-graphical charset. Activable with ESC sequence.
+* Multiple ANSI/[advanced graphical charset](font-suite/readme.md) availables
+ * NupetScii : charset merging several retro-computer character sets (C64, MSX, MSDOS). Great for ASCII art, interface design, map drawing, drawing ressource with Playscii.
+ * CP437 : IBM MS-DOS codepage for english computer.
+* [PicoTerm connector](docs/picoterm-conn.md) : expansion port
+ * SD card reader [under construction]
+ * Active Buzzer
+ * Delayed USB power-up
+ * [Poor man debug](docs/debug.md) output
+* Various helper screen (SHIFT+CTRL+<key>)
+ * SHIFT+CTRL+H : Help screen (with all shortcut).
+ * SHIFT+CTRL+M : Configuration screen with storage into flash.
+* Extensive documentation included in the repository (see below).<br />_A great project without documentation is a useless project (Meurisse D)._
+
+## How PicoTerm works
+* Textmode version (from v1.1) allows choice of green, amber or white on black, by holding button A, B or C on power-up. (Configuration can also be done via the configuration menu).
+* Help screen available via CTRL+SHIFT+H
+* Configuration screen is available via CTRL+SHIFT+M (configuration can be stored in Flash)
+* VGA generation starts at power-up
+* Pico LED blinks --> no USB device/keyboard attached
+* Pico LED off --> USB device/keyboard connected
+remark: VGA display is suspended 1 second when plug-in an USB keyboard
+
+
+## Know issues
+1. USB keyboard is not detected if already connected at power-up. Disconnect and reconnect it! __Hardware workaround available see the [picoterm-port](docs/picoterm-conn.md)__.
+2. Not all USB keyboards currently works. Most cheap generic keyboards seem to work fine, however, the testing sample is still fairly small. Hopefully with more data it will be easier to identify exactly which keyboards are likely to work and which aren’t, or, better still, a simple software fix will get more working.
+3. VGA rendering sometime hangs when connecting a keyboard (rare). Press reset button (on PicoTerm) and try again.
+4. Saving the configuration into Flash fails from time to time (rare). Just press reset button (on PicoTerm) and try again.
+
+## Release notes
+The [release notes](releases.md) is a great to discover the history.
 
 # Supported escape sequence
 
@@ -134,43 +176,6 @@ __Remarks:__
 | \ESC[38;5;*{n}*m | Set foreground colour to *{n}* (0-255)                              |
 | \ESC[48;5;*{n}*m | Set background colour to *{n}* (0-255)                              |
 
-USB keyboards are supported via a USB OTG adapter – however, not all keyboards currently work. Most cheap generic keyboards seem to work fine, however, the testing sample is still fairly small. Hopefully with more data it will be easier to identify exactly which keyboards are likely to work and which aren’t, or, better still, a simple software fix will get more working.
-
-PicoTerm provides:
-* VT100 ASCII: default, the 8th bit is for reverse video character.
-* [advanced graphical charset](font-suite/readme.md): NupetSCII and CP437 charsets defines entry from 128 to 255 to display semi-graphical characters (like Commodore C64 or CodePage 437).
-
-![NupetSCII characters added to the font8.c](font-suite/nupet-ascii-reduced.png)<br />Nupetscii graphical font.
-
-Big thanks to Tom Wilson and its [Character-Editor](https://github.com/tomxp411/Character-Editor) for autorising the NuPet ASCII charset inclusion.
-
-![NuPetScii Demo example](docs/_static/NupetSciiDemo-result.jpg)
-
-If you are interested in Drawing & Rendering NuPetScii ressource in PicoTerm you can read:
-* [Graphical Font readme](font-suite/readme.md): explains how to create ressource and extract data
-* [Using NupetScii readme](docs/using-nupetscii.md): some RC2014 assembly & codes related to NuPetScii usage on RC2014.
-
-## How PicoTerm works
-* Textmode version (from v1.1) allows choice of green, amber or white on black, by holding button A, B or C on power-up. (choice is remembered).
-* Configuration menu is available via CTRL+SHIFT+M (configuration can be stored in Flash)
-* VGA generation starts at power-up
-* Pico LED blinks --> no USB device/keyboard attached
-* Pico LED off --> USB device/keyboard connected
-* VGA display is suspended 1 second when plug-in an USB keyboard
-
-## Uploading firmware
-
-The Pi Pico uses a UF2 bootloader to appear as a mass storage device so that new firmware can be uploaded to it.  To do this, connect a Micro USB lead between the Pico and your PC/Mac/Laptop/Raspberry Pi/Android Phone.  Then push the BOOTSEL button on the Pico. Whilst holding this down, push and release the RUN button on the VGA board.  (Trust me, This is easier to to than to put in to words!). The Pico will then show up as a drive on your computer.  Simply drag and drop the UF2 firmware on to this drive.  The Pico will automatically reboot and disconnect once this is complete.
-
-# Release notes
-See the file [releases.md](releases.md) .
-
-## Know issues
-1. USB keyboard is not detected if already connected at power-up. Disconnect and reconnect it! __Hardware workaround available see the [picoterm-port](docs/picoterm-conn.md)__.
-2. Changing Graphical font configuration (eg: from NupetScii to CP437) would requires to save the configuration and restart.
-2. VGA rendering sometime hangs when connecting a keyboard (rare). Press reset button (on PicoTerm) and try again.
-3. Saving the configuration into Flash fails from time to time (rare). Just press reset button (on PicoTerm) and try again.
-
 # PicoTerm documentation
 
 The picoterm projet contains a wide variety of documentation and ressources about the software.
@@ -178,6 +183,7 @@ The picoterm projet contains a wide variety of documentation and ressources abou
 | Document                    | Description                                              |
 |-----------------------------|----------------------------------------------------------|
 | [Release notes](releases.md)       | History of changes                                |
+| [Firmware upgrade](docs/firmware-upgrade.md) | How to upload a new firmware on picoterm.|
 | [Graphical font](font-suite/readme.md) | Discovering the NuppetScii & CP437 graphical font and coding. Discover Playscii a software to draw screen with NuPetScii. |
 | [Using-NupetScii](docs/using-nupetscii.md) | How to activate NuPetScii from RC2014. |
 | [Compiling](docs/compiling.md)     | Building firmware from source<br />How to setup the compilation environment to compile PicoTerm on your computer |
