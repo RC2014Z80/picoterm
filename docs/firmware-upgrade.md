@@ -24,7 +24,7 @@ Power-off your project board, the __Raspberry-Pi Pico should be unpowered__.
 
 To activate the bootloader, the "bootsel" button must be pushed down while powering the Pico.
 
-![Bootloader activation](_static/upgrade-01.jpg)
+![Bootloader activation](_static/upgrade-01.jpg)<br />Credit: Meurisse D. - info@mchobby.be
 
 The Pico is now in bootloader mode and shows its Internal Flash Memory __as an USB-flash drive__.
 
