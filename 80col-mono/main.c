@@ -55,6 +55,7 @@
 #include "../common/picoterm_cursor.h"
 #include "../common/picoterm_stddef.h"
 #include "../common/keybd.h"
+#include "picoterm_screen.h"
 //#include "hardware/structs/bus_ctrl.h"
 
 #include "bsp/board.h"
@@ -79,20 +80,13 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core);
 
 
 #define vga_mode vga_mode_640x480_60
-//#define vga_mode vga_mode_320x240_60
-//#define vga_mode vga_mode_213x160_60
-//#define vga_mode vga_mode_160x120_60
-////#define vga_mode vga_mode_tft_800x480_50
-//#define vga_mode vga_mode_tft_400x240_50
 
-#define COUNT 80 //((vga_mode.width/8)-1) // 80 chars = 640 / 8 = (vga_mode.width/8)
+#define COUNT 80
 
 // for now we want to see second counter on native and don't need both cores
 
-// todo there is a bug in multithreaded rendering atm
-//#define RENDER_ON_CORE0
 #define RENDER_ON_CORE1
-//#define IRQS_ON_CORE1
+
 
 render_scanline_func render_scanline = render_scanline_bg;
 
@@ -197,14 +191,6 @@ uint8_t pad[65536];
 uint32_t *font_raw_pixels;
 
 #define FONT_WIDTH_WORDS FRAGMENT_WORDS
-//#if FRAGMENT_WORDS == 5
-//  const lv_font_t *font = &ubuntu_mono10;
-//#elif FRAGMENT_WORDS == 4
-//  const lv_font_t *font = &ubuntu_mono8;
-//#else
-//  const lv_font_t *font = &ubuntu_mono6;
-//#endif
-
 #define FONT_HEIGHT (font->line_height) // Should be identical accross all fonts.
 #define FONT_SIZE_WORDS (FONT_HEIGHT * FONT_WIDTH_WORDS)
 
@@ -415,12 +401,9 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
     assert(FRAGMENT_WORDS * 2 == count_of(end_of_line));
 
     uint32_t *output32 = buf;
-
     *output32++ = host_safe_hw_ptr(beginning_of_line);
     uint32_t *dbase = font_raw_pixels + FONT_WIDTH_WORDS * (y % FONT_HEIGHT);
-
     int max_char = config.font_id>0 ?  font->dsc->cmaps->range_length : 95;
-
 
     char ch = 0;
     char inv = 0;
@@ -432,7 +415,6 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
     unsigned char *rowblk = slotsForBlkRow(tr);
 
     for (int i = 0; i < COUNT; i++) {
-
       ch = *rowslots;
       rowslots++;
 
@@ -543,13 +525,11 @@ void on_uart_rx() {
   while (uart_is_readable (UART_ID)){
     insert_key_into_buffer(uart_getc (UART_ID));
   }
-
 }
 
 void tih_handler(){
     gpio_put(LED,true);
 }
-
 
 void handle_keyboard_input(){
   // normal terminal operation: if key received -> display it on term
@@ -592,7 +572,7 @@ int main(void) {
   gpio_set_dir(USB_POWER_GPIO, GPIO_OUT);
   gpio_put(USB_POWER_GPIO,false);
 	start_time = board_millis();
-	
+
   gpio_init(BUZZER_GPIO);
   gpio_set_dir(BUZZER_GPIO, GPIO_OUT);
   gpio_put(BUZZER_GPIO,false);
@@ -792,7 +772,7 @@ void csr_blinking_task() {
 
 void bell_task() {
   const uint32_t interval_ms_bell = 100;
-  static uint32_t start_ms_bell = 0; 
+  static uint32_t start_ms_bell = 0;
 
   if(get_bell_state() == 1){
     start_ms_bell = board_millis();
@@ -804,7 +784,7 @@ void bell_task() {
     gpio_put(BUZZER_GPIO, false);
     set_bell_state(0);
   }
-  
+
 }
 
 //--------------------------------------------------------------------+

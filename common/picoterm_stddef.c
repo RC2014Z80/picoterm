@@ -3,6 +3,7 @@
    ========================================================================== */
 
 #include "picoterm_stddef.h"
+#include <string.h>
 
 const char* get_font_name( uint8_t font_id ){
 	switch (font_id) {
@@ -15,4 +16,15 @@ const char* get_font_name( uint8_t font_id ){
 		default:
 			return "???";
 	}
+}
+
+
+int replace_char(char *str, char orig, char rep) {
+    char *ix = str;
+    int n = 0;
+    while((ix = strchr(ix, orig)) != NULL) {
+        *ix++ = rep;
+        n++;
+    }
+    return n;
 }

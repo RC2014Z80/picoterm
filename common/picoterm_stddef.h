@@ -18,4 +18,7 @@ typedef struct point {
 
 const char* get_font_name( uint8_t font_id );
 
+int replace_char(char *str, char orig, char rep);
+
+
 #endif // _PICOTERM_STDDEF_H_

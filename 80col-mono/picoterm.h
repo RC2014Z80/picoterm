@@ -47,27 +47,25 @@ unsigned char * slotsForBlkRow(int y);
 
 void reset_terminal();
 void prepare_text_buffer();
-void display_terminal();
-void display_config();
-void display_help();
-void display_charset();
 
 char get_bell_state();
 void set_bell_state(char state);
-// bool get_csr_blink_state(); moved to picoterm_cursor
-// void set_csr_blink_state(bool state);
+// MOVED! bool get_csr_blink_state(); moved to picoterm_cursor
+// MOVED! void set_csr_blink_state(bool state);
 void refresh_cursor();
 void clear_cursor();
 void print_cursor();
 void handle_new_character(unsigned char ch);
-void print_string(char str[]);
-void __print_string(char str[], bool strip_nupetscii );
-// for menu support
-char read_key();
-char handle_default_input();
-char handle_config_input(); // specialzed for MENU_CONFIG
-bool key_ready(); // in main.c
+// Moved! void print_string(char str[]);
+// Moved! void __print_string(char str[], bool strip_nupetscii );
+// Moved! for menu support
+// Moved! char read_key();
+// moved! char handle_default_input();
+// moved! char handle_config_input(); // specialzed for MENU_CONFIG
+// ?????  bool key_ready(); // in keybd.c
 unsigned char read_key_from_buffer(); // in main.c
+
+void clear_entire_screen();
 // for debugging purposes
 void print_ascii_value(unsigned char asc);
 

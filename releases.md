@@ -17,7 +17,17 @@ From version 1.2 any publication will includes all U2F firmware files for 40 & 8
 
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
 
+## Version 1.5.3 - (ongoing)
+
+### Features
+* Nope
+
+### Fix & Improvement
+* Nope
+
 ## Version 1.5.2 - Dec 30 2022
+
+This is a temporary release for testing the new features.
 
 ### Features
 * Display character rendering mode ASCII/ANSI on welcom screen.
