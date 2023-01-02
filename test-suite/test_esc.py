@@ -62,7 +62,7 @@ def get_args( argv ):
 class SerialHelper:
 	def __init__( self, args ):
 		self.args = args
-		self.ser = serial.Serial(args['device'], 115200, timeout=0.100 ) # 100ms
+		self.ser = serial.Serial(args['device'], 115200, timeout=0.500 ) # 100ms
 
 	def write_str( self, str ):
 		""" Generic write that replaces \ESC and \0x1b in unicode string """
@@ -215,7 +215,7 @@ def test_no_wrap( ser ):
 	ser.write_str( "\ESC[?7l" )
 	test_lorem( ser )
 
-def test_do_warp( ser ):
+def test_do_wrap( ser ):
 	""" complement of no_warp test. Reactivate warp_around and send a Lorem Ipsum """
 	ser.write_str( "\ESC[?7h" )
 	test_lorem( ser )
@@ -476,11 +476,11 @@ def test_cursor_at_line( ser ):
 	ser.write_str("\ESC[10d") # Move absolute line 10
 
 def test_cursor_at_col( ser ):
-	""" Send Lorem Ipsum, place cursor to 3th line & 5th char, move at absolute column 50."""
+	""" Send Lorem Ipsum, place cursor to 3th line & 5th char, move at absolute column 13."""
 	test_clear(ser)
 	test_lorem(ser)
 	ser.write_str("\ESC[3;5H") # Line 3, Col 5
-	ser.write_str("\ESC[50G") # Move absolute column 10
+	ser.write_str("\ESC[13G") # Move absolute column 13
 
 def test_cursor_down_bol( ser ):
 	""" Send Lorem Ipsum, place cursor to 3th line & 5th char, move cursor 6 lines down (at begin of line). Cursor must be on line 9. """
@@ -498,7 +498,7 @@ def test_cursor_up_bol( ser ):
 	ser.write_str("\ESC[2F") # move 2 lines up at begin-of-line
 
 def test_reverse( ser ):
-	""" Send Lorem Ipsum, set reverse, write some text, reset reverse, Lorem Ipsum."""
+	""" Send Lorem Ipsum, set reverse, write some text, reset reverse, write some text."""
 	test_clear(ser)
 	test_lorem(ser)
 	ser.write_str( "\ESC[7m" ) # reverse text

@@ -41,7 +41,7 @@ void display_charset(){
   char msg[80];
   char _c;
   // reset_escape_sequence(); LOOKS not usefull from screen!
-  clear_entire_screen();
+  clrscr();
   csr.x = 0; csr.y = 0;
 
   __print_string( "\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 Current Charset \x0A6\x0A6\r\n" , config.font_id!=FONT_NUPETSCII ); // strip Nupetscii when not activated
@@ -79,7 +79,7 @@ void display_charset(){
 void display_config(){
     char msg[80];
     // reset_escape_sequence(); LOOKS not usefull from screen!
-    clear_entire_screen();
+    clrscr();
     csr.x = 0; csr.y = 0;
 
     __print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Menu \x0A6\x0A6\r\n" , config.font_id!=FONT_NUPETSCII ); // strip graphical when not activated
@@ -271,7 +271,7 @@ void display_help(){
   char msg[80];
   char _c;
   // reset_escape_sequence(); LOOKS not usefull from screen!
-  clear_entire_screen();
+  clrscr();
   csr.x = 0; csr.y = 0;
   __print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Help \x0A6\x0A6\r\n", config.font_id!=FONT_NUPETSCII );
   __print_string("\x0B0\x0C3 Keyboard Shortcut \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n", config.font_id!=FONT_NUPETSCII );
@@ -296,7 +296,7 @@ void display_help(){
 void display_terminal(){
     char msg[80];
 
-    clear_entire_screen();
+    clrscr();
     csr.x = 0; csr.y = 0;
 
     print_string("_/_/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/     _/_/  _/\r\n");

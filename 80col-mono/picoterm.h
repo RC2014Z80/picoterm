@@ -65,7 +65,6 @@ void handle_new_character(unsigned char ch);
 // ?????  bool key_ready(); // in keybd.c
 unsigned char read_key_from_buffer(); // in main.c
 
-void clear_entire_screen();
 // for debugging purposes
 void print_ascii_value(unsigned char asc);
 

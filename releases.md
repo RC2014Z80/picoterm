@@ -23,7 +23,11 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 * Nope
 
 ### Fix & Improvement
-* Nope
+* Decoupling picoterm.c
+ * extract console features to picoterm_conio.c
+ * extract displayed screeb to picoterm_screen.c
+ * passed full test-suite
+
 
 ## Version 1.5.2 - Dec 30 2022
 

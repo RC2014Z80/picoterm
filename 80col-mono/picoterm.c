@@ -31,11 +31,6 @@
 #include "main.h"
 #include "../common/picoterm_debug.h"
 
-#define COLUMNS     80
-#define ROWS        34
-#define VISIBLEROWS 30
-/* #define CSRCHAR     128 */
-
 // wrap text
 #define WRAP_TEXT
 
@@ -61,47 +56,27 @@ static unsigned char esc_final_byte;
 int mode = VT100;
 
 /* picoterm_cursor.c */
-extern bool cursor_visible;
 extern bool cursor_blinking;
 extern bool cursor_blinking_mode;
 extern char cursor_symbol;
 
-char bell_state = 0;
-
-/* picoterm_dec.c */
-extern uint8_t dec_mode;
-
-bool insert_mode = false;
-bool wrap_text = true;
-//#ifdef  WRAP_TEXT
-bool just_wrapped = false;
-//#endif
-
-static bool rvs = false;
-static bool blk = false;
-static unsigned char chr_under_csr;
-static bool inv_under_csr;
-static bool blk_under_csr;
-
 /* picoterm_config.c */
 extern picoterm_config_t config; // Issue #13, awesome contribution of Spock64
 
-typedef struct row_of_text {
-  unsigned char slot[COLUMNS];
-  unsigned char inv[COLUMNS];
-    unsigned char blk[COLUMNS];
-} row_of_text;
-
-// array of pointers, each pointer points to a row structure
-static struct row_of_text *ptr[ROWS];
-static struct row_of_text *secondary_ptr[ROWS];
+/* picoterm_conio.c */
+extern bool rvs; // Reverse Drawing
+extern bool blk; // Blinking drawing
+extern bool wrap_text; // Auto-wrapping text
+extern uint8_t dec_mode;
 
 /* picoterm_cursor.c */
-extern point_t csr;
-extern point_t saved_csr;
+extern point_t csr;       // to remove  ?
+extern point_t saved_csr; // to remove ?
 
-void clear_entire_screen();
-void clear_secondary_screen();
+char bell_state = 0;
+
+bool insert_mode = false;
+
 
 // command answers
 void response_VT52Z();
@@ -109,18 +84,6 @@ void response_VT52ID();
 void response_VT100OK();
 void response_VT100ID();
 void response_csr();
-
-// commands
-void cmd_csr_up(int n);
-void cmd_csr_down(int n);
-void cmd_csr_forward(int n);
-void cmd_csr_backward(int n);
-
-void cmd_csr_home();
-void cmd_csr_position(int y, int x);
-void cmd_rev_lf();
-void cmd_lf();
-
 
 void clear_escape_parameters(){
     for(int i=0;i<MAX_ESC_PARAMS;i++){
@@ -140,433 +103,21 @@ void reset_escape_sequence(){
 }
 
 void reset_terminal(){
-    clear_entire_screen();
-    clear_secondary_screen();
-    cmd_csr_home();
-
+    move_cursor_home();
     saved_csr.x = 0;
     saved_csr.y = 0;
 
     mode = VT100;
-
     insert_mode = false;
 
-    wrap_text = true;
-    just_wrapped = false;
-
-    rvs = false;
-    blk = false;
-
-    chr_under_csr = 0;
-    inv_under_csr = 0;
-    blk_under_csr = 0;
-
-    dec_mode = DEC_MODE_NONE; // single/double lines
-
-    cursor_visible = true;
-    cursor_blinking = false;
-    cursor_blinking_mode = true;
-    cursor_symbol = get_cursor_char( config.font_id, CURSOR_TYPE_DEFAULT ) - 0x20;
-
+    conio_reset( get_cursor_char( config.font_id, CURSOR_TYPE_DEFAULT ) - 0x20 );
     make_cursor_visible(true);
     clear_cursor();  // so we have the character
     print_cursor();  // turns on
 }
 
-
-void constrain_cursor_values(){
-    if(csr.x<0) csr.x=0;
-    if(csr.x>=COLUMNS) csr.x=COLUMNS-1;
-    if(csr.y<0) csr.y=0;
-    if(csr.y>=VISIBLEROWS) csr.y=VISIBLEROWS-1;
-}
-
-
-void slip_character(unsigned char ch,int x,int y){
-    if(csr.x>=COLUMNS || csr.y>=VISIBLEROWS){
-        return;
-    }
-  /*
-    if(rvs && ch<95){   // 95 is the start of the rvs character set
-        ch = ch + 95;
-    }
-  */
-
-    //decmode on DOMEU
-    if(dec_mode != DEC_MODE_NONE){
-        //ch = ch + 32; // going from array_index to ASCII code
-        ch = get_dec_char( config.font_id, dec_mode, ch+32 ); // +32 to go from array_index to ASCII code
-        ptr[y]->slot[x] = ch-32;
-    }
-    else{
-        ptr[y]->slot[x] = ch;
-    }
-
-  if(rvs) // Reverse drawing
-    ptr[y]->inv[x] = 1;
-  else
-    ptr[y]->inv[x] = 0;
-
-  if(blk) // blinking drawing
-    ptr[y]->blk[x] = 1;
-  else
-    ptr[y]->blk[x] = 0;
-
-//#ifdef  WRAP_TEXT
-   if (just_wrapped) just_wrapped = false;
-//#endif
-}
-
-unsigned char slop_character(int x,int y){
-    // nb returns screen code - starts with space at zero, ie ascii-32
-    //return p[y].slot[x];
-    return ptr[y]->slot[x];
-}
-
-unsigned char inv_character(int x,int y){
-    return ptr[y]->inv[x];
-}
-
-unsigned char blk_character(int x,int y){
-    return ptr[y]->blk[x];
-}
-
-
-unsigned char * slotsForRow(int y){
-    return &ptr[y]->slot[0];
-}
-unsigned char * slotsForInvRow(int y){
-    return &ptr[y]->inv[0];
-}
-unsigned char * slotsForBlkRow(int y){
-    return &ptr[y]->blk[0];
-}
-
-/*
-    ptr[ROWS-1] = ptr[ROWS-2];
-    ptr[ROWS-2] = ptr[ROWS-3];
-    // ...
-    ptr[csr.y+1] = ptr[csr.y];
-*/
-
-
-
-void insert_line(){
-
-    struct row_of_text *temphandle = ptr[ROWS-1];
-
-    for(int r=ROWS-1;r>csr.y;r--){
-        ptr[r] = ptr[r-1];
-    }
-
-    ptr[csr.y] = temphandle;
-
-    // recycled row needs blanking
-    for(int i=0;i<COLUMNS;i++){
-        ptr[csr.y]->slot[i] = 0;
-        ptr[csr.y]->inv[i] = 0;
-        ptr[csr.y]->blk[i] = 0;
-    }
-
-}
-
-void delete_line(){
-
-    struct row_of_text *temphandle = ptr[csr.y];
-
-    for(int r=csr.y;r<ROWS-1;r++){
-        ptr[r]=ptr[r+1];
-    }
-
-    ptr[ROWS-1] = temphandle;
-
-    // recycled row needs blanking
-    for(int i=0;i<COLUMNS;i++){
-        ptr[ROWS-1]->slot[i] = 0;
-        ptr[ROWS-1]->inv[i] = 0;
-        ptr[ROWS-1]->blk[i] = 0;
-    }
-
-}
-
-
-void insert_lines(int n){
-    for (int i = 0; i < n; i++)
-    {
-        insert_line();
-    }
-}
-
-void delete_lines(int n){
-    for (int i = 0; i < n; i++)
-    {
-        delete_line();
-    }
-}
-
-void delete_chars(int n){
-    int c = csr.x;
-    for(int i=csr.x + n;i<COLUMNS;i++){
-        ptr[csr.y]->slot[c] = ptr[csr.y]->slot[i];
-        ptr[csr.y]->inv[c] = ptr[csr.y]->inv[i];
-        ptr[csr.y]->blk[c] = ptr[csr.y]->blk[i];
-        c++;
-    }
-    for(int i=c;i<COLUMNS;i++){
-        ptr[csr.y]->slot[i] = 0;
-        ptr[csr.y]->inv[i] = 0;
-        ptr[csr.y]->blk[i] = 0;
-    }
-}
-
-void erase_chars(int n){
-    int c = csr.x;
-    for(int i=csr.x;i<COLUMNS && i<c+n;i++){
-        ptr[csr.y]->slot[i] = 0;
-        ptr[csr.y]->inv[i] = 0;
-        ptr[csr.y]->blk[i] = 0;
-    }
-}
-
-void insert_chars(int n){
-
-    for(int r=COLUMNS-1;r>=csr.x+n;r--){
-        ptr[csr.y]->slot[r] = ptr[csr.y]->slot[r-n];
-        ptr[csr.y]->inv[r] = ptr[csr.y]->inv[r-n];
-        ptr[csr.y]->blk[r] = ptr[csr.y]->blk[r-n];
-    }
-
-    erase_chars(n);
-}
-
-
-void shuffle_down(){
-    // this is our scroll
-    // because we're using pointers to rows, we only need to shuffle the array of pointers
-
-    // recycle first line.
-    struct row_of_text *temphandle = ptr[0];
-    //ptr[ROWS-1]=ptr[0];
-
-    for(int r=0;r<ROWS-1;r++){
-        ptr[r]=ptr[r+1];
-    }
-
-    ptr[ROWS-1] = temphandle;
-
-    // recycled line needs blanking
-    for(int i=0;i<COLUMNS;i++){
-        ptr[ROWS-1]->slot[i] = 0;
-    ptr[ROWS-1]->inv[i] = 0;
-        ptr[ROWS-1]->blk[i] = 0;
-    }
-}
-
-void shuffle_up(){
-    // this is our scroll
-    // because we're using pointers to rows, we only need to shuffle the array of pointers
-
-    // recycle first line.
-    struct row_of_text *temphandle = ptr[ROWS-1];
-    //ptr[ROWS-1]=ptr[0];
-
-    for(int r=ROWS-2;r>=0;r--){
-        ptr[r+1]=ptr[r];
-    }
-
-    ptr[0] = temphandle;
-
-    // recycled line needs blanking
-    for(int i=0;i<COLUMNS;i++){
-        ptr[0]->slot[i] = 0;
-    ptr[0]->inv[i] = 0;
-        ptr[0]->blk[i] = 0;
-    }
-}
-
-
-
-void wrap_constrain_cursor_values(){
-
-  if(csr.x>=COLUMNS) {
-    csr.x=0;
-    if(csr.y==VISIBLEROWS-1){   // visiblerows is the count, csr is zero based
-      shuffle_down();
-    }
-    else{
-      csr.y++;
-    }
-//#ifdef  WRAP_TEXT
-    just_wrapped = true;
-//#endif
-  }
-}
-
-
 char get_bell_state() { return bell_state; }
 void set_bell_state(char state) { bell_state = state; }
-
-void refresh_cursor(){
-  clear_cursor();
-  print_cursor();
-}
-
-
-void print_cursor(){
-  chr_under_csr = slop_character(csr.x,csr.y);
-  inv_under_csr = inv_character(csr.x,csr.y);
-  blk_under_csr = blk_character(csr.x,csr.y);
-
-    if(cursor_visible==false || (cursor_blinking_mode && cursor_blinking)) return;
-
-  if(chr_under_csr == 0) // config.nupetscii &&
-    ptr[csr.y]->slot[csr.x] = cursor_symbol;
-
-  else if(inv_under_csr == 1)
-    ptr[csr.y]->inv[csr.x] = 0;
-
-  else
-    ptr[csr.y]->inv[csr.x] = 1;
-
-  /*
-  unsigned char rvs_chr = chr_under_csr;
-
-    if(rvs_chr>=95){        // yes, 95, our screen codes start at ascii 0x20-0x7f
-        rvs_chr -= 95;
-    }
-    else{
-       rvs_chr += 95;
-    }
-
-    //slip_character(rvs_chr,csr.x,csr.y); // fix 191121
-    // can't use slip, because it applies reverse
-    ptr[csr.y]->slot[csr.x] = rvs_chr;
-  */
-}
-
-
-void clear_cursor(){
-    //slip_character(chr_under_csr,csr.x,csr.y); // fix 191121
-    // can't use slip, because it applies reverse
-    ptr[csr.y]->slot[csr.x] = chr_under_csr;
-    ptr[csr.y]->inv[csr.x] = inv_under_csr;
-    ptr[csr.y]->blk[csr.x] = blk_under_csr;
-}
-
-
-void clear_line_from_cursor(){
-    // new faster method
-    void *sl = &ptr[csr.y]->slot[csr.x];
-    memset(sl, 0, COLUMNS-csr.x);
-
-    sl = &ptr[csr.y]->inv[csr.x];
-    memset(sl, 0, COLUMNS-csr.x);
-
-    sl = &ptr[csr.y]->blk[csr.x];
-    memset(sl, 0, COLUMNS-csr.x);
-}
-
-void clear_line_to_cursor(){
-    void *sl = &ptr[csr.y]->slot[0];
-    memset(sl, 0, csr.x);
-
-    sl = &ptr[csr.y]->inv[0];
-    memset(sl, 0, csr.x);
-
-    sl = &ptr[csr.y]->blk[0];
-    memset(sl, 0, csr.x);
-}
-
-void clear_entire_line(){
-    void *sl = &ptr[csr.y]->slot[0];
-    memset(sl, 0, COLUMNS);
-
-    sl = &ptr[csr.y]->inv[0];
-    memset(sl, 0, COLUMNS);
-
-    sl = &ptr[csr.y]->blk[0];
-    memset(sl, 0, COLUMNS);
-}
-
-void clear_entire_screen(){
-    for(int r=0;r<ROWS;r++){
-        //slip_character(0,c,r);
-        // tighter method, as too much of a delay here can cause dropped characters
-        void *sl = &ptr[r]->slot[0];
-        memset(sl, 0, COLUMNS);
-
-        sl = &ptr[r]->inv[0];
-        memset(sl, 0, COLUMNS);
-
-        sl = &ptr[r]->blk[0];
-        memset(sl, 0, COLUMNS);
-    }
-}
-
-void clear_secondary_screen(){
-    for(int r=0;r<ROWS;r++){
-        //slip_character(0,c,r);
-        // tighter method, as too much of a delay here can cause dropped characters
-        void *sl = &secondary_ptr[r]->slot[0];
-        memset(sl, 0, COLUMNS);
-
-        sl = &secondary_ptr[r]->inv[0];
-        memset(sl, 0, COLUMNS);
-
-        sl = &secondary_ptr[r]->blk[0];
-        memset(sl, 0, COLUMNS);
-    }
-}
-
-void copy_secondary_to_main_screen(){
-    for(int r=0;r<ROWS;r++){
-        memcpy(ptr[r]->slot,
-                secondary_ptr[r]->slot,
-                sizeof(ptr[r]->slot));
-
-        memcpy(ptr[r]->inv,
-                secondary_ptr[r]->inv,
-                sizeof(ptr[r]->inv));
-
-        memcpy(ptr[r]->blk,
-                secondary_ptr[r]->blk,
-                sizeof(ptr[r]->blk));
-    }
-}
-
-void copy_main_to_secondary_screen(){
-    for(int r=0;r<ROWS;r++){
-        void *src = &ptr[r]->slot[0];
-        void *dst = &secondary_ptr[r]->slot[0];
-        memcpy(dst, src, sizeof(secondary_ptr[r]->slot));
-
-        src = &ptr[r]->inv[0];
-        dst =  &secondary_ptr[r]->inv[0];
-        memcpy(dst, src, sizeof(secondary_ptr[r]->inv));
-
-        src = &ptr[r]->blk[0];
-        dst =  &secondary_ptr[r]->blk[0];
-        memcpy(dst, src, sizeof(secondary_ptr[r]->blk));
-    }
-}
-
-void clear_screen_from_csr(){
-    clear_line_from_cursor();
-    for(int r=csr.y+1;r<ROWS;r++){
-        for(int c=0;c<COLUMNS;c++){
-            slip_character(0,c,r);    // todo: should use the new method in clear_entire_screen
-        }
-    }
-}
-
-void clear_screen_to_csr(){
-    clear_line_to_cursor();
-    for(int r=0;r<csr.y;r++){
-        for(int c=0;c<COLUMNS;c++){
-            slip_character(0,c,r);  // todo: should use the new method in clear_entire_screen
-        }
-    }
-}
 
 
 // for debugging purposes only
@@ -631,48 +182,35 @@ void esc_sequence_received(){
               if(n == 0) n = 1;
               if(m == 0) m = 1;
 
-              cmd_csr_position(n,m);
+              move_cursor_at(n,m);
               break;
 
-          case 'E':
-              // ESC[#E  moves cursor to beginning of next line, # lines down
+          case 'E': // ESC[#E  moves cursor to beginning of next line, # lines down
               n = esc_parameters[0];
               if(n==0)n=1;
-
-              // these are zero based
-              csr.x = 0;
-              csr.y += n;
-              constrain_cursor_values();
+              // these are ONE based
+              move_cursor_at( csr.y+n+1, 1); // y, x
               break;
 
-          case 'F':
-              // ESC[#F  moves cursor to beginning of previous line, # lines up
-
+          case 'F':  // ESC[#F  moves cursor to beginning of previous line, # lines up
               n = esc_parameters[0];
               if(n==0)n=1;
-
-              // these are zero based
-              csr.x = 0;
-              csr.y -= n;
-              constrain_cursor_values();
+              // these are ONE based
+              move_cursor_at( csr.y - n+1, 1);
               break;
 
-          case 'd':
-              // ESC[#d  moves cursor to an absolute # line
+          case 'd': // ESC[#d  moves cursor to an absolute # line
               n = esc_parameters[0];
               n--;
-              // these are zero based
-              csr.y = n;
-              constrain_cursor_values();
+              // these are ONE based
+              move_cursor_at( n+1, csr.x+1 );
               break;
 
-          case 'G':
-              // ESC[#G  moves cursor to column #
+          case 'G': // ESC[#G  moves cursor to column #
               n = esc_parameters[0];
               n--;
-              // these are zero based
-              csr.x = n;
-              constrain_cursor_values();
+              // there are ONE based
+              move_cursor_at( csr.y+1, n+1 );
               break;
 
           case 'h':
@@ -864,22 +402,17 @@ void esc_sequence_received(){
               // If n is 3, clear entire screen and delete all lines saved in the scrollback buffer
               // (this feature was added for xterm and is supported by other terminal applications).
               switch(esc_parameters[0]){
-                case 0:
-                  // clear from cursor to end of screen
-                  clear_screen_from_csr();
+                case 0:  // clear from cursor to end of screen
+                  clear_screen_from_cursor();
                   break;
-                case 1:
-                  // clear from cursor to beginning of the screen
-                  clear_screen_to_csr();
+
+                case 1: // clear from cursor to beginning of the screen
+                  clear_screen_to_cursor();
                   break;
-                case 2:
-                  // clear entire screen
-                  clear_entire_screen();
-                  csr.x=0; csr.y=0;
-                  break;
+
+                case 2: // clear entire screen
                 case 3:
-                  // clear entire screen
-                  clear_entire_screen();
+                  clrscr();
                   csr.x=0; csr.y=0;
                   break;
               }
@@ -890,101 +423,79 @@ void esc_sequence_received(){
               // If n is 1, clear from cursor to beginning of the line. If n is 2, clear entire line.
               // Cursor position does not change.
               switch(esc_parameters[0]){
-                case 0:
-                  // clear from cursor to the end of the line
+                case 0: // clear from cursor to the end of the line
                   clear_line_from_cursor();
                   break;
-                case 1:
-                  // clear from cursor to beginning of the line
+                case 1:  // clear from cursor to beginning of the line
                   clear_line_to_cursor();
                   break;
-                case 2:
-                  // clear entire line
+                case 2:  // clear entire line
                   clear_entire_line();
                   break;
               }
               break;
 
-          case 'A':
-              // Cursor Up
-              //Moves the cursor n (default 1) cells
+          case 'A': // Cursor Up - Moves the cursor n (default 1) cells
               n = esc_parameters[0];
-              cmd_csr_up(n);
+              move_cursor_up(n);
               break;
 
-          case 'B':
-              // Cursor Down
-              //Moves the cursor n (default 1) cells
+          case 'B': // Cursor Down - Moves the cursor n (default 1) cells
               n = esc_parameters[0];
-              cmd_csr_down(n);
+              move_cursor_down(n);
               break;
 
-          case 'C':
-              // Cursor Forward
-              //Moves the cursor n (default 1) cells
+          case 'C': // Cursor Forward - Moves the cursor n (default 1) cells
               n = esc_parameters[0];
-              cmd_csr_forward(n);
+              move_cursor_forward(n);
               break;
 
-          case 'D':
-              // Cursor Backward
-              //Moves the cursor n (default 1) cells
+          case 'D': // Cursor Backward - Moves the cursor n (default 1) cells
               n = esc_parameters[0];
-              cmd_csr_backward(n);
+              move_cursor_backward(n);
               break;
 
-          case 'S':
-              // Scroll whole page up by n (default 1) lines. New lines are added at the bottom. (not ANSI.SYS)
+          case 'S': // Scroll whole page up by n (default 1) lines. New lines are added at the bottom. (not ANSI.SYS)
               n = esc_parameters[0];
               if(n==0)n=1;
-              for(int i=0;i<n;i++){
+              for(int i=0;i<n;i++)
                   shuffle_down();
-              }
              break;
 
-          case 'T':
-              // Scroll whole page down by n (default 1) lines. New lines are added at the top. (not ANSI.SYS)
+          case 'T': // Scroll whole page down by n (default 1) lines. New lines are added at the top. (not ANSI.SYS)
               n = esc_parameters[0];
               if(n==0)n=1;
-              for(int i=0;i<n;i++){
+              for(int i=0;i<n;i++)
                   shuffle_up();
-              }
               break;
 
           // MORE
 
-
-
-          case 'L':
-              // 'INSERT LINE' - scroll rows down from and including cursor position. (blank the cursor's row??)
+          case 'L': // 'INSERT LINE' - scroll rows down from and including cursor position. (blank the cursor's row??)
               n = esc_parameters[0];
               if(n==0)n=1;
               insert_lines(n);
               break;
 
-          case 'M':
-              // 'DELETE LINE' - delete row at cursor position, scrolling everything below, up to fill. Leaving blank line at bottom.
+          case 'M': // 'DELETE LINE' - delete row at cursor position, scrolling everything below, up to fill. Leaving blank line at bottom.
               n = esc_parameters[0];
               if(n==0)n=1;
               delete_lines(n);
               break;
 
-          case 'P':
-              // 'DELETE CHARS' - delete <n> characters at the current cursor position, shifting in space characters from the right edge of the screen.
+          case 'P': // 'DELETE CHARS' - delete <n> characters at the current cursor position, shifting in space characters from the right edge of the screen.
               n = esc_parameters[0];
               if(n==0)n=1;
               delete_chars(n);
               break;
 
-          case 'X':
-              // 'ERASE CHARS' - erase <n> characters from the current cursor position by overwriting them with a space character.
+          case 'X': // 'ERASE CHARS' - erase <n> characters from the current cursor position by overwriting them with a space character.
               n = esc_parameters[0];
               if(n==0)n=1;
               erase_chars(n);
               break;
 
-          case '@':
-              // 'Insert Character' - insert <n> spaces at the current cursor position, shifting all existing text to the right. Text exiting the screen to the right is removed.
+          case '@': // 'Insert Character' - insert <n> spaces at the current cursor position, shifting all existing text to the right. Text exiting the screen to the right is removed.
               n = esc_parameters[0];
               if(n==0)n=1;
               insert_chars(n);
@@ -993,7 +504,6 @@ void esc_sequence_received(){
           case 'q':
               if(parameter_sp){
                   parameter_sp = false;
-
                   //ESC [ 0 SP q  User Shape  Default cursor shape configured by the user
                   //ESC [ 1 SP q  Blinking Block  Blinking block cursor shape
                   //ESC [ 2 SP q  Steady Block  Steady block cursor shape
@@ -1062,7 +572,6 @@ void esc_sequence_received(){
       }
   }
 
-
   // our work here is done
   reset_escape_sequence();
 }
@@ -1070,21 +579,7 @@ void esc_sequence_received(){
 
 void prepare_text_buffer(){
     reset_escape_sequence();
-
-    for(int c=0;c<ROWS;c++){
-        struct row_of_text *newRow;
-        /* Create structure in memory */
-        newRow=(struct row_of_text *)malloc(sizeof(struct row_of_text));
-        if(newRow==NULL) exit(1);
-        ptr[c] = newRow;
-
-        /* Create structure in memory */
-        newRow=(struct row_of_text *)malloc(sizeof(struct row_of_text));
-        if(newRow==NULL) exit(1);
-        secondary_ptr[c] = newRow;
-    }
-
-    // print cursor
+    conio_init(); // initialize ConIO buffers
     make_cursor_visible(true);
     clear_cursor();  // so we have the character
     print_cursor();  // turns on
@@ -1154,15 +649,18 @@ void handle_new_character(unsigned char asc){
                     reset_escape_sequence();
                 }
                 else if (asc=='D' ){
-                    cmd_lf();
+                    //cmd_lf();
+                    move_cursor_lf( false ); // normal move
                     reset_escape_sequence();
                 }
                 else if (asc=='M' ){
-                    cmd_rev_lf();
+                    //cmd_rev_lf();
+                    move_cursor_lf( true ); // reverse move
                     reset_escape_sequence();
                 }
                 else if (asc=='E' ){
-                    cmd_lf();
+                    //cmd_lf();
+                    move_cursor_lf(true); // normal move
                     reset_escape_sequence();
                 }
 
@@ -1172,41 +670,36 @@ void handle_new_character(unsigned char asc){
               else if(mode==VT52){ // VT52 Commands
 
                 if (asc=='A' ){
-                    cmd_csr_up(0);
+                    // cmd_csr_up(0);
+                    move_cursor_up( 1 );
                     reset_escape_sequence();
                 }
                 else if (asc=='B' ){
-                    cmd_csr_down(0);
+                    //cmd_csr_down(0);
+                    move_cursor_down( 1 );
                     reset_escape_sequence();
                 }
                 else if (asc=='C' ){
-                    cmd_csr_forward(0);
+                    //cmd_csr_forward(0);
+                    move_cursor_forward( 1 );
                     reset_escape_sequence();
                 }
                 else if (asc=='D' ){
-                    cmd_csr_backward(0);
+                    // cmd_csr_backward(0);
+                    move_cursor_backward( 1 );
                     reset_escape_sequence();
                 }
-                /* see VT100 section also taking care of DEC mode
-                else if (asc=='F' ){
-                    dec_mode = true;
-                    reset_escape_sequence();
-                }
-                else if (asc=='G' ){
-                    dec_mode = false;
-                    reset_escape_sequence();
-                }
-                */
                 else if (asc=='H' ){
-                    cmd_csr_home();
+                    move_cursor_home();
                     reset_escape_sequence();
                 }
                 else if (asc=='I' ){
-                    cmd_rev_lf();
+                    //cmd_rev_lf();
+                    move_cursor_lf( true ); // reverse move
                     reset_escape_sequence();
                 }
                 else if (asc=='J' ){
-                    clear_screen_from_csr();
+                    clear_screen_from_cursor();
                     reset_escape_sequence();
                 }
                 else if (asc=='K' ){
@@ -1221,8 +714,6 @@ void handle_new_character(unsigned char asc){
                     mode = VT100;
                     reset_escape_sequence();
                 }
-
-
                 else
                     // unrecognised character after escape.
                     reset_escape_sequence();
@@ -1318,7 +809,8 @@ void handle_new_character(unsigned char asc){
                 break;
 
               case LF:
-                cmd_lf();
+                //cmd_lf();
+                move_cursor_lf( false ); // normal move
                 break;
 
               case CR:
@@ -1326,7 +818,7 @@ void handle_new_character(unsigned char asc){
                 break;
 
               case FF:
-                clear_entire_screen();
+                clrscr();
                 csr.x=0; csr.y=0;
                 break;
           } // switch(asc)
@@ -1334,20 +826,16 @@ void handle_new_character(unsigned char asc){
   } // eof Regular character
 
   if(cursor_blinking) cursor_blinking = false;
-
 }
 
 
 void __send_string(char str[]){
-   // remove the NuPetScii extended charset from a string and replace them with
-  // more convenient.
-  // This function is used by the configuration screen. See display_config().
+  /* send string back to host via UART */
   char c;
   for(int i=0;i<strlen(str);i++){
       c = str[i];
       //insert_key_into_buffer( c );
       uart_putc (UART_ID, c);
-
   }
 }
 
@@ -1372,80 +860,4 @@ void response_csr() { // cursor position
     char s[20];
     sprintf(s, "\033[%d;%dR", csr.y+1, csr.x+1);
     __send_string(s);
-}
-
-void cmd_csr_up(int n){
-    if(n==0)n=1;
-    csr.y -= n;
-    constrain_cursor_values();
-}
-
-void cmd_csr_down(int n){
-    if(n==0)n=1;
-    csr.y += n;
-    constrain_cursor_values();  // todo: should possibly do a scroll up?
-}
-
-void cmd_csr_forward(int n){
-    if(n==0)n=1;
-    csr.x += n;
-    constrain_cursor_values();
-}
-
-void cmd_csr_backward(int n){
-    if(n==0)n=1;
-    csr.x -= n;
-    constrain_cursor_values();
-}
-
-void cmd_csr_home(){
-    cmd_csr_position(1, 1);
-}
-
-void cmd_csr_position(int y, int x){
-    y--;
-    x--;
-
-    // Moves the cursor to row n, column m
-    // The values are 1-based, and default to 1
-
-    // these are zero based
-    csr.x = x;
-    csr.y = y;
-    constrain_cursor_values();
-}
-
-void cmd_rev_lf() {
-    if(csr.y > 0)
-        cmd_csr_position(csr.y, csr.x + 1);
-    else
-        shuffle_up();
-}
-
-void cmd_lf(){
-     if(wrap_text){
-    //#ifdef  WRAP_TEXT
-        if(!just_wrapped){
-//#endif
-        if(csr.y==VISIBLEROWS-1){ // visiblerows is the count, csr is zero based
-            shuffle_down();
-        }
-        else {
-            csr.y++;
-        }
-//#ifdef  WRAP_TEXT
-        }
-        else
-        just_wrapped = false;
-//#endif
-    }
-    else{
-        if(csr.y==VISIBLEROWS-1){ // visiblerows is the count, csr is zero based
-            shuffle_down();
-        }
-        else {
-            csr.y++;
-        }
-
-    }
 }

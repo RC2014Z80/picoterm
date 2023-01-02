@@ -11,7 +11,7 @@ bool cursor_blinking = false;     // Is the cursor do blink now ? (see csr_)
 bool cursor_blinking_mode = true; // do we want the cursor to be BLINKING or STEADY
 char cursor_symbol = 143;         // index in charset for the cursor
 
-struct point csr = {0,0}; // Cursor position
+struct point csr = {0,0}; // Cursor position ZERO BASED!
 struct point saved_csr = {0,0};
 
 char get_cursor_char( uint8_t font_id, uint8_t cursor_type ){
