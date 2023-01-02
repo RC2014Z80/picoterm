@@ -18,7 +18,7 @@
  */
 
 
-#include "picoterm.h"
+#include "picoterm_core.h"
 #include "../common/pmhid.h" // keyboard definitions
 #include "../common/picoterm_config.h"
 #include "../common/picoterm_cursor.h"

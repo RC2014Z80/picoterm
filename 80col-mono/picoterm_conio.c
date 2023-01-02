@@ -11,10 +11,9 @@
 #include "../common/picoterm_dec.h"
 #include "../common/picoterm_stddef.h"
 #include "../common/keybd.h" // Keyboard device
-#include "picoterm.h"
+#include "picoterm_core.h"
 #include "../common/picoterm_config.h"
-
-/* picoterm_config.c */
+#include <stdlib.h>
 
 /* picoterm_cursor.c */
 extern bool cursor_blinking;

@@ -4,11 +4,12 @@
               * keyboard callback function for keyboard
    ========================================================================== */
 
-#include "picoterm.h"
+//#include "picoterm_core.h"
 #include "../common/pmhid.h" // keyboard definitions
 #include "../common/picoterm_config.h"
 #include "../common/picoterm_cursor.h"
 #include "../common/picoterm_stddef.h"
+#include "picoterm_core.h" // handle_new_character
 #include "tusb_option.h"
 #include "picoterm_conio.h"
 #include "main.h" // UART_ID
