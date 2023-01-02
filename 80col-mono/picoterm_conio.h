@@ -8,20 +8,32 @@
 #ifndef _PICOTERM_CONIO_H
 #define _PICOTERM_CONIO_H
 
+#include <stdint.h>
+
 #define COLUMNS     80
 #define ROWS        34
 #define VISIBLEROWS 30
 
+/* console IO configuration */
+typedef struct picoterm_conio_config {
+  bool rvs; // draw in reverse
+  bool blk; // draw in blinking
+  bool just_wrapped;
+  bool wrap_text;   // terminal configured to warp_text around
+	uint8_t dec_mode; // current DEC mode (ligne drawing single/double/none)
+	uint8_t ansi_font_id; // ID of the ANSI Graphical font to use
+} picoterm_conio_config_t;
+
 typedef struct row_of_text {
   unsigned char slot[COLUMNS];
   unsigned char inv[COLUMNS];
-    unsigned char blk[COLUMNS];
+  unsigned char blk[COLUMNS];
 } row_of_text_t;
 
 // array of pointers, each pointer points to a row structure
 typedef row_of_text_t *array_of_row_text_pointer[ROWS];
 
-void conio_init(); // allocate required ressources
+void conio_init( uint8_t ansi_font_id ); // allocate required ressources
 void conio_reset( char default_cursor_symbol );
 
 void print_string(char str[]);

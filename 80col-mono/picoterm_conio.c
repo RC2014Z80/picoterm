@@ -26,27 +26,20 @@ extern bool cursor_blinking_mode;
 extern bool cursor_visible;
 extern char cursor_symbol;
 
-/* picoterm_dec.c */
-extern uint8_t dec_mode;
-
 /* picoterm_config.c */
-extern picoterm_config_t config;
+extern picoterm_config_t config; // required to read config.font_id
+
+picoterm_conio_config_t conio_config  = { .rvs = false, .blk = false, .just_wrapped = false, .wrap_text = true, .dec_mode = DEC_MODE_NONE };
 
 array_of_row_text_pointer ptr;           // primary screen content
 array_of_row_text_pointer secondary_ptr; // secondary screen content
 
-//#ifdef  WRAP_TEXT
-bool just_wrapped = false;
-//#endif
-bool wrap_text = true; // terminal configured to warp_text around
+// Private members
+unsigned char __chr_under_csr;
+bool __inv_under_csr;
+bool __blk_under_csr;
 
-bool rvs = false;
-bool blk = false;
-unsigned char chr_under_csr;
-bool inv_under_csr;
-bool blk_under_csr;
-
-void conio_init(){
+void conio_init( uint8_t ansi_font_id ){
   // Initialize the ConIO ressources
   for(int c=0;c<ROWS;c++){
       struct row_of_text *newRow;
@@ -60,26 +53,28 @@ void conio_init(){
       if(newRow==NULL) exit(1);
       secondary_ptr[c] = newRow;
   }
+	conio_config.ansi_font_id = ansi_font_id;
 }
 
 void conio_reset( char default_cursor_symbol ){
   // Reset the terminal
-  rvs = false;
-  blk = false;
+  conio_config.rvs = false;
+  conio_config.blk = false;
+	conio_config.wrap_text = true;
+	conio_config.just_wrapped = false;
+	conio_config.dec_mode = DEC_MODE_NONE; // single/double lines
+	// initialized @ init() 
+	// conio_config.ansi_font_id = FONT_NUPETSCII; // selected font_id for graphical operation
 
-  chr_under_csr = 0;
-  inv_under_csr = 0;
-  blk_under_csr = 0;
+  __chr_under_csr = 0;
+  __inv_under_csr = 0;
+  __blk_under_csr = 0;
 
   cursor_visible = true;
   cursor_blinking = false;
   cursor_blinking_mode = true;
   cursor_symbol = default_cursor_symbol;
 
-  wrap_text = true;
-  just_wrapped = false;
-
-  dec_mode = DEC_MODE_NONE; // single/double lines
   clrscr();
   clear_secondary_screen();
 }
@@ -444,28 +439,27 @@ void slip_character(unsigned char ch,int x,int y){
     }
 
     //decmode on DOMEU
-    if(dec_mode != DEC_MODE_NONE){
+    if(conio_config.dec_mode != DEC_MODE_NONE){
         //ch = ch + 32; // going from array_index to ASCII code
-        ch = get_dec_char( config.font_id, dec_mode, ch+32 ); // +32 to go from array_index to ASCII code
+        ch = get_dec_char( config.font_id, conio_config.dec_mode, ch+32 ); // +32 to go from array_index to ASCII code
         set_char( x, y, ch-32 );
     }
     else{
         set_char(x,y,ch);
     }
 
-  if(rvs) // Reverse drawing
+  if(conio_config.rvs) // Reverse drawing
     set_reverse( x,y, true );
   else
     set_reverse( x,y, false );
 
-  if(blk) // blinking drawing
+  if(conio_config.blk) // blinking drawing
     set_blinking( x,y, true );
   else
     set_blinking( x,y, false );
 
-//#ifdef  WRAP_TEXT
-   if (just_wrapped) just_wrapped = false;
-//#endif
+   if (conio_config.just_wrapped)
+     conio_config.just_wrapped = false;
 }
 
 // === Cursor based function ===================================================
@@ -476,16 +470,16 @@ void refresh_cursor(){
 }
 
 void print_cursor(){
-  chr_under_csr = slop_character(csr.x,csr.y);
-  inv_under_csr = inv_character(csr.x,csr.y);
-  blk_under_csr = blk_character(csr.x,csr.y);
+  __chr_under_csr = slop_character(csr.x,csr.y);
+  __inv_under_csr = inv_character(csr.x,csr.y);
+  __blk_under_csr = blk_character(csr.x,csr.y);
 
     if(cursor_visible==false || (cursor_blinking_mode && cursor_blinking)) return;
 
-  if(chr_under_csr == 0) // config.nupetscii &&
+  if(__chr_under_csr == 0) // config.nupetscii &&
     ptr[csr.y]->slot[csr.x] = cursor_symbol;
 
-  else if(inv_under_csr == 1)
+  else if(__inv_under_csr == 1)
     ptr[csr.y]->inv[csr.x] = 0;
 
   else
@@ -495,9 +489,9 @@ void print_cursor(){
 void clear_cursor(){
     //slip_character(chr_under_csr,csr.x,csr.y); // fix 191121
     // can't use slip, because it applies reverse
-    ptr[csr.y]->slot[csr.x] = chr_under_csr;
-    ptr[csr.y]->inv[csr.x] = inv_under_csr;
-    ptr[csr.y]->blk[csr.x] = blk_under_csr;
+    ptr[csr.y]->slot[csr.x] = __chr_under_csr;
+    ptr[csr.y]->inv[csr.x] = __inv_under_csr;
+    ptr[csr.y]->blk[csr.x] = __blk_under_csr;
 }
 
 void wrap_constrain_cursor_values(){
@@ -509,9 +503,7 @@ void wrap_constrain_cursor_values(){
     else{
       csr.y++;
     }
-//#ifdef  WRAP_TEXT
-    just_wrapped = true;
-//#endif
+    conio_config.just_wrapped = true;
   }
 }
 
@@ -536,32 +528,26 @@ void move_cursor_lf( bool reverse ){
   }
 
   // move cursor down
-  if(wrap_text){
- //#ifdef  WRAP_TEXT
-     if(!just_wrapped){
-//#endif
+  if(conio_config.wrap_text){
+    if(!conio_config.just_wrapped){
+      if(csr.y==VISIBLEROWS-1){ // visiblerows is the count, csr is zero based
+        shuffle_down();
+       }
+       else {
+        csr.y++;
+       }
+    }
+    else
+      conio_config.just_wrapped = false;
+  }
+  else{
      if(csr.y==VISIBLEROWS-1){ // visiblerows is the count, csr is zero based
-         shuffle_down();
+        shuffle_down();
      }
      else {
-         csr.y++;
+        csr.y++;
      }
-//#ifdef  WRAP_TEXT
-     }
-     else
-     just_wrapped = false;
-//#endif
- }
- else{
-     if(csr.y==VISIBLEROWS-1){ // visiblerows is the count, csr is zero based
-         shuffle_down();
-     }
-     else {
-         csr.y++;
-     }
-
- }
-
+  }
 }
 
 void move_cursor_at(int y, int x){

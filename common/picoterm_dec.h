@@ -12,5 +12,4 @@
 
 char get_dec_char( uint8_t font_id, uint8_t dec_mode, char _char ); // return the ASCII char for a given type of line drawing
 
-
 #endif

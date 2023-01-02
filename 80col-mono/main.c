@@ -50,6 +50,7 @@
 
 #include "main.h"
 #include "picoterm_core.h"
+#include "picoterm_conio.h"
 #include "../common/picoterm_config.h"
 #include "../common/picoterm_debug.h"
 #include "../common/picoterm_cursor.h"
@@ -660,11 +661,10 @@ int main(void) {
 
   // Initialise keyboard module
   keybd_init( pico_key_down, pico_key_up );
-
-  prepare_text_buffer();
+  terminal_init();
 
   video_main();       // also build the font
-	reset_terminal();
+	terminal_reset();
 	display_terminal(); // display terminal entry screen
   tusb_init(); // initialize tinyusb stack
 

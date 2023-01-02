@@ -31,8 +31,6 @@
 #include "main.h"
 #include "../common/picoterm_debug.h"
 
-// wrap text
-#define WRAP_TEXT
 
 // escape sequence state
 #define ESC_READY               0
@@ -64,26 +62,32 @@ extern char cursor_symbol;
 extern picoterm_config_t config; // Issue #13, awesome contribution of Spock64
 
 /* picoterm_conio.c */
-extern bool rvs; // Reverse Drawing
-extern bool blk; // Blinking drawing
-extern bool wrap_text; // Auto-wrapping text
-extern uint8_t dec_mode;
+extern picoterm_conio_config_t conio_config;
 
 /* picoterm_cursor.c */
 extern point_t csr;       // to remove  ?
 extern point_t saved_csr; // to remove ?
 
 char bell_state = 0;
-
 bool insert_mode = false;
 
-
+// early declaration
+void reset_escape_sequence();
 // command answers
 void response_VT52Z();
 void response_VT52ID();
 void response_VT100OK();
 void response_VT100ID();
 void response_csr();
+
+void terminal_init(){
+    reset_escape_sequence();
+    // initialize ConIO buffers and main parameters.
+    conio_init( config.graph_id ); // // ansi graphical font_id
+    make_cursor_visible(true);
+    clear_cursor();  // so we have the character
+    print_cursor();  // turns on
+}
 
 void clear_escape_parameters(){
     for(int i=0;i<MAX_ESC_PARAMS;i++){
@@ -102,7 +106,7 @@ void reset_escape_sequence(){
     parameter_sp=false;
 }
 
-void reset_terminal(){
+void terminal_reset(){
     move_cursor_home();
     saved_csr.x = 0;
     saved_csr.y = 0;
@@ -241,11 +245,11 @@ void esc_sequence_received(){
                   }
                   else if(esc_parameters[0]==7){
                       //Auto-wrap mode on (default) ESC [?7h
-                      wrap_text = true;
+                      conio_config.wrap_text = true;
                   }
                   else if(esc_parameters[0]==9){
                       //Set 24 lines per screen (default)
-                      reset_terminal(); // reset to simulate change
+                      terminal_reset(); // reset to simulate change
                   }
                   else if(esc_parameters[0]==12){
                       //Text Cursor Enable Blinking
@@ -309,11 +313,11 @@ void esc_sequence_received(){
                   }
                   else if(esc_parameters[0]==7){
                       //Auto-wrap mode off ESC [?7l
-                      wrap_text = false;
+                      conio_config.wrap_text = false;
                   }
                   else if(esc_parameters[0]==9){
                       //Set 36 lines per screen
-                      reset_terminal(); // reset to simulate change
+                      terminal_reset(); // reset to simulate change
                   }
                   else if(esc_parameters[0]==12){
                       //Text Cursor Disable Blinking
@@ -361,20 +365,20 @@ void esc_sequence_received(){
               for(int param_idx = 0; param_idx <= esc_parameter_count && param_idx <= MAX_ESC_PARAMS; param_idx++){ //allows multiple parameters
                   int param = esc_parameters[param_idx];
                   if(param==0){
-                      rvs = false; // reset / normal
-                      blk = false;
+                      conio_config.rvs = false; // reset / normal
+                      conio_config.blk = false;
                   }
                   else if(param==5){
-                      blk = true;
+                      conio_config.blk = true;
                   }
                   else if(param==7){
-                      rvs = true;
+                      conio_config.rvs = true;
                   }
                   else if(param==25){
-                      blk = false;
+                      conio_config.blk = false;
                   }
                   else if(param==27){
-                      rvs = false;
+                      conio_config.rvs = false;
                   }
                   else if(param>=30 && param<=39){ //Foreground
                   }
@@ -558,16 +562,16 @@ void esc_sequence_received(){
       case 'B':
           // display ascii chars (not letter) but stays in NupetScii font
           // to allow swtich back to DEC "single/double line" drawing.
-          dec_mode = DEC_MODE_NONE;
+          conio_config.dec_mode = DEC_MODE_NONE;
           break;
       case '0':
-          dec_mode = DEC_MODE_SINGLE_LINE;
+          conio_config.dec_mode = DEC_MODE_SINGLE_LINE;
           break;
       case '2':
-          dec_mode = DEC_MODE_DOUBLE_LINE;
+          conio_config.dec_mode = DEC_MODE_DOUBLE_LINE;
           break;
       default:
-          dec_mode = DEC_MODE_NONE;
+          conio_config.dec_mode = DEC_MODE_NONE;
           break;
       }
   }
@@ -575,16 +579,6 @@ void esc_sequence_received(){
   // our work here is done
   reset_escape_sequence();
 }
-
-
-void prepare_text_buffer(){
-    reset_escape_sequence();
-    conio_init(); // initialize ConIO buffers
-    make_cursor_visible(true);
-    clear_cursor();  // so we have the character
-    print_cursor();  // turns on
-}
-
 
 void handle_new_character(unsigned char asc){
   if(esc_state != ESC_READY){
@@ -617,19 +611,19 @@ void handle_new_character(unsigned char asc){
               // --- SINGLE CHAR escape ----------------------------------------
               // --- VT100 / VT52 ----------------------------------------------
               else if(asc=='c'){ // mode==BOTH VT52 / VT100 Commands
-                    reset_terminal();
+                    terminal_reset();
                     reset_escape_sequence();
               }
               else if (asc=='F' ){
                     config.font_id=config.graph_id; // Enter graphic charset
                     build_font( config.font_id );
-                    dec_mode = DEC_MODE_NONE; // use approriate ESC to enter DEC Line Drawing mode
+                    conio_config.dec_mode = DEC_MODE_NONE; // use approriate ESC to enter DEC Line Drawing mode
                     reset_escape_sequence();
               }
               else if (asc=='G'){
                     config.font_id=FONT_ASCII; // Enter ASCII charset
                     build_font( config.font_id );
-                    dec_mode = DEC_MODE_NONE;
+                    conio_config.dec_mode = DEC_MODE_NONE;
                     reset_escape_sequence();
               }
               // --- SINGLE CHAR escape ----------------------------------------
@@ -777,19 +771,14 @@ void handle_new_character(unsigned char asc){
           slip_character(asc-32,csr.x,csr.y);
           csr.x++;
 
-          if(!wrap_text){
-//#ifndef  WRAP_TEXT
-          // this for disabling wrapping in terminal
-          constrain_cursor_values();
-//#endif
+          if(!conio_config.wrap_text){
+            // this for disabling wrapping in terminal
+            constrain_cursor_values();
           }
           else{
-//#ifdef  WRAP_TEXT
-          // alternatively, use this code for enabling wrapping in terminal
-          wrap_constrain_cursor_values();
-//#endif
+            // alternatively, use this code for enabling wrapping in terminal
+            wrap_constrain_cursor_values();
           }
-
       }
       else if(asc==0x1B){
           // --- Begin of ESCAPE SEQUENCE ---

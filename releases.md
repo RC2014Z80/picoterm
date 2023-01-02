@@ -27,6 +27,7 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
  * extract console features to picoterm_conio.c
  * extract displayed screeb to picoterm_screen.c
  * passed full test-suite
+ * renamed picoterm_core.c (main processing file)
 * Decoupling picoterm_screen.c
  * Store the PICOTERM_LOGO into picoterm_logo.c
  * allow replacement for custom project (Please keeps the PicoTerm credit)

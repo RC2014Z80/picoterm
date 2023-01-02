@@ -5,7 +5,7 @@
 #include "picoterm_dec.h"
 #include "picoterm_stddef.h"
 
-uint8_t dec_mode = DEC_MODE_NONE; // single or double line drawing
+//uint8_t dec_mode = DEC_MODE_NONE; // single or double line drawing
 
 
 char get_dec_char( uint8_t font_id, uint8_t dec_mode, char _char ){
