@@ -13,6 +13,7 @@
 #include "picoterm_conio.h"
 #include "main.h" // UART_ID
 #include "hardware/watchdog.h"
+#include <stdio.h>
 
 
 /* picoterm_config.c */
@@ -22,9 +23,13 @@ extern picoterm_config_t config; // Issue #13, awesome contribution of Spock64
 extern point_t csr;
 extern char cursor_symbol;
 
+/* picoterm_logo.c */
+extern const int LOGO_LINES;
+extern const char * PICOTERM_LOGO[];
+
 /* ----------------------------------------------------------------------------
    - Toolbox
-	 ---------------------------------------------------------------------------*/
+   ---------------------------------------------------------------------------*/
 
 char handle_default_input(){
   // Make your own specialized menu input handler (if needed, see handle_menu_input)
@@ -35,7 +40,7 @@ char handle_default_input(){
 
 /* --- CHARSET ----------------------------------------------------------------
    -
-	 ---------------------------------------------------------------------------*/
+   ---------------------------------------------------------------------------*/
 
 void display_charset(){
   char msg[80];
@@ -74,7 +79,7 @@ void display_charset(){
 
 /* --- CONFIG ----------------------------------------------------------------
    -
-	 ---------------------------------------------------------------------------*/
+   ---------------------------------------------------------------------------*/
 
 void display_config(){
     char msg[80];
@@ -265,7 +270,7 @@ char handle_config_input(){
 
 /* --- HELP -------------------------------------------------------------------
    -
-	 ---------------------------------------------------------------------------*/
+   ---------------------------------------------------------------------------*/
 
 void display_help(){
   char msg[80];
@@ -291,7 +296,8 @@ void display_help(){
 
 /* --- TERMINAL ---------------------------------------------------------------
    -
-	 ---------------------------------------------------------------------------*/
+   ---------------------------------------------------------------------------*/
+#define n_array (sizeof (logo) / sizeof (const char *))
 
 void display_terminal(){
     char msg[80];
@@ -299,22 +305,10 @@ void display_terminal(){
     clrscr();
     csr.x = 0; csr.y = 0;
 
-    print_string("_/_/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/     _/_/  _/\r\n");
-    print_string("_/_/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/_/_/_/     _/_/     _/_/  _/\r\n");
-    print_string("_/_/      _/_/ _/_/      _/_/ _/_/      _/_/ _/_/    _/_/_/ _/_/_/     _/_/  _/\r\n");
-    print_string("_/_/      _/_/ _/_/      _/_/ _/_/      _/_/ _/_/    _/_/_/ _/_/_/     _/_/  _/\r\n");
-    print_string("_/_/      _/_/ _/_/                   _/_/   _/_/  _/  _/_/   _/_/     _/_/  _/\r\n");
-    print_string("_/_/      _/_/ _/_/                   _/_/   _/_/  _/  _/_/   _/_/   _/_/    _/\r\n");
-    print_string("_/_/_/_/_/_/   _/_/             _/_/_/_/     _/_/  _/  _/_/   _/_/   _/_/    _/\r\n");
-    print_string("_/_/_/_/_/_/   _/_/             _/_/_/_/     _/_/  _/  _/_/   _/_/   _/_/    _/\r\n");
-    print_string("_/_/      _/_/ _/_/           _/_/           _/_/  _/  _/_/   _/_/   _/_/_/_/_/\r\n");
-    print_string("_/_/      _/_/ _/_/           _/_/           _/_/  _/  _/_/   _/_/   _/_/_/_/_/\r\n");
-    print_string("_/_/      _/_/ _/_/      _/_/ _/_/      _/_/ _/_/_/    _/_/   _/_/         _/_/\r\n");
-    print_string("_/_/      _/_/ _/_/      _/_/ _/_/      _/_/ _/_/_/    _/_/   _/_/         _/_/\r\n");
-    print_string("_/_/      _/_/   _/_/_/_/_/   _/_/_/_/_/_/_/   _/_/_/_/_/ _/_/_/_/_/_/     _/_/\r\n");
-    print_string("_/_/      _/_/   _/_/_/_/_/   _/_/_/_/_/_/_/   _/_/_/_/_/ _/_/_/_/_/_/     _/_/\r\n");
-    print_string("    S.Dixon & D.Meurisse                               Help : CTRL+SHIFT+H\r\n");
-    sprintf(msg, "\r\nTinyUSB=%d.%d.%d, ", TUSB_VERSION_MAJOR, TUSB_VERSION_MINOR,TUSB_VERSION_REVISION);
+    for( int i=0; i < LOGO_LINES; i++ ){
+      print_string( (char *)PICOTERM_LOGO[i] );
+    }
+    sprintf(msg, "TinyUSB=%d.%d.%d, ", TUSB_VERSION_MAJOR, TUSB_VERSION_MINOR,TUSB_VERSION_REVISION);
     print_string(msg);
     sprintf(msg, "Keymap=%s rev %d, ", KEYMAP, KEYMAP_REV );
     print_string(msg);

@@ -10,7 +10,6 @@
 
 char handle_default_input();
 
-
 void display_charset();
 
 void display_config();

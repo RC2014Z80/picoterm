@@ -14,7 +14,7 @@ message("PicoTerm 80Col version = ${CMAKE_PROJECT_VERSION}")
 #    Not included in source: font6.c font10.c lcd.c font8.c
 list( APPEND sources picoterm_conio.c )
 list( APPEND sources main.c picoterm.c cp437.c nupetscii.c  )
-list( APPEND sources picoterm_screen.c )
+list( APPEND sources picoterm_logo.c picoterm_screen.c )
 list( APPEND sources ../common/picoterm_config.c )
 list( APPEND sources ../common/picoterm_debug.c )
 list( APPEND sources ../common/picoterm_stddef.c )
