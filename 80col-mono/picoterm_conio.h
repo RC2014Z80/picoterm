@@ -22,9 +22,9 @@ typedef struct picoterm_conio_config {
   bool blk; // draw in blinking
   bool just_wrapped;
   bool wrap_text;   // terminal configured to warp_text around
-	uint8_t dec_mode; // current DEC mode (ligne drawing single/double/none)
-	uint8_t ansi_font_id; // ID of the ANSI Graphical font to use
-	cursor_term_t cursor; // full definition of a terminal cursor
+  uint8_t dec_mode; // current DEC mode (ligne drawing single/double/none)
+  uint8_t ansi_font_id; // ID of the ANSI Graphical font to use
+  cursor_term_t cursor; // full definition of a terminal cursor
 } picoterm_conio_config_t;
 
 typedef struct row_of_text {

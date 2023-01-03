@@ -20,9 +20,9 @@
 extern picoterm_config_t config; // required to read config.font_id
 
 picoterm_conio_config_t conio_config  = { .rvs = false, .blk = false, .just_wrapped = false,
-	  .wrap_text = true, .dec_mode = DEC_MODE_NONE, .cursor.pos.x = 0, .cursor.pos.y = 0,
-		.cursor.state.visible = true, .cursor.state.blink_state = false,
-	  .cursor.state.blinking_mode = true, .cursor.symbol = 143 };
+    .wrap_text = true, .dec_mode = DEC_MODE_NONE, .cursor.pos.x = 0, .cursor.pos.y = 0,
+    .cursor.state.visible = true, .cursor.state.blink_state = false,
+    .cursor.state.blinking_mode = true, .cursor.symbol = 143 };
 
 array_of_row_text_pointer ptr;           // primary screen content
 array_of_row_text_pointer secondary_ptr; // secondary screen content
@@ -46,19 +46,19 @@ void conio_init( uint8_t ansi_font_id ){
       if(newRow==NULL) exit(1);
       secondary_ptr[c] = newRow;
   }
-	conio_config.ansi_font_id = ansi_font_id;
-	cursor_term_init( &(conio_config.cursor) );
+  conio_config.ansi_font_id = ansi_font_id;
+  cursor_term_init( &(conio_config.cursor) );
 }
 
 void conio_reset( char default_cursor_symbol ){
   // Reset the terminal
   conio_config.rvs = false;
   conio_config.blk = false;
-	conio_config.wrap_text = true;
-	conio_config.just_wrapped = false;
-	conio_config.dec_mode = DEC_MODE_NONE; // single/double lines
-	// initialized @ init()
-	// conio_config.ansi_font_id = FONT_NUPETSCII; // selected font_id for graphical operation
+  conio_config.wrap_text = true;
+  conio_config.just_wrapped = false;
+  conio_config.dec_mode = DEC_MODE_NONE; // single/double lines
+  // initialized @ init()
+  // conio_config.ansi_font_id = FONT_NUPETSCII; // selected font_id for graphical operation
 
   __chr_under_csr = 0;
   __inv_under_csr = 0;
@@ -596,6 +596,6 @@ bool cursor_blink_state() {
   return conio_config.cursor.state.blink_state;
 }
 void set_cursor_blink_state( bool state ) {
-	// is the Blinking cursor should currently be visible or not visible
+  // is the Blinking cursor should currently be visible or not visible
   conio_config.cursor.state.blink_state = state;
 }

@@ -199,14 +199,14 @@ void select_graphic_font( uint8_t font_id ){
   /* Assign GRAPHICAL font (nupetscii, cp437) by reassigning the `font` pointer */
   if(font_id == FONT_ASCII) // ignore for ANSI
     return;
-	if(font_id == FONT_NUPETSCII){
-		font = &nupetscii_mono8;
-		return;
-	}
-	if(font_id == FONT_CP437){
-		font = &cp437_mono8;
-		return;
-	}
+  if(font_id == FONT_NUPETSCII){
+    font = &nupetscii_mono8;
+    return;
+  }
+  if(font_id == FONT_CP437){
+    font = &cp437_mono8;
+    return;
+  }
 }
 
 void build_font( uint8_t font_id ){
@@ -348,7 +348,7 @@ void build_font( uint8_t font_id ){
 
 int video_main(void) {
     mutex_init(&frame_logic_mutex);
-		select_graphic_font( config.font_id );
+    select_graphic_font( config.font_id );
     build_font( config.font_id );
     sem_init(&video_setup_complete, 0, 1);
 
@@ -572,7 +572,7 @@ int main(void) {
   gpio_init(USB_POWER_GPIO); // GPIO 26
   gpio_set_dir(USB_POWER_GPIO, GPIO_OUT);
   gpio_put(USB_POWER_GPIO,false);
-	start_time = board_millis();
+  start_time = board_millis();
 
   gpio_init(BUZZER_GPIO);
   gpio_set_dir(BUZZER_GPIO, GPIO_OUT);
@@ -664,8 +664,8 @@ int main(void) {
   terminal_init();
 
   video_main();       // also build the font
-	terminal_reset();
-	display_terminal(); // display terminal entry screen
+  terminal_reset();
+  display_terminal(); // display terminal entry screen
   tusb_init(); // initialize tinyusb stack
 
   char _ch = 0;
@@ -761,12 +761,12 @@ void csr_blinking_task() {
   // Blink every interval ms
   if ( board_millis() - start_ms_csr > interval_ms_csr) {
 
-	start_ms_csr += interval_ms_csr;
+  start_ms_csr += interval_ms_csr;
 
-	is_blinking = !is_blinking;
-	set_cursor_blink_state( 1 - cursor_blink_state() );
+  is_blinking = !is_blinking;
+  set_cursor_blink_state( 1 - cursor_blink_state() );
 
-	refresh_cursor();
+  refresh_cursor();
   }
 }
 

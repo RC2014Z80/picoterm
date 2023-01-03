@@ -26,16 +26,16 @@
 #define CURSOR_TYPE_BAR_STEADY 6
 
 typedef struct cursor_state {
-	bool visible;       // should the cursor be visible on the terminal ?
-	bool blink_state;   // A blinking cursor is either in visible or hidden state
-	bool blinking_mode; // do we want the cursor to be BLINKING or STEADY/SOLID
-	//char symbol;        // index in charset for the cursor
+  bool visible;       // should the cursor be visible on the terminal ?
+  bool blink_state;   // A blinking cursor is either in visible or hidden state
+  bool blinking_mode; // do we want the cursor to be BLINKING or STEADY/SOLID
+  //char symbol;        // index in charset for the cursor
 } cursor_state_t;
 
 typedef struct cursor_term {
-	point_t pos; // Cursor position
-	char symbol; // index in charset for the cursor
-	cursor_state_t state; // current state of the cursor
+  point_t pos; // Cursor position
+  char symbol; // index in charset for the cursor
+  cursor_state_t state; // current state of the cursor
 } cursor_term_t;
 
 void cursor_state_init( cursor_state_t *this );

@@ -46,7 +46,7 @@ void display_charset(){
   char _c;
   // reset_escape_sequence(); LOOKS not usefull from screen!
   clrscr();
-	move_cursor_home(); //csr.x = 0; csr.y = 0;
+  move_cursor_home(); //csr.x = 0; csr.y = 0;
 
   __print_string( "\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 Current Charset \x0A6\x0A6\r\n" , config.font_id!=FONT_NUPETSCII ); // strip Nupetscii when not activated
   print_string( "     0 1 2 3 4 5 6 7 8 9 A B C D E F\r\n");
