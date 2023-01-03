@@ -17,3 +17,7 @@ void debug_print( const char *s ){
 	uart_tx_program_puts(pio, sm, s );
 	uart_tx_program_puts(pio, sm, "\r\n");
 }
+
+void debug_write( const char *s ){
+	uart_tx_program_puts(pio, sm, s );
+}
