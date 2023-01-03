@@ -9,6 +9,8 @@
 #define _PICOTERM_CONIO_H
 
 #include <stdint.h>
+#include "../common/picoterm_stddef.h"
+#include "../common/picoterm_cursor.h"
 
 #define COLUMNS     80
 #define ROWS        34
@@ -22,6 +24,8 @@ typedef struct picoterm_conio_config {
   bool wrap_text;   // terminal configured to warp_text around
 	uint8_t dec_mode; // current DEC mode (ligne drawing single/double/none)
 	uint8_t ansi_font_id; // ID of the ANSI Graphical font to use
+	point_t cursor; // terminal cursor
+	cursor_state_t cursor_state; // blinking, visible, etc
 } picoterm_conio_config_t;
 
 typedef struct row_of_text {
@@ -87,5 +91,9 @@ void move_cursor_forward(int n);
 void move_cursor_backward(int n);
 void constrain_cursor_values();
 void wrap_constrain_cursor_values();
+
+void make_cursor_visible(bool v);
+bool get_csr_blink_state();
+void set_csr_blink_state(bool state);
 
 #endif

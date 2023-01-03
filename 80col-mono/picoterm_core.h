@@ -39,7 +39,6 @@ void refresh_cursor();
 void clear_cursor();
 void print_cursor();
 void handle_new_character(unsigned char ch);
-// ?????  bool key_ready(); // in keybd.c
 unsigned char read_key_from_buffer(); // in main.c
 
 // for debugging purposes

@@ -23,12 +23,19 @@
 #define CURSOR_TYPE_BAR_BLINK 5
 #define CURSOR_TYPE_BAR_STEADY 6
 
+typedef struct cursor_state {
+	bool visible;       // should the cursor be visible on the terminal
+	bool blinking;      // Is the cursor do blink now ? (see csr_)
+	bool blinking_mode; // do we want the cursor to be BLINKING or STEADY
+	char symbol;        // index in charset for the cursor
+} cursor_state_t;
+
+void cursor_state_init( cursor_state_t *this );
 char get_cursor_char( uint8_t font_id, uint8_t cursor_type ); // return the ASCII char for a given type cursor
 bool get_cursor_blinking( uint8_t font_id, uint8_t cursor_type ); // return true/false for a given type cursor
 
-void make_cursor_visible(bool v);
-
-bool get_csr_blink_state();
-void set_csr_blink_state(bool state);
+// Moved! void make_cursor_visible(bool v);
+// Moved! bool get_csr_blink_state();
+// Moved! void set_csr_blink_state(bool state);
 
 #endif

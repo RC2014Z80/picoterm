@@ -7,7 +7,6 @@
 //#include "picoterm_core.h"
 #include "../common/pmhid.h" // keyboard definitions
 #include "../common/picoterm_config.h"
-#include "../common/picoterm_cursor.h"
 #include "../common/picoterm_stddef.h"
 #include "picoterm_core.h" // handle_new_character
 #include "tusb_option.h"
@@ -20,9 +19,8 @@
 /* picoterm_config.c */
 extern picoterm_config_t config; // Issue #13, awesome contribution of Spock64
 
-/* picoterm_cursor.c */
-extern point_t csr;
-extern char cursor_symbol;
+/* picoterm_conio.c */
+extern picoterm_conio_config_t conio_config;
 
 /* picoterm_logo.c */
 extern const int LOGO_LINES;
@@ -48,7 +46,7 @@ void display_charset(){
   char _c;
   // reset_escape_sequence(); LOOKS not usefull from screen!
   clrscr();
-  csr.x = 0; csr.y = 0;
+	move_cursor_home(); //csr.x = 0; csr.y = 0;
 
   __print_string( "\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 Current Charset \x0A6\x0A6\r\n" , config.font_id!=FONT_NUPETSCII ); // strip Nupetscii when not activated
   print_string( "     0 1 2 3 4 5 6 7 8 9 A B C D E F\r\n");
@@ -86,7 +84,7 @@ void display_config(){
     char msg[80];
     // reset_escape_sequence(); LOOKS not usefull from screen!
     clrscr();
-    csr.x = 0; csr.y = 0;
+    move_cursor_home();//csr.x = 0; csr.y = 0;
 
     __print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Menu \x0A6\x0A6\r\n" , config.font_id!=FONT_NUPETSCII ); // strip graphical when not activated
     __print_string("\x0E2\x0E1 Terminal Colors \x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E4\r\n", config.font_id!=FONT_NUPETSCII );
@@ -243,7 +241,7 @@ char handle_config_input(){
     }
     select_graphic_font( config.font_id );
     build_font(config.font_id);
-    cursor_symbol = get_cursor_char( config.font_id, CURSOR_TYPE_DEFAULT ) - 0x20;
+    conio_config.cursor_state.symbol = get_cursor_char( config.font_id, CURSOR_TYPE_DEFAULT ) - 0x20;
     display_config();
   }
   // Select the Graphical font to be used
@@ -258,8 +256,9 @@ char handle_config_input(){
     }
     if( config.font_id != FONT_ASCII ) {
       config.font_id = config.graph_id; // set the Graphic font to font_id
+      conio_config.ansi_font_id = config.font_id; // Terminal should be aware of the selected graphical font
       select_graphic_font( config.font_id );
-      cursor_symbol = get_cursor_char( config.font_id, CURSOR_TYPE_DEFAULT ) - 0x20;
+      conio_config.cursor_state.symbol = get_cursor_char( config.font_id, CURSOR_TYPE_DEFAULT ) - 0x20;
       build_font(config.font_id);
     }
     display_config();
@@ -278,7 +277,7 @@ void display_help(){
   char _c;
   // reset_escape_sequence(); LOOKS not usefull from screen!
   clrscr();
-  csr.x = 0; csr.y = 0;
+  move_cursor_home(); // csr.x = 0; csr.y = 0;
   __print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Help \x0A6\x0A6\r\n", config.font_id!=FONT_NUPETSCII );
   __print_string("\x0B0\x0C3 Keyboard Shortcut \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n", config.font_id!=FONT_NUPETSCII );
   __print_string("\x0C2 \x083 Shift+Ctrl+H : Help screen                   \x0C2\r\n", config.font_id!=FONT_NUPETSCII ); // strip Nupetscii when not activated
@@ -304,7 +303,7 @@ void display_terminal(){
     char msg[80];
 
     clrscr();
-    csr.x = 0; csr.y = 0;
+    move_cursor_home(); // csr.x = 0; csr.y = 0;
 
     for( int i=0; i < LOGO_LINES; i++ ){
       print_string( (char *)PICOTERM_LOGO[i] );
