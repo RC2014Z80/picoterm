@@ -132,7 +132,7 @@ void print_ascii_value(unsigned char asc){
     }
     handle_new_character(0x30+remainder);
     handle_new_character(' ');
-    if(conio_config.cursor.x>COLUMNS-5){
+    if(conio_config.cursor.pos.x>COLUMNS-5){
         handle_new_character(CR);
         handle_new_character(LF);
     }
@@ -186,28 +186,28 @@ void esc_sequence_received(){
               n = esc_parameters[0];
               if(n==0)n=1;
               // these are ONE based
-              move_cursor_at( conio_config.cursor.y+n+1, 1); // y, x
+              move_cursor_at( conio_config.cursor.pos.y+n+1, 1); // y, x
               break;
 
           case 'F':  // ESC[#F  moves cursor to beginning of previous line, # lines up
               n = esc_parameters[0];
               if(n==0)n=1;
               // these are ONE based
-              move_cursor_at( conio_config.cursor.y - n+1, 1);
+              move_cursor_at( conio_config.cursor.pos.y - n+1, 1);
               break;
 
           case 'd': // ESC[#d  moves cursor to an absolute # line
               n = esc_parameters[0];
               n--;
               // these are ONE based
-              move_cursor_at( n+1, conio_config.cursor.x+1 );
+              move_cursor_at( n+1, conio_config.cursor.pos.x+1 );
               break;
 
           case 'G': // ESC[#G  moves cursor to column #
               n = esc_parameters[0];
               n--;
               // there are ONE based
-              move_cursor_at( conio_config.cursor.y+1, n+1 );
+              move_cursor_at( conio_config.cursor.pos.y+1, n+1 );
               break;
 
           case 'h':
@@ -246,7 +246,7 @@ void esc_sequence_received(){
                   }
                   else if(esc_parameters[0]==12){
                       //Text Cursor Enable Blinking
-                      conio_config.cursor_state.blinking_mode = true;
+                      conio_config.cursor.state.blinking_mode = true;
                   }
                   else if(esc_parameters[0]==47 || esc_parameters[0]==1047){
                       //save screen
@@ -254,13 +254,13 @@ void esc_sequence_received(){
                   }
                   else if(esc_parameters[0]==1048){
                       //save cursor
-                      saved_csr.x = conio_config.cursor.x;
-                      saved_csr.y = conio_config.cursor.y;
+                      saved_csr.x = conio_config.cursor.pos.x;
+                      saved_csr.y = conio_config.cursor.pos.y;
                   }
                   else if(esc_parameters[0]==1049){
                       //save cursor and save screen
-                      saved_csr.x = conio_config.cursor.x;
-                      saved_csr.y = conio_config.cursor.y;
+                      saved_csr.x = conio_config.cursor.pos.x;
+                      saved_csr.y = conio_config.cursor.pos.y;
                       copy_main_to_secondary_screen();
                   }
               }
@@ -314,7 +314,7 @@ void esc_sequence_received(){
                   }
                   else if(esc_parameters[0]==12){
                       //Text Cursor Disable Blinking
-                      conio_config.cursor_state.blinking_mode = false;
+                      conio_config.cursor.state.blinking_mode = false;
                   }
                   else if(esc_parameters[0]==47 || esc_parameters[0]==1047){
                       //restore screen
@@ -327,8 +327,8 @@ void esc_sequence_received(){
                   else if(esc_parameters[0]==1049){
                       //restore screen and restore cursor
                       copy_secondary_to_main_screen();
-                      conio_config.cursor.x = saved_csr.x;
-                      conio_config.cursor.y = saved_csr.y;
+                      conio_config.cursor.pos.x = saved_csr.x;
+                      conio_config.cursor.pos.y = saved_csr.y;
                   }
               }
               else{
@@ -382,14 +382,14 @@ void esc_sequence_received(){
 
           case 's':
               // save cursor position
-              saved_csr.x = conio_config.cursor.x;
-              saved_csr.y = conio_config.cursor.y;
+              saved_csr.x = conio_config.cursor.pos.x;
+              saved_csr.y = conio_config.cursor.pos.y;
               break;
 
           case 'u':
               // move to saved cursor position
-              conio_config.cursor.x = saved_csr.x;
-              conio_config.cursor.y = saved_csr.y;
+              conio_config.cursor.pos.x = saved_csr.x;
+              conio_config.cursor.pos.y = saved_csr.y;
               break;
 
           case 'J':
@@ -410,7 +410,7 @@ void esc_sequence_received(){
                 case 2: // clear entire screen
                 case 3:
                   clrscr();
-                  conio_config.cursor.x=0; conio_config.cursor.y=0;
+                  conio_config.cursor.pos.x=0; conio_config.cursor.pos.y=0;
                   break;
               }
               break;
@@ -508,8 +508,8 @@ void esc_sequence_received(){
                   //ESC [ 4 SP q  Steady Underline  Steady underline cursor shape
                   //ESC [ 5 SP q  Blinking Bar  Blinking bar cursor shape
                   //ESC [ 6 SP q  Steady Bar  Steady bar cursor shape
-                  conio_config.cursor_state.symbol = get_cursor_char( config.font_id, esc_parameters[0] ) - 0x20; // parameter correspond to picoterm_cursor.h::CURSOR_TYPE_xxx
-                  conio_config.cursor_state.blinking_mode = get_cursor_blinking( config.font_id, esc_parameters[0] );
+                  conio_config.cursor.symbol = get_cursor_char( config.font_id, esc_parameters[0] ) - 0x20; // parameter correspond to picoterm_cursor.h::CURSOR_TYPE_xxx
+                  conio_config.cursor.state.blinking_mode = get_cursor_blinking( config.font_id, esc_parameters[0] );
               }
               break; // case q
 
@@ -625,14 +625,14 @@ void handle_new_character(unsigned char asc){
 
                 if (asc=='7' ){
                     // save cursor position
-                    saved_csr.x = conio_config.cursor.x;
-                    saved_csr.y = conio_config.cursor.y;
+                    saved_csr.x = conio_config.cursor.pos.x;
+                    saved_csr.y = conio_config.cursor.pos.y;
                     reset_escape_sequence();
                 }
                 else if (asc=='8' ){
                     // move to saved cursor position
-                    conio_config.cursor.x = saved_csr.x;
-                    conio_config.cursor.y = saved_csr.y;
+                    conio_config.cursor.pos.x = saved_csr.x;
+                    conio_config.cursor.pos.y = saved_csr.y;
                     reset_escape_sequence();
                 }
                 else if (asc=='D' ){
@@ -756,8 +756,8 @@ void handle_new_character(unsigned char asc){
           if(insert_mode) insert_chars(1);
 
           // --- Strict ASCII <0x7f or Extended NuPetSCII <= 0xFF ---
-          slip_character(asc-32,conio_config.cursor.x,conio_config.cursor.y);
-          conio_config.cursor.x++;
+          slip_character(asc-32,conio_config.cursor.pos.x,conio_config.cursor.pos.y);
+          conio_config.cursor.pos.x++;
 
           if(!conio_config.wrap_text){
             // this for disabling wrapping in terminal
@@ -780,8 +780,8 @@ void handle_new_character(unsigned char asc){
               break;
 
               case BSP:
-                if( conio_config.cursor.x>0 ){
-                  conio_config.cursor.x--;
+                if( conio_config.cursor.pos.x>0 ){
+                  conio_config.cursor.pos.x--;
                 }
                 break;
 
@@ -791,19 +791,19 @@ void handle_new_character(unsigned char asc){
                 break;
 
               case CR:
-                conio_config.cursor.x=0;
+                conio_config.cursor.pos.x=0;
                 break;
 
               case FF:
                 clrscr();
-                conio_config.cursor.x=0; conio_config.cursor.y=0;
+                conio_config.cursor.pos.x=0; conio_config.cursor.pos.y=0;
                 break;
           } // switch(asc)
       } // else
   } // eof Regular character
 
-  if(conio_config.cursor_state.blink_state)
-    conio_config.cursor_state.blink_state = false;
+  if(conio_config.cursor.state.blink_state)
+    conio_config.cursor.state.blink_state = false;
 }
 
 
@@ -836,6 +836,6 @@ void response_VT100ID() {
 
 void response_csr() { // cursor position
     char s[20];
-    sprintf(s, "\033[%d;%dR", conio_config.cursor.y+1, conio_config.cursor.x+1);
+    sprintf(s, "\033[%d;%dR", conio_config.cursor.pos.y+1, conio_config.cursor.pos.x+1);
     __send_string(s);
 }

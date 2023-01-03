@@ -241,7 +241,7 @@ char handle_config_input(){
     }
     select_graphic_font( config.font_id );
     build_font(config.font_id);
-    conio_config.cursor_state.symbol = get_cursor_char( config.font_id, CURSOR_TYPE_DEFAULT ) - 0x20;
+    conio_config.cursor.symbol = get_cursor_char( config.font_id, CURSOR_TYPE_DEFAULT ) - 0x20;
     display_config();
   }
   // Select the Graphical font to be used
@@ -258,7 +258,7 @@ char handle_config_input(){
       config.font_id = config.graph_id; // set the Graphic font to font_id
       conio_config.ansi_font_id = config.font_id; // Terminal should be aware of the selected graphical font
       select_graphic_font( config.font_id );
-      conio_config.cursor_state.symbol = get_cursor_char( config.font_id, CURSOR_TYPE_DEFAULT ) - 0x20;
+      conio_config.cursor.symbol = get_cursor_char( config.font_id, CURSOR_TYPE_DEFAULT ) - 0x20;
       build_font(config.font_id);
     }
     display_config();

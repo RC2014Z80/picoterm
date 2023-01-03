@@ -11,7 +11,14 @@ void cursor_state_init( cursor_state_t *this ){
 	this->visible = true;
 	this->blink_state = false;
 	this->blinking_mode = true;
+	//this->symbol = 143;
+}
+
+void cursor_term_init( cursor_term_t *this ){
+	cursor_state_init( &(this->state) );
 	this->symbol = 143;
+	this->pos.x = 0;
+	this->pos.y = 0;
 }
 
 char get_cursor_char( uint8_t font_id, uint8_t cursor_type ){

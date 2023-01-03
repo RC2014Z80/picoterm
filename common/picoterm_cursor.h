@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "../common/picoterm_stddef.h"
+
 /* ==========================================================================
             Manage the cursor Appearance/Position for the PicoTerm
    ========================================================================== */
@@ -27,10 +29,17 @@ typedef struct cursor_state {
 	bool visible;       // should the cursor be visible on the terminal ?
 	bool blink_state;   // A blinking cursor is either in visible or hidden state
 	bool blinking_mode; // do we want the cursor to be BLINKING or STEADY/SOLID
-	char symbol;        // index in charset for the cursor
+	//char symbol;        // index in charset for the cursor
 } cursor_state_t;
 
+typedef struct cursor_term {
+	point_t pos; // Cursor position
+	char symbol; // index in charset for the cursor
+	cursor_state_t state; // current state of the cursor
+} cursor_term_t;
+
 void cursor_state_init( cursor_state_t *this );
+void cursor_term_init( cursor_term_t *this );
 char get_cursor_char( uint8_t font_id, uint8_t cursor_type ); // return the ASCII char for a given type cursor
 bool get_cursor_blinking( uint8_t font_id, uint8_t cursor_type ); // return true/false for a given type cursor
 

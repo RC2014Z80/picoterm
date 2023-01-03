@@ -28,6 +28,9 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
  * extract displayed screeb to picoterm_screen.c
  * passed full test-suite
  * renamed picoterm_core.c (main processing file)
+* picoterm_conio.c
+ * conio_config -> group all the console parameters that before was individual parameters
+ * conio_config.cursor -> contains pos.x, pos.y, state (for visibility,blink state,...), symbol (for cursor symbol)
 * Decoupling picoterm_screen.c
  * Store the PICOTERM_LOGO into picoterm_logo.c
  * allow replacement for custom project (Please keeps the PicoTerm credit)

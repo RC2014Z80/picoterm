@@ -20,9 +20,9 @@
 extern picoterm_config_t config; // required to read config.font_id
 
 picoterm_conio_config_t conio_config  = { .rvs = false, .blk = false, .just_wrapped = false,
-	  .wrap_text = true, .dec_mode = DEC_MODE_NONE, .cursor.x = 0, .cursor.y = 0,
-		.cursor_state.visible = true, .cursor_state.blink_state = false,
-	  .cursor_state.blinking_mode = true, .cursor_state.symbol = 143 };
+	  .wrap_text = true, .dec_mode = DEC_MODE_NONE, .cursor.pos.x = 0, .cursor.pos.y = 0,
+		.cursor.state.visible = true, .cursor.state.blink_state = false,
+	  .cursor.state.blinking_mode = true, .cursor.symbol = 143 };
 
 array_of_row_text_pointer ptr;           // primary screen content
 array_of_row_text_pointer secondary_ptr; // secondary screen content
@@ -47,6 +47,7 @@ void conio_init( uint8_t ansi_font_id ){
       secondary_ptr[c] = newRow;
   }
 	conio_config.ansi_font_id = ansi_font_id;
+	cursor_term_init( &(conio_config.cursor) );
 }
 
 void conio_reset( char default_cursor_symbol ){
@@ -63,10 +64,10 @@ void conio_reset( char default_cursor_symbol ){
   __inv_under_csr = 0;
   __blk_under_csr = 0;
 
-  conio_config.cursor_state.visible = true;
-  conio_config.cursor_state.blink_state = false; // blinking cursor is in hidden state
-  conio_config.cursor_state.blinking_mode = true;
-  conio_config.cursor_state.symbol = default_cursor_symbol;
+  conio_config.cursor.state.visible = true;
+  conio_config.cursor.state.blink_state = false; // blinking cursor is in hidden state
+  conio_config.cursor.state.blinking_mode = true;
+  conio_config.cursor.symbol = default_cursor_symbol;
 
   clrscr();
   clear_secondary_screen();
@@ -132,8 +133,8 @@ char read_key(){
   // read a key from input buffer (the keyboard or serial line). This is used
   // for menu handling. Return 0 if no char available
   if( key_ready()==false ) return 0;
-  if(conio_config.cursor_state.blink_state)
-    conio_config.cursor_state.blink_state = false; // hide cursor
+  if(conio_config.cursor.state.blink_state)
+    conio_config.cursor.state.blink_state = false; // hide cursor
   return read_key_from_buffer();
 }
 
@@ -206,7 +207,7 @@ void copy_main_to_secondary_screen(){
 
 void clear_screen_from_cursor(){
     clear_line_from_cursor();
-    for(int r=conio_config.cursor.y+1;r<ROWS;r++){
+    for(int r=conio_config.cursor.pos.y+1;r<ROWS;r++){
         for(int c=0;c<COLUMNS;c++){
             slip_character(0,c,r);    // todo: should use the new method in clear_entire_screen
         }
@@ -215,7 +216,7 @@ void clear_screen_from_cursor(){
 
 void clear_screen_to_cursor(){
     clear_line_to_cursor();
-    for(int r=0;r<conio_config.cursor.y;r++){
+    for(int r=0;r<conio_config.cursor.pos.y;r++){
         for(int c=0;c<COLUMNS;c++){
             slip_character(0,c,r);  // todo: should use the new method in clear_entire_screen
         }
@@ -272,24 +273,24 @@ void shuffle_up(){
 void insert_line(){
     struct row_of_text *temphandle = ptr[ROWS-1];
 
-    for(int r=ROWS-1;r>conio_config.cursor.y;r--){
+    for(int r=ROWS-1;r>conio_config.cursor.pos.y;r--){
         ptr[r] = ptr[r-1];
     }
 
-    ptr[conio_config.cursor.y] = temphandle;
+    ptr[conio_config.cursor.pos.y] = temphandle;
 
     // recycled row needs blanking
     for(int i=0;i<COLUMNS;i++){
-        ptr[conio_config.cursor.y]->slot[i] = 0;
-        ptr[conio_config.cursor.y]->inv[i] = 0;
-        ptr[conio_config.cursor.y]->blk[i] = 0;
+        ptr[conio_config.cursor.pos.y]->slot[i] = 0;
+        ptr[conio_config.cursor.pos.y]->inv[i] = 0;
+        ptr[conio_config.cursor.pos.y]->blk[i] = 0;
     }
 }
 
 void delete_line(){
-    struct row_of_text *temphandle = ptr[conio_config.cursor.y];
+    struct row_of_text *temphandle = ptr[conio_config.cursor.pos.y];
 
-    for(int r=conio_config.cursor.y;r<ROWS-1;r++){
+    for(int r=conio_config.cursor.pos.y;r<ROWS-1;r++){
         ptr[r]=ptr[r+1];
     }
 
@@ -319,35 +320,35 @@ void delete_lines(int n){
 
 void clear_line_from_cursor(){
     // new faster method
-    void *sl = &ptr[conio_config.cursor.y]->slot[conio_config.cursor.x];
-    memset(sl, 0, COLUMNS-conio_config.cursor.x);
+    void *sl = &ptr[conio_config.cursor.pos.y]->slot[conio_config.cursor.pos.x];
+    memset(sl, 0, COLUMNS-conio_config.cursor.pos.x);
 
-    sl = &ptr[conio_config.cursor.y]->inv[conio_config.cursor.x];
-    memset(sl, 0, COLUMNS-conio_config.cursor.x);
+    sl = &ptr[conio_config.cursor.pos.y]->inv[conio_config.cursor.pos.x];
+    memset(sl, 0, COLUMNS-conio_config.cursor.pos.x);
 
-    sl = &ptr[conio_config.cursor.y]->blk[conio_config.cursor.x];
-    memset(sl, 0, COLUMNS-conio_config.cursor.x);
+    sl = &ptr[conio_config.cursor.pos.y]->blk[conio_config.cursor.pos.x];
+    memset(sl, 0, COLUMNS-conio_config.cursor.pos.x);
 }
 
 void clear_line_to_cursor(){
-    void *sl = &ptr[conio_config.cursor.y]->slot[0];
-    memset(sl, 0, conio_config.cursor.x);
+    void *sl = &ptr[conio_config.cursor.pos.y]->slot[0];
+    memset(sl, 0, conio_config.cursor.pos.x);
 
-    sl = &ptr[conio_config.cursor.y]->inv[0];
-    memset(sl, 0, conio_config.cursor.x);
+    sl = &ptr[conio_config.cursor.pos.y]->inv[0];
+    memset(sl, 0, conio_config.cursor.pos.x);
 
-    sl = &ptr[conio_config.cursor.y]->blk[0];
-    memset(sl, 0, conio_config.cursor.x);
+    sl = &ptr[conio_config.cursor.pos.y]->blk[0];
+    memset(sl, 0, conio_config.cursor.pos.x);
 }
 
 void clear_entire_line(){
-    void *sl = &ptr[conio_config.cursor.y]->slot[0];
+    void *sl = &ptr[conio_config.cursor.pos.y]->slot[0];
     memset(sl, 0, COLUMNS);
 
-    sl = &ptr[conio_config.cursor.y]->inv[0];
+    sl = &ptr[conio_config.cursor.pos.y]->inv[0];
     memset(sl, 0, COLUMNS);
 
-    sl = &ptr[conio_config.cursor.y]->blk[0];
+    sl = &ptr[conio_config.cursor.pos.y]->blk[0];
     memset(sl, 0, COLUMNS);
 }
 
@@ -385,35 +386,35 @@ unsigned char * slotsForBlkRow(int y){
 
 
 void delete_chars(int n){
-    int c = conio_config.cursor.x;
-    for(int i=conio_config.cursor.x + n;i<COLUMNS;i++){
-        ptr[conio_config.cursor.y]->slot[c] = ptr[conio_config.cursor.y]->slot[i];
-        ptr[conio_config.cursor.y]->inv[c] = ptr[conio_config.cursor.y]->inv[i];
-        ptr[conio_config.cursor.y]->blk[c] = ptr[conio_config.cursor.y]->blk[i];
+    int c = conio_config.cursor.pos.x;
+    for(int i=conio_config.cursor.pos.x + n;i<COLUMNS;i++){
+        ptr[conio_config.cursor.pos.y]->slot[c] = ptr[conio_config.cursor.pos.y]->slot[i];
+        ptr[conio_config.cursor.pos.y]->inv[c] = ptr[conio_config.cursor.pos.y]->inv[i];
+        ptr[conio_config.cursor.pos.y]->blk[c] = ptr[conio_config.cursor.pos.y]->blk[i];
         c++;
     }
     for(int i=c;i<COLUMNS;i++){
-        ptr[conio_config.cursor.y]->slot[i] = 0;
-        ptr[conio_config.cursor.y]->inv[i] = 0;
-        ptr[conio_config.cursor.y]->blk[i] = 0;
+        ptr[conio_config.cursor.pos.y]->slot[i] = 0;
+        ptr[conio_config.cursor.pos.y]->inv[i] = 0;
+        ptr[conio_config.cursor.pos.y]->blk[i] = 0;
     }
 }
 
 void erase_chars(int n){
-    int c = conio_config.cursor.x;
-    for(int i=conio_config.cursor.x;i<COLUMNS && i<c+n;i++){
-        ptr[conio_config.cursor.y]->slot[i] = 0;
-        ptr[conio_config.cursor.y]->inv[i] = 0;
-        ptr[conio_config.cursor.y]->blk[i] = 0;
+    int c = conio_config.cursor.pos.x;
+    for(int i=conio_config.cursor.pos.x;i<COLUMNS && i<c+n;i++){
+        ptr[conio_config.cursor.pos.y]->slot[i] = 0;
+        ptr[conio_config.cursor.pos.y]->inv[i] = 0;
+        ptr[conio_config.cursor.pos.y]->blk[i] = 0;
     }
 }
 
 void insert_chars(int n){
 
-    for(int r=COLUMNS-1;r>=conio_config.cursor.x+n;r--){
-        ptr[conio_config.cursor.y]->slot[r] = ptr[conio_config.cursor.y]->slot[r-n];
-        ptr[conio_config.cursor.y]->inv[r] = ptr[conio_config.cursor.y]->inv[r-n];
-        ptr[conio_config.cursor.y]->blk[r] = ptr[conio_config.cursor.y]->blk[r-n];
+    for(int r=COLUMNS-1;r>=conio_config.cursor.pos.x+n;r--){
+        ptr[conio_config.cursor.pos.y]->slot[r] = ptr[conio_config.cursor.pos.y]->slot[r-n];
+        ptr[conio_config.cursor.pos.y]->inv[r] = ptr[conio_config.cursor.pos.y]->inv[r-n];
+        ptr[conio_config.cursor.pos.y]->blk[r] = ptr[conio_config.cursor.pos.y]->blk[r-n];
     }
 
     erase_chars(n);
@@ -428,7 +429,7 @@ unsigned char blk_character(int x,int y){
 }
 
 void slip_character(unsigned char ch,int x,int y){
-    if(conio_config.cursor.x>=COLUMNS || conio_config.cursor.y>=VISIBLEROWS){
+    if(conio_config.cursor.pos.x>=COLUMNS || conio_config.cursor.pos.y>=VISIBLEROWS){
         return;
     }
 
@@ -464,53 +465,53 @@ void refresh_cursor(){
 }
 
 void print_cursor(){
-  __chr_under_csr = slop_character(conio_config.cursor.x,conio_config.cursor.y);
-  __inv_under_csr = inv_character(conio_config.cursor.x,conio_config.cursor.y);
-  __blk_under_csr = blk_character(conio_config.cursor.x,conio_config.cursor.y);
+  __chr_under_csr = slop_character(conio_config.cursor.pos.x,conio_config.cursor.pos.y);
+  __inv_under_csr = inv_character(conio_config.cursor.pos.x,conio_config.cursor.pos.y);
+  __blk_under_csr = blk_character(conio_config.cursor.pos.x,conio_config.cursor.pos.y);
 
-  if(conio_config.cursor_state.visible==false || (conio_config.cursor_state.blinking_mode && conio_config.cursor_state.blink_state)) return;
+  if(conio_config.cursor.state.visible==false || (conio_config.cursor.state.blinking_mode && conio_config.cursor.state.blink_state)) return;
 
   if(__chr_under_csr == 0) // config.nupetscii &&
-    ptr[conio_config.cursor.y]->slot[conio_config.cursor.x] = conio_config.cursor_state.symbol;
+    ptr[conio_config.cursor.pos.y]->slot[conio_config.cursor.pos.x] = conio_config.cursor.symbol;
 
   else if(__inv_under_csr == 1)
-    ptr[conio_config.cursor.y]->inv[conio_config.cursor.x] = 0;
+    ptr[conio_config.cursor.pos.y]->inv[conio_config.cursor.pos.x] = 0;
 
   else
-    ptr[conio_config.cursor.y]->inv[conio_config.cursor.x] = 1;
+    ptr[conio_config.cursor.pos.y]->inv[conio_config.cursor.pos.x] = 1;
 }
 
 void clear_cursor(){
     //slip_character(chr_under_csr,csr.x,csr.y); // fix 191121
     // can't use slip, because it applies reverse
-    ptr[conio_config.cursor.y]->slot[conio_config.cursor.x] = __chr_under_csr;
-    ptr[conio_config.cursor.y]->inv[conio_config.cursor.x] = __inv_under_csr;
-    ptr[conio_config.cursor.y]->blk[conio_config.cursor.x] = __blk_under_csr;
+    ptr[conio_config.cursor.pos.y]->slot[conio_config.cursor.pos.x] = __chr_under_csr;
+    ptr[conio_config.cursor.pos.y]->inv[conio_config.cursor.pos.x] = __inv_under_csr;
+    ptr[conio_config.cursor.pos.y]->blk[conio_config.cursor.pos.x] = __blk_under_csr;
 }
 
 void wrap_constrain_cursor_values(){
-  if(conio_config.cursor.x>=COLUMNS) {
-    conio_config.cursor.x=0;
-    if(conio_config.cursor.y==VISIBLEROWS-1){   // visiblerows is the count, csr is zero based
+  if(conio_config.cursor.pos.x>=COLUMNS) {
+    conio_config.cursor.pos.x=0;
+    if(conio_config.cursor.pos.y==VISIBLEROWS-1){   // visiblerows is the count, csr is zero based
       shuffle_down();
     }
     else{
-      conio_config.cursor.y++;
+      conio_config.cursor.pos.y++;
     }
     conio_config.just_wrapped = true;
   }
 }
 
 void constrain_cursor_values(){
-    if(conio_config.cursor.x<0) conio_config.cursor.x=0;
-    if(conio_config.cursor.x>=COLUMNS) conio_config.cursor.x=COLUMNS-1;
-    if(conio_config.cursor.y<0) conio_config.cursor.y=0;
-    if(conio_config.cursor.y>=VISIBLEROWS) conio_config.cursor.y=VISIBLEROWS-1;
+    if(conio_config.cursor.pos.x<0) conio_config.cursor.pos.x=0;
+    if(conio_config.cursor.pos.x>=COLUMNS) conio_config.cursor.pos.x=COLUMNS-1;
+    if(conio_config.cursor.pos.y<0) conio_config.cursor.pos.y=0;
+    if(conio_config.cursor.pos.y>=VISIBLEROWS) conio_config.cursor.pos.y=VISIBLEROWS-1;
 }
 
 void cursor_reverse_lf(){
-  if(conio_config.cursor.y > 0)
-      move_cursor_at(conio_config.cursor.y, conio_config.cursor.x + 1);
+  if(conio_config.cursor.pos.y > 0)
+      move_cursor_at(conio_config.cursor.pos.y, conio_config.cursor.pos.x + 1);
   else
       shuffle_up();
 }
@@ -524,22 +525,22 @@ void move_cursor_lf( bool reverse ){
   // move cursor down
   if(conio_config.wrap_text){
     if(!conio_config.just_wrapped){
-      if(conio_config.cursor.y==VISIBLEROWS-1){ // visiblerows is the count, csr is zero based
+      if(conio_config.cursor.pos.y==VISIBLEROWS-1){ // visiblerows is the count, csr is zero based
         shuffle_down();
        }
        else {
-        conio_config.cursor.y++;
+        conio_config.cursor.pos.y++;
        }
     }
     else
       conio_config.just_wrapped = false;
   }
   else{
-     if(conio_config.cursor.y==VISIBLEROWS-1){ // visiblerows is the count, csr is zero based
+     if(conio_config.cursor.pos.y==VISIBLEROWS-1){ // visiblerows is the count, csr is zero based
         shuffle_down();
      }
      else {
-        conio_config.cursor.y++;
+        conio_config.cursor.pos.y++;
      }
   }
 }
@@ -553,32 +554,32 @@ void move_cursor_at(int y, int x){
     // The values are 1-based, and default to 1
 
     // these are zero based
-    conio_config.cursor.x = x;
-    conio_config.cursor.y = y;
+    conio_config.cursor.pos.x = x;
+    conio_config.cursor.pos.y = y;
     constrain_cursor_values();
 }
 
 void move_cursor_up(int n){
     if(n==0)n=1;
-    conio_config.cursor.y -= n;
+    conio_config.cursor.pos.y -= n;
     constrain_cursor_values();
 }
 
 void move_cursor_down(int n){
     if(n==0)n=1;
-    conio_config.cursor.y += n;
+    conio_config.cursor.pos.y += n;
     constrain_cursor_values();  // todo: should possibly do a scroll up?
 }
 
 void move_cursor_forward(int n){
     if(n==0)n=1;
-    conio_config.cursor.x += n;
+    conio_config.cursor.pos.x += n;
     constrain_cursor_values();
 }
 
 void move_cursor_backward(int n){
     if(n==0)n=1;
-    conio_config.cursor.x -= n;
+    conio_config.cursor.pos.x -= n;
     constrain_cursor_values();
 }
 
@@ -588,13 +589,13 @@ void move_cursor_home(){
 
 
 void cursor_visible(bool v){
-    conio_config.cursor_state.visible=v;
+    conio_config.cursor.state.visible=v;
 }
 
 bool cursor_blink_state() {
-  return conio_config.cursor_state.blink_state;
+  return conio_config.cursor.state.blink_state;
 }
 void set_cursor_blink_state( bool state ) {
 	// is the Blinking cursor should currently be visible or not visible
-  conio_config.cursor_state.blink_state = state;
+  conio_config.cursor.state.blink_state = state;
 }
