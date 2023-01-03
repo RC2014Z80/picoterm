@@ -23,6 +23,7 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 * Nope
 
 ### Fix & Improvement
+* DEC Lines in ASCII: using = instead of - offers a better visibility.
 * Decoupling picoterm.c
  * extract console features to picoterm_conio.c
  * extract displayed screeb to picoterm_screen.c
@@ -34,7 +35,7 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 * Decoupling picoterm_screen.c
  * Store the PICOTERM_LOGO into picoterm_logo.c
  * allow replacement for custom project (Please keeps the PicoTerm credit)
-
+ * passed full test-suite
 ## Version 1.5.2 - Dec 30 2022
 
 This is a temporary release for testing the new features.

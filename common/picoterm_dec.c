@@ -110,7 +110,7 @@ char get_dec_char( uint8_t font_id, uint8_t dec_mode, char _char ){
 						_r =  dec_mode == DEC_MODE_SINGLE_LINE ? '+' : 0x8A; // +, inverted +
 						break;
 					case 'q': // ─
-						_r = dec_mode == DEC_MODE_SINGLE_LINE ? '-' : 0x8C; // -, inverted -
+						_r = dec_mode == DEC_MODE_SINGLE_LINE ? '=' : 0x9C; // -, inverted -
 						break;
 					case 'x': // │
 						_r = dec_mode == DEC_MODE_SINGLE_LINE ? 0x7C : 0xDB; // pipe, inverted pipe
