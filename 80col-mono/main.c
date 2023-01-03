@@ -764,7 +764,7 @@ void csr_blinking_task() {
 	start_ms_csr += interval_ms_csr;
 
 	is_blinking = !is_blinking;
-	set_csr_blink_state(1 - get_csr_blink_state());
+	set_cursor_blink_state( 1 - cursor_blink_state() );
 
 	refresh_cursor();
   }

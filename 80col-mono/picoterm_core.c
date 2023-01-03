@@ -59,7 +59,7 @@ extern picoterm_config_t config; // Issue #13, awesome contribution of Spock64
 extern picoterm_conio_config_t conio_config;
 
 // saved cursor
-struct point saved_csr = {0,0};  
+struct point saved_csr = {0,0};
 
 char bell_state = 0;
 bool insert_mode = false;
@@ -77,7 +77,7 @@ void terminal_init(){
     reset_escape_sequence();
     // initialize ConIO buffers and main parameters.
     conio_init( config.graph_id ); // // ansi graphical font_id
-    make_cursor_visible(true);
+    cursor_visible(true);
     clear_cursor();  // so we have the character
     print_cursor();  // turns on
 }
@@ -108,7 +108,7 @@ void terminal_reset(){
     insert_mode = false;
 
     conio_reset( get_cursor_char( config.font_id, CURSOR_TYPE_DEFAULT ) - 0x20 );
-    make_cursor_visible(true);
+    cursor_visible(true);
     clear_cursor();  // so we have the character
     print_cursor();  // turns on
 }
@@ -234,7 +234,7 @@ void esc_sequence_received(){
               if(parameter_q){
                   if(esc_parameters[0]==25 || esc_parameters[0]==50){
                       // show csr
-                      make_cursor_visible(true);
+                      cursor_visible(true);
                   }
                   else if(esc_parameters[0]==7){
                       //Auto-wrap mode on (default) ESC [?7h
@@ -298,7 +298,7 @@ void esc_sequence_received(){
               if(parameter_q){
                   if(esc_parameters[0]==25 || esc_parameters[0]==50){
                       // hide csr
-                      make_cursor_visible(false);
+                      cursor_visible(false);
                   }
                   else if(esc_parameters[0]==2){
                       //Set VT52 (versus ANSI)
@@ -802,8 +802,8 @@ void handle_new_character(unsigned char asc){
       } // else
   } // eof Regular character
 
-  if(conio_config.cursor_state.blinking)
-    conio_config.cursor_state.blinking = false;
+  if(conio_config.cursor_state.blink_state)
+    conio_config.cursor_state.blink_state = false;
 }
 
 

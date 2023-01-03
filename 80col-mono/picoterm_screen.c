@@ -71,7 +71,7 @@ void display_charset(){
   print_string( "     0 1 2 3 4 5 6 7 8 9 A B C D E F\r\n");
 
   print_string("\r\n(ESC=close) ? ");
-  make_cursor_visible(true);
+  cursor_visible(true);
   clear_cursor();  // so we have the character
   print_cursor();  // turns on
 }
@@ -117,7 +117,7 @@ void display_config(){
     print_string("\r\n(S upcase=save / ESC=close) ? ");
 
 
-    make_cursor_visible(true);
+    cursor_visible(true);
     clear_cursor();  // so we have the character
     print_cursor();  // turns on
 }
@@ -288,7 +288,7 @@ void display_help(){
   __print_string("\x0AD\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0BD\r\n", config.font_id!=FONT_NUPETSCII );
 
   print_string("\r\n(ESC=close) ? ");
-  make_cursor_visible(true);
+  cursor_visible(true);
   clear_cursor();  // so we have the character
   print_cursor();  // turns on
 }
@@ -333,7 +333,7 @@ void display_terminal(){
 
 
     // print cursor
-    make_cursor_visible(true);
+    cursor_visible(true);
     clear_cursor();  // so we have the character
     print_cursor();  // turns on
 }

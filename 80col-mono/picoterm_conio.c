@@ -21,7 +21,8 @@ extern picoterm_config_t config; // required to read config.font_id
 
 picoterm_conio_config_t conio_config  = { .rvs = false, .blk = false, .just_wrapped = false,
 	  .wrap_text = true, .dec_mode = DEC_MODE_NONE, .cursor.x = 0, .cursor.y = 0,
-		.cursor_state.visible = true };
+		.cursor_state.visible = true, .cursor_state.blink_state = false,
+	  .cursor_state.blinking_mode = true, .cursor_state.symbol = 143 };
 
 array_of_row_text_pointer ptr;           // primary screen content
 array_of_row_text_pointer secondary_ptr; // secondary screen content
@@ -63,7 +64,7 @@ void conio_reset( char default_cursor_symbol ){
   __blk_under_csr = 0;
 
   conio_config.cursor_state.visible = true;
-  conio_config.cursor_state.blinking = false;
+  conio_config.cursor_state.blink_state = false; // blinking cursor is in hidden state
   conio_config.cursor_state.blinking_mode = true;
   conio_config.cursor_state.symbol = default_cursor_symbol;
 
@@ -131,7 +132,8 @@ char read_key(){
   // read a key from input buffer (the keyboard or serial line). This is used
   // for menu handling. Return 0 if no char available
   if( key_ready()==false ) return 0;
-  if(conio_config.cursor_state.blinking) conio_config.cursor_state.blinking = false;
+  if(conio_config.cursor_state.blink_state)
+    conio_config.cursor_state.blink_state = false; // hide cursor
   return read_key_from_buffer();
 }
 
@@ -466,7 +468,7 @@ void print_cursor(){
   __inv_under_csr = inv_character(conio_config.cursor.x,conio_config.cursor.y);
   __blk_under_csr = blk_character(conio_config.cursor.x,conio_config.cursor.y);
 
-    if(conio_config.cursor_state.visible==false || (conio_config.cursor_state.blinking_mode && conio_config.cursor_state.blinking)) return;
+  if(conio_config.cursor_state.visible==false || (conio_config.cursor_state.blinking_mode && conio_config.cursor_state.blink_state)) return;
 
   if(__chr_under_csr == 0) // config.nupetscii &&
     ptr[conio_config.cursor.y]->slot[conio_config.cursor.x] = conio_config.cursor_state.symbol;
@@ -585,13 +587,14 @@ void move_cursor_home(){
 }
 
 
-void make_cursor_visible(bool v){
+void cursor_visible(bool v){
     conio_config.cursor_state.visible=v;
 }
 
-bool get_csr_blink_state() {
-  return conio_config.cursor_state.blinking;
+bool cursor_blink_state() {
+  return conio_config.cursor_state.blink_state;
 }
-void set_csr_blink_state(bool state) {
-  conio_config.cursor_state.blinking = state;
+void set_cursor_blink_state( bool state ) {
+	// is the Blinking cursor should currently be visible or not visible
+  conio_config.cursor_state.blink_state = state;
 }

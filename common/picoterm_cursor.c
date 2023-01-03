@@ -9,7 +9,7 @@
 
 void cursor_state_init( cursor_state_t *this ){
 	this->visible = true;
-	this->blinking = false;
+	this->blink_state = false;
 	this->blinking_mode = true;
 	this->symbol = 143;
 }

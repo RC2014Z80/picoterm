@@ -92,8 +92,8 @@ void move_cursor_backward(int n);
 void constrain_cursor_values();
 void wrap_constrain_cursor_values();
 
-void make_cursor_visible(bool v);
-bool get_csr_blink_state();
-void set_csr_blink_state(bool state);
+void cursor_visible(bool v);
+bool cursor_blink_state(); // is the blinking cursor currently visible or hidden ?
+void set_cursor_blink_state(bool state);
 
 #endif
