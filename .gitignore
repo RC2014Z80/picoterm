@@ -2,6 +2,10 @@
 pico_*_import.cmake
 font.h
 
+# Copied by the CMAKE from /font-suite -> ignore copy
+80col-mono/cp437.c
+80col-mono/nupetscii.c
+
 # Compiled files
 uart_tx.pio.h
 CMakeCache.txt
@@ -20,6 +24,8 @@ Makefile
 generated/
 pico-sdk/
 pico_extras/
+picoterm
+picoterm_??
 
 # Gimp files
 *.xcf

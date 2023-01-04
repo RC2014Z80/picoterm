@@ -41,9 +41,12 @@ cd picoterm/80col-mono/Build
 REM Indicates where to find the Pico SDK
 export PICO_SDK_PATH=../../../../../pico/pico-sdk
 
+REM Since jan 4, 2023 this operation is made by Cmake
+REM
 REM adding the required cmake file for this build
-cp $PICO_SDK_PATH/external/pico_sdk_import.cmake ..
-cp $PICO_SDK_PATH/../pico-extras/external/pico_extras_import.cmake ..
+REM cp $PICO_SDK_PATH/external/pico_sdk_import.cmake ..
+REM cp $PICO_SDK_PATH/../pico-extras/external/pico_extras_import.cmake ..
+
 cmake ..
 ```
 
@@ -106,13 +109,21 @@ cd ~/
 cd Bureau
 cd RC2014
 cd picoterm/80col-mono/Build
-cp $PICO_SDK_PATH/../pico-playground/scanvideo/textmode/font.h ../
+
+REM Since jan 4, 2023 this operation is made by cmake
+REM
+REM cp $PICO_SDK_PATH/../pico-playground/scanvideo/textmode/font.h ../
 
 REM create with UK Mapping (default)
+REM
 make picoterm
+
 REM create with FR Mapping
+REM
 make picoterm_FR
+
 REM create all the mapping
+REM
 make all
 ```
 Notice that make messages will includes the following statement when using another TinyUSB version:

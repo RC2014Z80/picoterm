@@ -24,6 +24,7 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 
 ### Fix & Improvement
 * DEC Lines in ASCII: using = instead of - offers a better visibility.
+* CMakeList copy the required files from PICO_SDK and font-suite (issue #25).
 * Decoupling picoterm.c
  * extract console features to picoterm_conio.c
  * extract displayed screeb to picoterm_screen.c

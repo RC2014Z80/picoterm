@@ -1,14 +1,38 @@
 cmake_minimum_required(VERSION 3.14)
 
-#set(PICO_BOARD "vgaboard")
+project(picoterm VERSION 1.5.3)
+message("PicoTerm 80Col version = ${CMAKE_PROJECT_VERSION}")
 
+if(EXISTS "${PICO_SDK_PATH}")
+	message("detected PICO_SDK_PATH @ ${PICO_SDK_PATH}" )
+else()
+	message( FATAL_ERROR "Systen Environment variable PICO_SDK_PATH undefined!" )
+endif()
+
+
+# PICO_SDK_PATH: Copy the CMAKE dependencies to local folder
+#
+file(COPY ${PICO_SDK_PATH}/external/pico_sdk_import.cmake  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
+file(COPY ${PICO_SDK_PATH}/../pico-extras/external/pico_extras_import.cmake  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
+
+# PICO_SDK_PATH: Copy the FILES dependencies to local folder
+#
+file(COPY ${PICO_SDK_PATH}/../pico-playground/scanvideo/textmode/font.h  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
+
+# FONT-SUITE: Copy the files dependencies to local folder
+#
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/cp437.c  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/nupetscii.c  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
+
+
+# Set alternative TinyUSB source code
+#
 #set(PICO_TINYUSB_PATH "/home/domeu/Bureau/RC2014/picoterm/80col-mono/tinyusb" )
+
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
 pico_sdk_init()
 
-project(picoterm VERSION 1.5.3)
-message("PicoTerm 80Col version = ${CMAKE_PROJECT_VERSION}")
 
 # Defines source files to compile
 #    Not included in source: font6.c font10.c lcd.c font8.c
