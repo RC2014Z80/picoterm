@@ -37,6 +37,7 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
  * Store the PICOTERM_LOGO into picoterm_logo.c
  * allow replacement for custom project (Please keeps the PicoTerm credit)
  * passed full test-suite
+ 
 ## Version 1.5.2 - Dec 30 2022
 
 This is a temporary release for testing the new features.
