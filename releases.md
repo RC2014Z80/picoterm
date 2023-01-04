@@ -20,7 +20,7 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 ## Version 1.5.3 - (ongoing)
 
 ### Features
-* Nope
+* Adding License file (BSD 3-Clause).
 
 ### Fix & Improvement
 * DEC Lines in ASCII: using = instead of - offers a better visibility.
