@@ -56,11 +56,14 @@
 #include "../common/picoterm_cursor.h"
 #include "../common/picoterm_stddef.h"
 #include "../common/keybd.h"
+#include "../common/picoterm_i2c.h"
+#include "../common/pca9536.h"
 #include "picoterm_screen.h"
 //#include "hardware/structs/bus_ctrl.h"
-
 #include "bsp/board.h"
 #include "tusb.h"
+#include "hardware/i2c.h"
+extern i2c_inst_t *i2c_bus;
 
 // This is 4 for the font we're using
 #define FRAGMENT_WORDS 4
@@ -569,15 +572,6 @@ int main(void) {
   gpio_set_dir(LED, GPIO_OUT);
   gpio_put(LED,false);
 
-  gpio_init(USB_POWER_GPIO); // GPIO 26
-  gpio_set_dir(USB_POWER_GPIO, GPIO_OUT);
-  gpio_put(USB_POWER_GPIO,false);
-  start_time = board_millis();
-
-  gpio_init(BUZZER_GPIO);
-  gpio_set_dir(BUZZER_GPIO, GPIO_OUT);
-  gpio_put(BUZZER_GPIO,false);
-
   uint8_t bootchoice = 0;
   gpio_init(BTN_A);
   gpio_set_dir(BTN_A, GPIO_IN);
@@ -636,6 +630,40 @@ int main(void) {
 
   // AFTER   reading and writing
   stdio_init_all();
+
+	/* PCA9536 - future stuff for issue #21 
+	debug_print( "Check I2C capability on GP26, GP27" );
+	init_i2c_bus(); // try to initialize the PicoTerm I2C bus
+	if( has_pca9536( i2c_bus ) ){
+		debug_print( "pca9536 detected!" );
+		pca9536_output_reset( i2c_bus, 0b0111 ); // preinitialize output at LOW
+		pca9536_setup_io( i2c_bus, IO_0, IO_MODE_OUT );
+		pca9536_setup_io( i2c_bus, IO_1, IO_MODE_OUT );
+		pca9536_setup_io( i2c_bus, IO_2, IO_MODE_OUT );
+		pca9536_setup_io( i2c_bus, IO_3, IO_MODE_IN );
+		bool state = pca9536_input_io( i2c_bus, IO_3 ); // read state of IO3
+		debug_print( "IO activated" );
+		sleep_ms( 1000 );
+		pca9536_output_io( i2c_bus, IO_0, true ); // preinitialize at LOW
+		pca9536_output_io( i2c_bus, IO_1, state ); // preinitialize at LOW
+		pca9536_output_io( i2c_bus, IO_2, true ); // preinitialize at LOW
+		sleep_ms( 1000 );
+		pca9536_output_io( i2c_bus, IO_0, false ); // preinitialize at LOW
+		pca9536_output_io( i2c_bus, IO_1, state ); // preinitialize at LOW
+		pca9536_output_io( i2c_bus, IO_2, false ); // preinitialize at LOW
+	}
+	deinit_i2c_bus();
+	*/
+	debug_print( "Using GPIO capability on GP26, GP27" );
+  gpio_init(USB_POWER_GPIO); // GPIO 26
+  gpio_set_dir(USB_POWER_GPIO, GPIO_OUT);
+  gpio_put(USB_POWER_GPIO,false);
+  start_time = board_millis();
+
+  gpio_init(BUZZER_GPIO);
+  gpio_set_dir(BUZZER_GPIO, GPIO_OUT);
+  gpio_put(BUZZER_GPIO,false);
+
 
   uart_init(UART_ID, config.baudrate); // UART 1
   uart_set_hw_flow(UART_ID,false,false);
