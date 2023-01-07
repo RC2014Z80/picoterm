@@ -28,6 +28,7 @@ static key_change_cb_t key_up_cb = NULL;
 void keybd_init( key_change_cb_t key_down_callback, key_change_cb_t key_up_callback );
 bool keyboard_attached();
 bool key_ready();
+void key_repeat_task();
 
 void insert_key_into_buffer(unsigned char ch);
 unsigned char read_key_from_buffer();

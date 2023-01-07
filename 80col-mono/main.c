@@ -631,7 +631,7 @@ int main(void) {
   // AFTER   reading and writing
   stdio_init_all();
 
-	/* PCA9536 - future stuff for issue #21 
+	/* PCA9536 - future stuff for issue #21
 	debug_print( "Check I2C capability on GP26, GP27" );
 	init_i2c_bus(); // try to initialize the PicoTerm I2C bus
 	if( has_pca9536( i2c_bus ) ){
@@ -705,6 +705,7 @@ int main(void) {
     usb_power_task();
     led_blinking_task();
     csr_blinking_task();
+    key_repeat_task();
     bell_task();
 
     if( is_menu && !(old_menu) ){ // CRL+M : menu activated ?

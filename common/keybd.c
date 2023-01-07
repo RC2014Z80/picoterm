@@ -59,22 +59,36 @@ enum {
  struct KeyboardBuffer keybuffer1 = {0};
 
  void keybd_init( key_change_cb_t key_down_callback, key_change_cb_t key_up_callback ){
-	   keybd_dev_addr = UNDEFINED_ADDR;
+     keybd_dev_addr = UNDEFINED_ADDR;
 
-		 key_down_cb = key_down_callback; // callbacks NULL accepted
-		 key_up_cb = key_up_callback;
+     key_down_cb = key_down_callback; // callbacks NULL accepted
+     key_up_cb = key_up_callback;
 
      keybuffer1.length=2000;
      keybuffer1.take=0;
      keybuffer1.insert=0;
 }
 
+static void default_key_down(int scancode, int keysym, int modifiers);
+
 static bool capslock_key_down_in_last_report = false;
 static bool capslock_key_down_in_this_report = false;
 static bool capslock_on = false;
 
+// --- Keyboard repeat feature ----------------------------
+static int __last_key_down_scancode = 0; // NULL
+static int __last_key_down_modifier = 0;
+static uint32_t __last_key_down = 0;        // time of the last key down
+static uint32_t __last_key_down_resent = 0; // time of the last keydown resent
+
+static int keydown_start_repeat_delay = 500; // Start repeat a character after x ms
+static int keydown_resent_delay = 50; // interval between multiple repeat in ms
+
+void set_last_key_down( int scancode, int keysym, int modifiers );
+void clear_last_key_down( int scancode, int keysym, int modifiers );
+
 bool keyboard_attached(){
-	return keybd_dev_addr != UNDEFINED_ADDR;
+  return keybd_dev_addr != UNDEFINED_ADDR;
 }
 
  //--------------------------------------------------------------------+
@@ -114,6 +128,19 @@ unsigned char read_key_from_buffer(){
      return ch;
 }
 
+void key_repeat_task(){
+    // Check if key is maintained down too enough to start repeating
+    // Must be called from the main loop()
+    if( (__last_key_down_scancode != 0) && ((board_millis()-__last_key_down)>=keydown_start_repeat_delay) )
+      if( (board_millis() - __last_key_down_resent)>keydown_resent_delay ) {
+        //sprintf( debug_msg, "keydown repeat for %i", __last_key_down_scancode );
+        //debug_print( debug_msg );
+        __last_key_down_resent = board_millis();
+        if( key_down_cb != NULL)
+          key_down_cb( __last_key_down_scancode, 0, __last_key_down_modifier );
+      }
+
+}
 
 //--------------------------------------------------------------------+
 // TinyUSB Callbacks - Generic report
@@ -131,7 +158,7 @@ static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t c
          // Simple report without report ID as 1st byte
          rpt_info = &rpt_info_arr[0];
      }
-		 else {
+     else {
          // Composite report, 1st byte is report ID, data starts from 2nd byte
          uint8_t const rpt_id = report[0];
 
@@ -151,7 +178,7 @@ static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t c
 
      if (!rpt_info) {
          sprintf( debug_msg, "Couldn't find the report info for this report !");
- 				debug_print( debug_msg );
+         debug_print( debug_msg );
          return;
      }
 
@@ -188,32 +215,32 @@ static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t c
 // Note: if report descriptor length > CFG_TUH_ENUMERATION_BUFSIZE, it will be skipped
 // therefore report_desc = NULL, desc_len = 0
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len) {
-		sprintf( debug_msg, "HID device address = %d, instance = %d is mounted", dev_addr, instance );
-		debug_print( debug_msg );
+    sprintf( debug_msg, "HID device address = %d, instance = %d is mounted", dev_addr, instance );
+    debug_print( debug_msg );
 
-		// Interface protocol (hid_interface_protocol_enum_t)
-		const char* protocol_str[] = { "None", "Keyboard", "Mouse" };
-		uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
-	  sprintf( debug_msg, "HID Interface Protocol = %s", protocol_str[itf_protocol] );
-		debug_print( debug_msg );
+    // Interface protocol (hid_interface_protocol_enum_t)
+    const char* protocol_str[] = { "None", "Keyboard", "Mouse" };
+    uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
+    sprintf( debug_msg, "HID Interface Protocol = %s", protocol_str[itf_protocol] );
+    debug_print( debug_msg );
 
-		if( itf_protocol == 1 ) // Did we attached a keyboard?
-			keybd_dev_addr = dev_addr;
+    if( itf_protocol == 1 ) // Did we attached a keyboard?
+      keybd_dev_addr = dev_addr;
 
-	 // printf("%d USB: device %d connected, protocol %s\n", time_us_32() - t0 , dev_addr, protocol_str[itf_protocol]);
+   // printf("%d USB: device %d connected, protocol %s\n", time_us_32() - t0 , dev_addr, protocol_str[itf_protocol]);
 
-		// By default host stack will use activate boot protocol on supported interface.
-		// Therefore for this simple example, we only need to parse generic report descriptor (with built-in parser)
-		if ( itf_protocol == HID_ITF_PROTOCOL_NONE ) {
-				hid_info[instance].report_count = tuh_hid_parse_report_descriptor(hid_info[instance].report_info, MAX_REPORT, desc_report, desc_len);
-				sprintf( debug_msg, "HID has %u reports \r\n", hid_info[instance].report_count );
-			 debug_print( debug_msg );
-		}
+    // By default host stack will use activate boot protocol on supported interface.
+    // Therefore for this simple example, we only need to parse generic report descriptor (with built-in parser)
+    if ( itf_protocol == HID_ITF_PROTOCOL_NONE ) {
+        hid_info[instance].report_count = tuh_hid_parse_report_descriptor(hid_info[instance].report_info, MAX_REPORT, desc_report, desc_len);
+        sprintf( debug_msg, "HID has %u reports \r\n", hid_info[instance].report_count );
+       debug_print( debug_msg );
+    }
 
-		// request to receive report tuh_hid_report_received_cb() will be invoked when report is available
-		if ( !tuh_hid_receive_report(dev_addr, instance) ) {
-				debug_print("HID Error: cannot request to receive report");
-		}
+    // request to receive report tuh_hid_report_received_cb() will be invoked when report is available
+    if ( !tuh_hid_receive_report(dev_addr, instance) ) {
+        debug_print("HID Error: cannot request to receive report");
+    }
 }
 
 // Invoked when device with hid interface is un-mounted
@@ -221,8 +248,8 @@ void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t instance) {
     sprintf( debug_msg, "HID device address = %d, instance = %d is unmounted", dev_addr, instance);
     debug_print( debug_msg );
 
-		if( dev_addr == keybd_dev_addr ) // did we disconnect the detected Keyboard?
-			keybd_dev_addr = UNDEFINED_ADDR;
+    if( dev_addr == keybd_dev_addr ) // did we disconnect the detected Keyboard?
+      keybd_dev_addr = UNDEFINED_ADDR;
 }
 
 // Invoked when received report from device via interrupt endpoint
@@ -257,11 +284,23 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
 //--------------------------------------------------------------------+
 static void default_key_down(int scancode, int keysym, int modifiers);
 
+void set_last_key_down( int scancode, int keysym, int modifiers ){
+   __last_key_down_scancode = scancode;
+   __last_key_down_modifier = modifiers;
+   __last_key_down = board_millis();
+   __last_key_down_resent = 0;
+}
+
+void clear_last_key_down( int scancode, int keysym, int modifiers ){
+  __last_key_down_scancode = 0; // NULL
+  __last_key_down_modifier = 0;
+}
+
 // look up new key in previous keys
 static inline bool find_key_in_report(hid_keyboard_report_t const *report, uint8_t keycode) {
     for(uint8_t i=0; i<6; i++) {
         if (report->keycode[i] == keycode)
-				  return true;
+          return true;
     }
     return false;
 }
@@ -292,6 +331,9 @@ static void process_kbd_report(hid_keyboard_report_t const *report) {
             if ( find_key_in_report(&prev_report, report->keycode[i]) )
             {
                 // exist in previous report means the current key is holding
+                // Domeu note: Append when keeping "a" pressed & pressing releasing another key.
+                // Domeu note: When holding only the "a" pressed... then nothing happens.
+                //debug_print( "Key Holding");
             }else
             {
                 // not existed in previous report means the current key is pressed
@@ -307,10 +349,11 @@ static void process_kbd_report(hid_keyboard_report_t const *report) {
                 modifier = modifier | (capslock_on ? WITH_CAPSLOCK : 0);
 
                 //pico_key_down(report->keycode[i], 0, modifier);
-								if( key_down_cb != NULL )
-									key_down_cb( report->keycode[i], 0, modifier );
-								else
-									default_key_down( report->keycode[i], 0, modifier ); // just add it to caracter buffer
+                set_last_key_down( report->keycode[i], 0, modifier );
+                if( key_down_cb != NULL )
+                  key_down_cb( report->keycode[i], 0, modifier );
+                else
+                  default_key_down( report->keycode[i], 0, modifier ); // just add it to caracter buffer
             }
         }
         // Check for key depresses (i.e. was present in prev report but not here)
@@ -330,8 +373,9 @@ static void process_kbd_report(hid_keyboard_report_t const *report) {
                 modifier = modifier | (capslock_on ? WITH_CAPSLOCK : 0);
 
                 //pico_key_up(prev_report.keycode[i], 0, modifier);
-								if( key_up_cb != NULL )
-									key_up_cb( prev_report.keycode[i], 0, modifier );
+                clear_last_key_down( prev_report.keycode[i], 0, modifier );
+                if( key_up_cb != NULL )
+                  key_up_cb( prev_report.keycode[i], 0, modifier );
             }
         }
     }
@@ -376,7 +420,6 @@ bool scancode_is_mod(int scancode) {
 
 static void default_key_down(int scancode, int keysym, int modifiers) {
     // Create your own key_down event handler & assign it to `key_down_cb`
-		debug_print( "default_key_down");
     if( scancode_is_mod(scancode)==false ){
       // which char at that key?
       uint8_t ch = keycode2ascii[scancode][0];

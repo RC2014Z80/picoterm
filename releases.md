@@ -21,6 +21,8 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 
 ### Features
 * Adding License file (BSD 3-Clause).
+* Key Repeat implemented into keybd.c (see keydown_start_repeat_delay, keydown_resent_delay for parametrisation).
+
 
 ### Fix & Improvement
 * DEC Lines in ASCII: using = instead of - offers a better visibility.
@@ -37,7 +39,7 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
  * Store the PICOTERM_LOGO into picoterm_logo.c
  * allow replacement for custom project (Please keeps the PicoTerm credit)
  * passed full test-suite
- 
+
 ## Version 1.5.2 - Dec 30 2022
 
 This is a temporary release for testing the new features.
