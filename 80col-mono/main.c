@@ -708,10 +708,10 @@ int main(void) {
     key_repeat_task();
     bell_task();
 
-    if( is_menu && !(old_menu) ){ // CRL+M : menu activated ?
-      // empty the keyboard buffer
-      while( key_ready() )
-        read_key_from_buffer();
+    if( is_menu && !(old_menu) ){ // menu activated ?
+      copy_main_to_secondary_screen(); // copy terminal screen
+      save_cursor_position();
+      clear_key_buffer(); // empty the keyboard buffer
       switch( id_menu ){
         case MENU_CONFIG:
           display_config();
@@ -725,8 +725,12 @@ int main(void) {
       };
       old_menu = is_menu;
     }
-    else if( !(is_menu) && old_menu ){ // CRL+M : menu de-activated ?
-      display_terminal();
+    else if( !(is_menu) && old_menu ){ // menu de-activated ?
+      //display_terminal();
+      clrscr();
+      copy_secondary_to_main_screen(); // restore terminal screen
+      restore_cursor_position();
+      clear_key_buffer(); // empty the keyboard buffer
       old_menu = is_menu;
     }
 

@@ -32,6 +32,9 @@ unsigned char __chr_under_csr;
 bool __inv_under_csr;
 bool __blk_under_csr;
 
+// saved cursor
+struct point __saved_csr = {0,0};
+
 void conio_init( uint8_t ansi_font_id ){
   // Initialize the ConIO ressources
   for(int c=0;c<ROWS;c++){
@@ -598,4 +601,19 @@ bool cursor_blink_state() {
 void set_cursor_blink_state( bool state ) {
   // is the Blinking cursor should currently be visible or not visible
   conio_config.cursor.state.blink_state = state;
+}
+
+void save_cursor_position(){
+  __saved_csr.x = conio_config.cursor.pos.x;
+  __saved_csr.y = conio_config.cursor.pos.y;
+}
+
+void restore_cursor_position(){
+  conio_config.cursor.pos.x = __saved_csr.x;
+  conio_config.cursor.pos.y = __saved_csr.y;
+}
+
+void reset_saved_cursor(){
+	__saved_csr.x = conio_config.cursor.pos.x;
+  __saved_csr.y = conio_config.cursor.pos.y;
 }

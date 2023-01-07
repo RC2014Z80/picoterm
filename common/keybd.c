@@ -128,6 +128,11 @@ unsigned char read_key_from_buffer(){
      return ch;
 }
 
+void clear_key_buffer(){
+    while( key_ready() )
+      read_key_from_buffer();
+}
+
 void key_repeat_task(){
     // Check if key is maintained down too enough to start repeating
     // Must be called from the main loop()

@@ -22,6 +22,7 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 ### Features
 * Adding License file (BSD 3-Clause).
 * Key Repeat implemented into keybd.c (see keydown_start_repeat_delay, keydown_resent_delay for parametrisation).
+* save screen+cursor when activating menu screen. Restore them when existing menu screen.
 
 
 ### Fix & Improvement
@@ -35,6 +36,7 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 * picoterm_conio.c
  * conio_config -> group all the console parameters that before was individual parameters
  * conio_config.cursor -> contains pos.x, pos.y, state (for visibility,blink state,...), symbol (for cursor symbol)
+ * cursor save & restore
 * Decoupling picoterm_screen.c
  * Store the PICOTERM_LOGO into picoterm_logo.c
  * allow replacement for custom project (Please keeps the PicoTerm credit)

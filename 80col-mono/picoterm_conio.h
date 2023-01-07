@@ -94,5 +94,8 @@ void wrap_constrain_cursor_values();
 void cursor_visible(bool v);
 bool cursor_blink_state(); // is the blinking cursor currently visible or hidden ?
 void set_cursor_blink_state(bool state);
+void save_cursor_position();
+void restore_cursor_position();
+void reset_saved_cursor();
 
 #endif

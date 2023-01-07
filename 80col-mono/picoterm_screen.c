@@ -15,6 +15,7 @@
 #include "hardware/watchdog.h"
 #include <stdio.h>
 
+#include "../common/picoterm_debug.h"
 
 /* picoterm_config.c */
 extern picoterm_config_t config; // Issue #13, awesome contribution of Spock64
@@ -162,7 +163,7 @@ char handle_config_input(){
       case 'b':
         config.baudrate = 57600;
         break;
-    case 'c':
+      case 'c':
         config.baudrate = 38400;
         break;
       case 'd':
@@ -185,7 +186,6 @@ char handle_config_input(){
         break;
     }
     uart_set_baudrate( UART_ID, config.baudrate );
-    display_config();
   }
   // data bit configuration
   if ( ( _ch >= '7') && (_ch <= '8') ) {
@@ -198,7 +198,6 @@ char handle_config_input(){
         break;
     }
     uart_set_format(UART_ID, config.databits, config.stopbits, config.parity );
-    display_config();
   }
   // Stop bit configuration
   if ( ( _ch >= 'w') && (_ch <= 'x') ) {
@@ -211,10 +210,9 @@ char handle_config_input(){
         break;
     }
     uart_set_format(UART_ID, config.databits, config.stopbits, config.parity );
-    display_config();
   }
   // Parity configuration
-  if ( ( _ch >= 'n') || (_ch <= 'o') || (_ch <= 'v')) {
+  if ( ( _ch == 'n') || (_ch == 'o') || (_ch == 'v')) {
     switch( _ch ){
       case 'n':
         config.parity = UART_PARITY_NONE;
@@ -227,7 +225,6 @@ char handle_config_input(){
         break;
     }
     uart_set_format(UART_ID, config.databits, config.stopbits, config.parity );
-    display_config();
   }
   // ASCII / Graphical font configuration @ Startup
   if ( ( _ch >= 'l') && (_ch <= 'm') ) {
@@ -242,7 +239,6 @@ char handle_config_input(){
     select_graphic_font( config.font_id );
     build_font(config.font_id);
     conio_config.cursor.symbol = get_cursor_char( config.font_id, CURSOR_TYPE_DEFAULT ) - 0x20;
-    display_config();
   }
   // Select the Graphical font to be used
   if ( ( _ch >= 'p') && (_ch <= 'q') ) {
@@ -261,9 +257,10 @@ char handle_config_input(){
       conio_config.cursor.symbol = get_cursor_char( config.font_id, CURSOR_TYPE_DEFAULT ) - 0x20;
       build_font(config.font_id);
     }
-    display_config();
   }
 
+	// redisplay the configuration in any situations
+	display_config();
   return _ch;
 }
 
