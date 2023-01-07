@@ -47,6 +47,8 @@ list( APPEND sources ../common/picoterm_stddef.c )
 list( APPEND sources ../common/picoterm_cursor.c )
 list( APPEND sources ../common/picoterm_dec.c )
 list( APPEND sources ../common/keybd.c )
+list( APPEND sources ../common/picoterm_i2c.c )
+list( APPEND sources ../common/pca9536.c )
 
 # Define the library to includes at compile time
 #
