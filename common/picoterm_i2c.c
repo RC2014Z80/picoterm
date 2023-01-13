@@ -12,6 +12,10 @@ https://www.digikey.be/en/maker/projects/raspberry-pi-pico-rp2040-i2c-example-wi
 #define SDA_PIN 26
 #define SCL_PIN 27
 
+// Global flag informing about the usage of gp26 & gp27 on the Picoterm expansion
+// When true, the GPIO are used as I2C, otherwise they are used as simple GPIO.
+bool i2c_bus_available;
+
 i2c_inst_t *i2c_bus = i2c1;
 
 void init_i2c_bus(){
@@ -40,7 +44,7 @@ int reg_write(  i2c_inst_t *i2c,
                 uint8_t *buf,
                 const uint8_t nbytes) {
 
-    int num_bytes_read = 0;
+    int num_bytes_write = 0;
     uint8_t msg[nbytes + 1];
 
     // Check to make sure caller is sending 1 or more bytes
@@ -55,13 +59,13 @@ int reg_write(  i2c_inst_t *i2c,
     }
 
     // Write data to register(s) over I2C
-    i2c_write_blocking(i2c, addr, msg, (nbytes + 1), false);
+    num_bytes_write = i2c_write_blocking(i2c, addr, msg, (nbytes + 1), false);
 
-    return num_bytes_read;
+    return num_bytes_write;
 }
 
 // Read byte(s) from specified register. If nbytes > 1, read from consecutive
-// registers.
+// registers. Returns the number for bytes readed.
 int reg_read(  i2c_inst_t *i2c,
                 const uint addr,
                 const uint8_t reg,
@@ -83,7 +87,7 @@ int reg_read(  i2c_inst_t *i2c,
 }
 
 // Read byte(s) from specified register. If nbytes > 1, read from consecutive
-// registers.
+// registers. Returns the number for bytes readed.
 int reg_read_timeout(  i2c_inst_t *i2c,
                 const uint addr,
                 const uint8_t reg,

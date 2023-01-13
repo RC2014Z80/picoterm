@@ -23,7 +23,7 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 * Adding License file (BSD 3-Clause).
 * Key Repeat implemented into keybd.c (see keydown_start_repeat_delay, keydown_resent_delay for parametrisation).
 * save screen+cursor when activating menu screen. Restore them when existing menu screen.
-
+* Buzzer & USB-Power pins: auto-detect PCA9536 I2C GPIO expander at startup (otherwise use GPIOs). See [picoterm-conn](docs/picoterm-conn.md) for details.
 
 ### Fix & Improvement
 * DEC Lines in ASCII: using = instead of - offers a better visibility.

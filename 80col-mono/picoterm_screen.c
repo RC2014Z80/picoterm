@@ -17,6 +17,9 @@
 
 #include "../common/picoterm_debug.h"
 
+/* Picoterm_i2c.c */
+extern bool i2c_bus_available; // gp26 & gp27 are used as I2C (otherwise as simple GPIO)
+
 /* picoterm_config.c */
 extern picoterm_config_t config; // Issue #13, awesome contribution of Spock64
 
@@ -311,7 +314,8 @@ void display_terminal(){
     print_string(msg);
     sprintf(msg, "%s (%s)\r\n", config.font_id==FONT_ASCII ? "ASCII" : "ANSI", get_font_name(config.graph_id) ); // ANSI graphical font name in parenthesis
     print_string(msg);
-
+		sprintf(msg, "Buzzer/USB-power on %s\r\n", i2c_bus_available==true ? "I2C" : "GPIO" );
+		print_string(msg);
     char _parity = '?';
     switch(config.parity){
       case UART_PARITY_NONE:

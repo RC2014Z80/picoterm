@@ -63,13 +63,18 @@
 #include "bsp/board.h"
 #include "tusb.h"
 #include "hardware/i2c.h"
+
+/* picoterm_i2c.c */
 extern i2c_inst_t *i2c_bus;
+extern bool i2c_bus_available; // gp26 & gp27 are used as I2C (otherwise as simple GPIO)
 
 // This is 4 for the font we're using
 #define FRAGMENT_WORDS 4
 
 static bool is_menu = false;   // switch between Terminal mode and Menu mode
 static uint8_t id_menu = 0x00; // toggle with CTRL+SHIFT+M
+
+
 
 //CU_REGISTER_DEBUG_PINS(frame_gen)
 //CU_SELECT_DEBUG_PINS(frame_gen)
@@ -631,38 +636,39 @@ int main(void) {
   // AFTER   reading and writing
   stdio_init_all();
 
-	/* PCA9536 - future stuff for issue #21
-	debug_print( "Check I2C capability on GP26, GP27" );
-	init_i2c_bus(); // try to initialize the PicoTerm I2C bus
-	if( has_pca9536( i2c_bus ) ){
-		debug_print( "pca9536 detected!" );
-		pca9536_output_reset( i2c_bus, 0b0111 ); // preinitialize output at LOW
-		pca9536_setup_io( i2c_bus, IO_0, IO_MODE_OUT );
-		pca9536_setup_io( i2c_bus, IO_1, IO_MODE_OUT );
-		pca9536_setup_io( i2c_bus, IO_2, IO_MODE_OUT );
-		pca9536_setup_io( i2c_bus, IO_3, IO_MODE_IN );
-		bool state = pca9536_input_io( i2c_bus, IO_3 ); // read state of IO3
-		debug_print( "IO activated" );
-		sleep_ms( 1000 );
-		pca9536_output_io( i2c_bus, IO_0, true ); // preinitialize at LOW
-		pca9536_output_io( i2c_bus, IO_1, state ); // preinitialize at LOW
-		pca9536_output_io( i2c_bus, IO_2, true ); // preinitialize at LOW
-		sleep_ms( 1000 );
-		pca9536_output_io( i2c_bus, IO_0, false ); // preinitialize at LOW
-		pca9536_output_io( i2c_bus, IO_1, state ); // preinitialize at LOW
-		pca9536_output_io( i2c_bus, IO_2, false ); // preinitialize at LOW
-	}
-	deinit_i2c_bus();
-	*/
-	debug_print( "Using GPIO capability on GP26, GP27" );
-  gpio_init(USB_POWER_GPIO); // GPIO 26
-  gpio_set_dir(USB_POWER_GPIO, GPIO_OUT);
-  gpio_put(USB_POWER_GPIO,false);
-  start_time = board_millis();
+  // Checking GP26 & GP27 will be handled as GPIO or I2C bus (with PCA9536 see issue #21)
+  // Then initialize the IO for USB_POWER &
+  i2c_bus_available = false;
+  debug_print( "Check I2C capability on GP26, GP27" );
+  init_i2c_bus(); // try to initialize the PicoTerm I2C bus
+  if( has_pca9536( i2c_bus ) ){
+    debug_print( "pca9536 detected!" );
+    i2c_bus_available = true;
+    pca9536_output_reset( i2c_bus, 0b0011 ); // preinitialize output at LOW
+    pca9536_setup_io( i2c_bus, IO_0, IO_MODE_OUT ); // USB_POWER
+    pca9536_setup_io( i2c_bus, IO_1, IO_MODE_OUT ); // BUZZER
+    pca9536_setup_io( i2c_bus, IO_2, IO_MODE_IN ); // not used yet
+    pca9536_setup_io( i2c_bus, IO_3, IO_MODE_IN ); // not used yet
+  }
+	// check other I2C GPIO expander here!
 
-  gpio_init(BUZZER_GPIO);
-  gpio_set_dir(BUZZER_GPIO, GPIO_OUT);
-  gpio_put(BUZZER_GPIO,false);
+  if( i2c_bus_available )
+    debug_print( "I2C bus detected on GP26, GP27" );
+
+  if( !i2c_bus_available ){
+    debug_print( "Using GPIO capability on GP26, GP27" );
+    deinit_i2c_bus();
+
+    gpio_init(USB_POWER_GPIO); // GPIO 26
+    gpio_set_dir(USB_POWER_GPIO, GPIO_OUT);
+    gpio_put(USB_POWER_GPIO,false);
+
+    gpio_init(BUZZER_GPIO);
+    gpio_set_dir(BUZZER_GPIO, GPIO_OUT);
+    gpio_put(BUZZER_GPIO,false);
+  }
+
+  start_time = board_millis();
 
 
   uart_init(UART_ID, config.baudrate); // UART 1
@@ -783,7 +789,13 @@ void led_blinking_task() {
 void usb_power_task() {
   if( !usb_power_state && ((board_millis() - start_time)>USB_POWER_DELAY )){
     usb_power_state = true;
-    gpio_put( USB_POWER_GPIO, true );
+    if( i2c_bus_available ){
+      // USB_POWER wired on the IO_0 of PCA9536
+      pca9536_output_io( i2c_bus, IO_0, true );
+    }
+    else
+      // USB_POWER wired directly on the GPIO
+      gpio_put( USB_POWER_GPIO, true );
   }
 }
 
@@ -809,12 +821,18 @@ void bell_task() {
 
   if(get_bell_state() == 1){
     start_ms_bell = board_millis();
-    gpio_put(BUZZER_GPIO, true);
+    if(i2c_bus_available) // BuZZER wired on the IO_1 of PCA9536
+      pca9536_output_io( i2c_bus, IO_1, true );
+    else
+      gpio_put(BUZZER_GPIO, true); // buzzer Wired directly on GPIO
     set_bell_state(2);
   }
 
   else if (get_bell_state() == 2 && board_millis() - start_ms_bell > interval_ms_bell) {
-    gpio_put(BUZZER_GPIO, false);
+    if(i2c_bus_available)
+      pca9536_output_io( i2c_bus, IO_1, false ); // BuZZER wired on the IO_1 of PCA9536
+    else
+      gpio_put(BUZZER_GPIO, false); // buzzer Wired directly on GPIO
     set_bell_state(0);
   }
 
