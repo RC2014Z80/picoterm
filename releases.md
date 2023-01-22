@@ -24,6 +24,7 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 * Key Repeat implemented into keybd.c (see keydown_start_repeat_delay, keydown_resent_delay for parametrisation).
 * save screen+cursor when activating menu screen. Restore them when existing menu screen.
 * Buzzer & USB-Power pins: auto-detect PCA9536 I2C GPIO expander at startup (otherwise use GPIOs). See [picoterm-conn](docs/picoterm-conn.md) for details.
+* pictoterm_screen nows diplays at best under NupetScii and cp437 fonts.
 
 ### Fix & Improvement
 * font cp437 fix char 0xC4 (horizontal line)

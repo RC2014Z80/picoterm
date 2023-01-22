@@ -40,7 +40,7 @@ void conio_init( uint8_t ansi_font_id ); // allocate required ressources
 void conio_reset( char default_cursor_symbol );
 
 void print_string(char str[]);
-void __print_string(char str[], bool strip_graphical );
+void print_nupet(char str[], uint8_t font_id ); // Print a NupetSCII encoded string to terminal with current font_id
 
 // Read a key from input buffer (the keyboard or serial line). Return 0 if no
 // char available (this is used by the menu handling)

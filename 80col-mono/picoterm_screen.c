@@ -52,26 +52,26 @@ void display_charset(){
   clrscr();
   move_cursor_home(); //csr.x = 0; csr.y = 0;
 
-  __print_string( "\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 Current Charset \x0A6\x0A6\r\n" , config.font_id!=FONT_NUPETSCII ); // strip Nupetscii when not activated
+  print_nupet( "\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 Current Charset \x0A6\x0A6\r\n" , config.font_id ); // strip Nupetscii when not activated
   print_string( "     0 1 2 3 4 5 6 7 8 9 A B C D E F\r\n");
-  __print_string( "   \x0B0\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n"  , config.font_id!=FONT_NUPETSCII );
+  print_nupet( "   \x0B0\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n"  , config.font_id );
   for( char line=2; line<16; line++ ){
     sprintf( msg, "%02X \x0C2 ", line*16 );
-    __print_string( msg , config.font_id!=FONT_NUPETSCII ); // strip Nupetscii when not activated
+    print_nupet( msg , config.font_id ); // strip Nupetscii when not activated
     for( char index=0; index<=15; index++ ){
       _c = line*16+index;
       sprintf( msg, "%c ", _c );
       print_string( msg );
     }
-    __print_string("\x0C2\r\n", config.font_id!=FONT_NUPETSCII );
+    print_nupet("\x0C2\r\n", config.font_id );
     // Insert a index line in the middle for easier reading
     if( line==8 ){
-      __print_string( "   \x0AB\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B3\r\n", config.font_id!=FONT_NUPETSCII );
-      __print_string( "   \x0C2 0 1 2 3 4 5 6 7 8 9 A B C D E F \x0C2\r\n" , config.font_id!=FONT_NUPETSCII );
-      __print_string( "   \x0AB\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B3\r\n", config.font_id!=FONT_NUPETSCII );
+      print_nupet( "   \x0AB\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B3\r\n", config.font_id );
+      print_nupet( "   \x0C2 0 1 2 3 4 5 6 7 8 9 A B C D E F \x0C2\r\n" , config.font_id );
+      print_nupet( "   \x0AB\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B3\r\n", config.font_id );
     }
   }
-  __print_string( "   \x0AD\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0BD\r\n", config.font_id!=FONT_NUPETSCII );
+  print_nupet( "   \x0AD\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0BD\r\n", config.font_id );
   print_string( "     0 1 2 3 4 5 6 7 8 9 A B C D E F\r\n");
 
   print_string("\r\n(ESC=close) ? ");
@@ -90,34 +90,34 @@ void display_config(){
     clrscr();
     move_cursor_home();//csr.x = 0; csr.y = 0;
 
-    __print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Menu \x0A6\x0A6\r\n" , config.font_id!=FONT_NUPETSCII ); // strip graphical when not activated
-    __print_string("\x0E2\x0E1 Terminal Colors \x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E4\r\n", config.font_id!=FONT_NUPETSCII );
+    print_nupet("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Menu \x0A6\x0A6\r\n" , config.font_id ); // strip graphical when not activated
+    print_nupet("\x0E2\x0E1 Terminal Colors \x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E4\r\n", config.font_id );
     sprintf(msg, "\x0E0  %s0 White   %s1 Light Amber %s2 Dark Amber   \x0E0\r\n", (config.colour_preference==0)?"\x0D1":" ", (config.colour_preference==1)?"\x0D1":" ", (config.colour_preference==2)?"\x0D1":" " );
-    __print_string(msg, config.font_id!=FONT_NUPETSCII );
+    print_nupet(msg, config.font_id );
     sprintf( msg, "\x0E0  %s3 Green1  %s4 Green2      %s5 Green3       \x0E0\r\n", (config.colour_preference==3)?"\x0D1":" ", (config.colour_preference==4)?"\x0D1":" ", (config.colour_preference==5)?"\x0D1":" " );
-    __print_string(msg, config.font_id!=FONT_NUPETSCII );
+    print_nupet(msg, config.font_id );
     sprintf( msg, "\x0E0  %s6 Purple                                 \x0E0\r\n", (config.colour_preference==6)?"\x0D1":" " );
-    __print_string( msg, config.font_id!=FONT_NUPETSCII );
-    __print_string("\x0E8\x0C3 Serial  Baud \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B2\x0C3 Data bit \x0C3\x0C3\x0E9\r\n", config.font_id!=FONT_NUPETSCII );
+    print_nupet( msg, config.font_id );
+    print_nupet("\x0E8\x0C3 Serial  Baud \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B2\x0C3 Data bit \x0C3\x0C3\x0E9\r\n", config.font_id );
     sprintf(msg, "\x0E0  %sa 115200 %sb 57600 %sc 38400 \x0C2 %s8  8 bits  \x0E0\r\n", (config.baudrate==115200)?"\x0D1":" " , (config.baudrate==57600)?"\x0D1":" ", (config.baudrate==38400)?"\x0D1":" ", (config.databits==8)?"\x0D1":" " );
-    __print_string(msg, config.font_id!=FONT_NUPETSCII );
+    print_nupet(msg, config.font_id );
     sprintf(msg, "\x0E0  %sd 19200  %se 9600  %sf 4800  \x0C2 %s7  7 bits  \x0E0\r\n", (config.baudrate==19200)?"\x0D1":" " , (config.baudrate==9600)?"\x0D1":" ", (config.baudrate==4800)?"\x0D1":" ", (config.databits==7)?"\x0D1":" " );
-    __print_string(msg, config.font_id!=FONT_NUPETSCII );
+    print_nupet(msg, config.font_id );
     sprintf(msg, "\x0E0  %sg 2400   %sh 1200  %si 300   \x0C2             \x0E0\r\n", (config.baudrate==2400)?"\x0D1":" " , (config.baudrate==1200)?"\x0D1":" " , (config.baudrate==300)?"\x0D1":" " );
-    __print_string(msg, config.font_id!=FONT_NUPETSCII );
-    __print_string("\x0E8\x0C3 Parity \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0DB\x0C3 Stop bits \x0C3\x0E9\r\n", config.font_id!=FONT_NUPETSCII );
+    print_nupet(msg, config.font_id );
+    print_nupet("\x0E8\x0C3 Parity \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0DB\x0C3 Stop bits \x0C3\x0E9\r\n", config.font_id );
     sprintf(msg, "\x0E0  %sn None   %so Odd   %sv Even  \x0C2 %sw  1 bit   \x0E0\r\n", (config.parity==UART_PARITY_NONE)?"\xD1":" " , (config.parity==UART_PARITY_ODD)?"\xD1":" ", (config.parity==UART_PARITY_EVEN)?"\xD1":" " , (config.stopbits==1)?"\xD1":" "  );
-    __print_string(msg, config.font_id!=FONT_NUPETSCII );
+    print_nupet(msg, config.font_id );
     sprintf(msg, "\x0E8\x0C3 Charset \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B3 %sx  2 bits  \x0E0\r\n", (config.stopbits==2)?"\xD1":" " );
-    __print_string(msg, config.font_id!=FONT_NUPETSCII );
+    print_nupet(msg, config.font_id );
     sprintf(msg, "\x0E0  %sl ASCII (7bits+reverse)    \x0C2             \x0E0\r\n", (config.font_id == FONT_ASCII)?"\x0D1":" " );
-    __print_string(msg, config.font_id!=FONT_NUPETSCII );
+    print_nupet(msg, config.font_id );
     sprintf(msg, "\x0E0  %sm ANSI Graphic (8bits)     \x0C2             \x0E0\r\n", (config.font_id > FONT_ASCII)?"\x0D1":" " );
-    __print_string(msg, config.font_id!=FONT_NUPETSCII );
-    __print_string("\x0E8\x0C3 ANSI Graphic font \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B1\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0E9\r\n", config.font_id!=FONT_NUPETSCII );
+    print_nupet(msg, config.font_id );
+    print_nupet("\x0E8\x0C3 ANSI Graphic font \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B1\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0E9\r\n", config.font_id );
     sprintf(msg, "\x0E0  %sp NupetSCII   %sq CP437                   \x0E0\r\n", (config.graph_id==FONT_NUPETSCII)?"\x0D1":" ", (config.graph_id==FONT_CP437)?"\x0D1":" " );
-    __print_string(msg, config.font_id!=FONT_NUPETSCII );
-    __print_string("\x0E5\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E7\r\n", config.font_id!=FONT_NUPETSCII );
+    print_nupet(msg, config.font_id );
+    print_nupet("\x0E5\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E7\r\n", config.font_id );
     print_string("\r\n(S upcase=save / ESC=close) ? ");
 
 
@@ -278,14 +278,14 @@ void display_help(){
   // reset_escape_sequence(); LOOKS not usefull from screen!
   clrscr();
   move_cursor_home(); // csr.x = 0; csr.y = 0;
-  __print_string("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Help \x0A6\x0A6\r\n", config.font_id!=FONT_NUPETSCII );
-  __print_string("\x0B0\x0C3 Keyboard Shortcut \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n", config.font_id!=FONT_NUPETSCII );
-  __print_string("\x0C2 \x083 Shift+Ctrl+H : Help screen                   \x0C2\r\n", config.font_id!=FONT_NUPETSCII ); // strip Nupetscii when not activated
-  __print_string("\x0C2 \x083 Shift+Ctrl+L : Toggle ASCII/ANSI charset     \x0C2\r\n", config.font_id!=FONT_NUPETSCII );
-  __print_string("\x0C2 \x083 Shift+Ctrl+M : Configuration menu            \x0C2\r\n", config.font_id!=FONT_NUPETSCII );
-  __print_string("\x0C2 \x083 Shift+Ctrl+N : Display current charset       \x0C2\r\n", config.font_id!=FONT_NUPETSCII );
-  __print_string("\x0C2                                                \x0C2\r\n", config.font_id!=FONT_NUPETSCII );
-  __print_string("\x0AD\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0BD\r\n", config.font_id!=FONT_NUPETSCII );
+  print_nupet("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Help \x0A6\x0A6\r\n", config.font_id );
+  print_nupet("\x0B0\x0C3 Keyboard Shortcut \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n", config.font_id );
+  print_nupet("\x0C2 \x083 Shift+Ctrl+H : Help screen                   \x0C2\r\n", config.font_id ); // strip Nupetscii when not activated
+  print_nupet("\x0C2 \x083 Shift+Ctrl+L : Toggle ASCII/ANSI charset     \x0C2\r\n", config.font_id );
+  print_nupet("\x0C2 \x083 Shift+Ctrl+M : Configuration menu            \x0C2\r\n", config.font_id );
+  print_nupet("\x0C2 \x083 Shift+Ctrl+N : Display current charset       \x0C2\r\n", config.font_id );
+  print_nupet("\x0C2                                                \x0C2\r\n", config.font_id );
+  print_nupet("\x0AD\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0BD\r\n", config.font_id );
 
   print_string("\r\n(ESC=close) ? ");
   cursor_visible(true);
