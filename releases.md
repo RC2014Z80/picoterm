@@ -26,6 +26,7 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 * Buzzer & USB-Power pins: auto-detect PCA9536 I2C GPIO expander at startup (otherwise use GPIOs). See [picoterm-conn](docs/picoterm-conn.md) for details.
 
 ### Fix & Improvement
+* font cp437 fix char 0xC4 (horizontal line)
 * DEC Lines in ASCII: using = instead of - offers a better visibility.
 * CMakeList copy the required files from PICO_SDK and font-suite (issue #25).
 * Decoupling picoterm.c
