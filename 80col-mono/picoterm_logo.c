@@ -4,7 +4,7 @@
    This logo is stored in a separate file to allow easy customisation for
    project customization with simple file replacement.
 
-   Please keeps the credit to the original PicoTerm projet!
+   Please keeps the credit (top & bottom lines) to the original PicoTerm projet! 
 */
 
 const int LOGO_LINES = 19;
