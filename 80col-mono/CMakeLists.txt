@@ -3,10 +3,22 @@ cmake_minimum_required(VERSION 3.14)
 project(picoterm VERSION 1.5.3)
 message("PicoTerm 80Col version = ${CMAKE_PROJECT_VERSION}")
 
-if(EXISTS "${PICO_SDK_PATH}")
-	message("detected PICO_SDK_PATH @ ${PICO_SDK_PATH}" )
+# PICO_SDK_PATH defined in environment variable? --> Use it
+# Otherwise the variable should be exported. Read docs/compiling.md for details!
+#
+if(EXISTS "$ENV{PICO_SDK_PATH}")
+  message("Environment variable PICO_SDK_PATH detected" )
+  set(PICO_SDK_PATH "$ENV{PICO_SDK_PATH}" )
 else()
-	message( FATAL_ERROR "Systen Environment variable PICO_SDK_PATH undefined!" )
+  message("Environment variable PICO_SDK_PATH not present! Will rely on EXPORT PICO_SDK_PATH=..." )
+endif()
+
+message("PICO_SDK_PATH = ${PICO_SDK_PATH}" )
+
+if(EXISTS "${PICO_SDK_PATH}")
+	message("PICO_SDK_PATH successfully detected." )
+else()
+	message( FATAL_ERROR "Systen Environment variable PICO_SDK_PATH undefined or not exported!" )
 endif()
 
 
@@ -32,7 +44,7 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/nupetscii.c  DESTINATION ${C
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
 pico_sdk_init()
-
+project(picoterm LANGUAGES CXX C ASM VERSION 2.5.3 ) # see issue 36
 
 # Defines source files to compile
 #    Not included in source: font6.c font10.c lcd.c font8.c

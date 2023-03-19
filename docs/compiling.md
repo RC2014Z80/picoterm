@@ -39,7 +39,9 @@ REM We will build the "80col-mono" version
 cd picoterm/80col-mono/Build
 
 REM Indicates where to find the Pico SDK
-export PICO_SDK_PATH=../../../../../pico/pico-sdk
+REM   It is better to have absolute path instead of relative path
+REM   export PICO_SDK_PATH=../../../../../pico/pico-sdk
+export PICO_SDK_PATH=/home/__YOUR_USER__/pico/pico-sdk
 
 REM Since jan 4, 2023 this operation is made by Cmake
 REM

@@ -1,13 +1,50 @@
 cmake_minimum_required(VERSION 3.14)
 
-#set(PICO_BOARD "vgaboard")
+project(picoterm VERSION 1.4)
+message("PicoTerm 40Col version = ${CMAKE_PROJECT_VERSION}")
+
+# PICO_SDK_PATH defined in environment variable? --> Use it
+# Otherwise the variable should be exported. Read docs/compiling.md for details!
+#
+if(EXISTS "$ENV{PICO_SDK_PATH}")
+  message("Environment variable PICO_SDK_PATH detected" )
+  set(PICO_SDK_PATH "$ENV{PICO_SDK_PATH}" )
+else()
+  message("Environment variable PICO_SDK_PATH not present! Will rely on EXPORT PICO_SDK_PATH=..." )
+endif()
+
+message("PICO_SDK_PATH = ${PICO_SDK_PATH}" )
+
+if(EXISTS "${PICO_SDK_PATH}")
+	message("PICO_SDK_PATH successfully detected." )
+else()
+	message( FATAL_ERROR "Systen Environment variable PICO_SDK_PATH undefined or not exported!" )
+endif()
+
+
+# PICO_SDK_PATH: Copy the CMAKE dependencies to local folder
+#
+file(COPY ${PICO_SDK_PATH}/external/pico_sdk_import.cmake  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
+file(COPY ${PICO_SDK_PATH}/../pico-extras/external/pico_extras_import.cmake  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
+
+# PICO_SDK_PATH: Copy the FILES dependencies to local folder
+#
+file(COPY ${PICO_SDK_PATH}/../pico-playground/scanvideo/textmode/font.h  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
+
+# FONT-SUITE: Copy the files dependencies to local folder
+#
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/cp437.c  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/nupetscii.c  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
+
+
+# Set alternative TinyUSB source code
+#
+#set(PICO_TINYUSB_PATH "/home/domeu/Bureau/RC2014/picoterm/80col-mono/tinyusb" )
 
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
 pico_sdk_init()
-
-project(picoterm VERSION 1.4)
-message("PicoTerm 40Col version = ${CMAKE_PROJECT_VERSION}")
+project(picoterm LANGUAGES CXX C ASM VERSION 2.5.3 ) # see issue 36
 
 # Defines source files to compile
 #    Not included in source: font8.c font6.c font10.c lcd.c
@@ -31,8 +68,8 @@ list( APPEND to_build picoterm picoterm_US picoterm_DE picoterm_FR picoterm_BE )
 foreach( exec ${to_build} )
   add_executable( ${exec} ${sources} )
 	pico_generate_pio_header( ${exec} ../../common/uart_tx.pio)
-	pico_enable_stdio_usb( ${exec} 0)
-	pico_enable_stdio_uart( ${exec} 0)
+	pico_enable_stdio_usb( ${exec} 0)  # Redirect printf to USB-Serial. Conflict with TinyUSB!
+	pico_enable_stdio_uart( ${exec} 0) # Redirect printf to uart0. But no room to place UART0 on GPIO!
 
 	# Necessary to include tusb_config.h
 	target_include_directories( ${exec} PRIVATE ${CMAKE_CURRENT_LIST_DIR} )
