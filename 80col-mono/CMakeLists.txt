@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(picoterm VERSION 1.5.3)
-message("PicoTerm 80Col version = ${CMAKE_PROJECT_VERSION}")
+set( PICOTERM_VERSION 1.5.3.99  )
+set( PICOTERM_DESCR "Alpha" )
+message("PicoTerm 80Col version = ${PICOTERM_VERSION} ${PICOTERM_DESCR}") #  ${CMAKE_PROJECT_VERSION}
 
 # PICO_SDK_PATH defined in environment variable? --> Use it
 # Otherwise the variable should be exported. Read docs/compiling.md for details!
@@ -46,7 +47,7 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/olivetti_thin_nupetscii.c  D
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
 pico_sdk_init()
-project(picoterm LANGUAGES CXX C ASM VERSION 2.5.3 ) # see issue 36
+project(picoterm LANGUAGES CXX C ASM VERSION ${PICOTERM_VERSION} DESCRIPTION ${PICOTERM_DESCR}) # see issue 36
 
 # Defines source files to compile
 #    Not included in source: font6.c font10.c lcd.c font8.c
