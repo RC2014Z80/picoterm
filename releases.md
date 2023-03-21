@@ -24,7 +24,11 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 * Key Repeat implemented into keybd.c (see keydown_start_repeat_delay, keydown_resent_delay for parametrisation).
 * save screen+cursor when activating menu screen. Restore them when existing menu screen.
 * Buzzer & USB-Power pins: auto-detect PCA9536 I2C GPIO expander at startup (otherwise use GPIOs). See [picoterm-conn](docs/picoterm-conn.md) for details.
-* pictoterm_screen nows diplays at best under NupetScii and cp437 fonts.
+* pictoterm_screen now diplays at best under NupetScii and cp437 fonts.
+* Multi-FontFace support : adding OlivettiThin font added
+ * Support up to 16 Font-Face
+ * Support up to 16 Charset
+ * Know issue: CP437 & NupetScii data should also be designed in 14 pixels height for compiling OlivettiThin (also 14 pixels Height)
 
 ### Fix & Improvement
 * font cp437 fix char 0xC4 (horizontal line)
@@ -43,6 +47,11 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
  * Store the PICOTERM_LOGO into picoterm_logo.c
  * allow replacement for custom project (Please keeps the PicoTerm credit)
  * passed full test-suite
+* CMakeList.txt: Using $ENV{PICO_SDK_PATH} to detect environment variable and initialise ${PICO_SDK_PATH}
+* Document how to add new charset.
+* Document how to add new font-face.
+* Avoids multiples allocation in `build_font()` causing memory fragmentation.
+* font-suite/nupetscii.c & cp437.c are renamed mono8_cp437.c & mono8_nupetscii.c for better consistancy. Picoterm CMakeList and code are updated accordingly!
 
 ## Version 1.5.2 - Dec 30 2022
 

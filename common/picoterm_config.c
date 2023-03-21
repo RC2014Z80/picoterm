@@ -45,7 +45,7 @@ void set_default_config( struct PicotermConfig *c ){
 	// version 3
 	c->font_id = FONT_ASCII; // current font to use
 	// version 4
-	c->graph_id = FONT_NUPETSCII; // prefered graphical font.
+	c->graph_id = FONT_NUPETSCII_MONO8; // prefered graphical font.
 
 }
 
@@ -66,7 +66,7 @@ void upgrade_config( struct PicotermConfig *c ){
 		c->version  = 3;
   }
 	if( c->version == 3 ){ // Upgrade to version 4 with defaults
-		c->graph_id = FONT_NUPETSCII;
+		c->graph_id = FONT_NUPETSCII_MONO8;
     // Ok for version 4
     c->version  = 4;
   }
@@ -75,7 +75,7 @@ void upgrade_config( struct PicotermConfig *c ){
 	// the currently graphical ANSI font selected by the user.
 	if( c->font_id!=FONT_ASCII )
 		c->font_id = c->graph_id;
-	
+
   /*
   if( c->version == 4 ){ // Upgrade to version 5 with defaults
     // blabla

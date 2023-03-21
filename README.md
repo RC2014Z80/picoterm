@@ -22,6 +22,10 @@ PicoTerm offers the following features:
 * Multiple ANSI/[advanced graphical charset](font-suite/readme.md) availables
  * NupetScii : charset merging several retro-computer character sets (C64, MSX, MSDOS). Great for ASCII art, interface design, map drawing, drawing ressource with Playscii.
  * CP437 : IBM MS-DOS codepage for english computer.
+ * Up to 16 charsets possible
+* Multiple Font-Face supported (see [multiple font-Face support](font-suite/add-font-face.md) )
+ * Ubuntu Mono8 (from Pico-SDK)
+ * [Olivetti Thin](https://int10h.org/oldschool-pc-fonts/fontlist/?2#olivetti) (from [int10h.org](https://int10h.org/oldschool-pc-fonts/))
 * [PicoTerm connector](docs/picoterm-conn.md) : expansion port
  * SD card reader [under construction]
  * Active Buzzer
@@ -184,7 +188,8 @@ The picoterm projet contains a wide variety of documentation and ressources abou
 |-----------------------------|----------------------------------------------------------|
 | [Release notes](releases.md)       | History of changes                                |
 | [Firmware upgrade](docs/firmware-upgrade.md) | How to upload a new firmware on picoterm.|
-| [Graphical font](font-suite/readme.md) | Discovering the NuppetScii & CP437 graphical font and coding. Discover Playscii a software to draw screen with NuPetScii. |
+| [Graphical charset](font-suite/readme.md) | Discovering the NuppetScii & CP437 graphical charset (128 to 255) append behind ASCII charset. Discover Playscii software used to draw screen with NuPetScii. |
+| [Font-Face](font-suite/add-font-face.md) | Adding new font-face to picoterm. |
 | [Using-NupetScii](docs/using-nupetscii.md) | How to activate NuPetScii from RC2014. |
 | [Compiling](docs/compiling.md)     | Building firmware from source<br />How to setup the compilation environment to compile PicoTerm on your computer |
 | [Debug](docs/debug.md)             | Poor man serial debugger for PicoTerm.<br />Need to debug and troubleshoot? This document describes the picoterm _debug uart_. |

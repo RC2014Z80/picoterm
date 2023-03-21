@@ -115,7 +115,9 @@ void display_config(){
     sprintf(msg, "\x0E0  %sm ANSI Graphic (8bits)     \x0C2             \x0E0\r\n", (config.font_id > FONT_ASCII)?"\x0D1":" " );
     print_nupet(msg, config.font_id );
     print_nupet("\x0E8\x0C3 ANSI Graphic font \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0B1\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0E9\r\n", config.font_id );
-    sprintf(msg, "\x0E0  %sp NupetSCII   %sq CP437                   \x0E0\r\n", (config.graph_id==FONT_NUPETSCII)?"\x0D1":" ", (config.graph_id==FONT_CP437)?"\x0D1":" " );
+    sprintf(msg, "\x0E0  %sp NupetSCII Mono8    %sq CP437 Mono8      \x0E0\r\n", (config.graph_id==FONT_NUPETSCII_MONO8)?"\x0D1":" ", (config.graph_id==FONT_CP437_MONO8)?"\x0D1":" " );
+    print_nupet(msg, config.font_id );
+		sprintf(msg, "\x0E0  %sr NupetSCII OlivettiT%ss CP437 OlivettiT  \x0E0\r\n", (config.graph_id==FONT_NUPETSCII_OLIVETTITHIN)?"\x0D1":" ", (config.graph_id==FONT_CP437_OLIVETTITHIN)?"\x0D1":" " );
     print_nupet(msg, config.font_id );
     print_nupet("\x0E5\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E1\x0E7\r\n", config.font_id );
     print_string("\r\n(S upcase=save / ESC=close) ? ");
@@ -236,7 +238,7 @@ char handle_config_input(){
         config.font_id = FONT_ASCII; // normal font
         break;
       case 'm':
-        config.font_id = config.graph_id; //FONT_NUPETSCII;
+        config.font_id = config.graph_id; //Graphical font (FONT_NUPETSCII_MONO8);
         break;
     }
     select_graphic_font( config.font_id );
@@ -244,13 +246,19 @@ char handle_config_input(){
     conio_config.cursor.symbol = get_cursor_char( config.font_id, CURSOR_TYPE_DEFAULT ) - 0x20;
   }
   // Select the Graphical font to be used
-  if ( ( _ch >= 'p') && (_ch <= 'q') ) {
+  if ( ( _ch >= 'p') && (_ch <= 's') ) {
     switch( _ch ){
       case 'p':
-        config.graph_id = FONT_NUPETSCII;
+        config.graph_id = FONT_NUPETSCII_MONO8;
         break;
       case 'q':
-        config.graph_id = FONT_CP437;
+        config.graph_id = FONT_CP437_MONO8;
+        break;
+      case 'r':
+        config.graph_id = FONT_NUPETSCII_OLIVETTITHIN;
+        break;
+      case 's':
+        config.graph_id = FONT_CP437_OLIVETTITHIN;
         break;
     }
     if( config.font_id != FONT_ASCII ) {

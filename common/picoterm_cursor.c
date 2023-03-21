@@ -25,8 +25,8 @@ char get_cursor_char( uint8_t font_id, uint8_t cursor_type ){
   // return the ASCII char for a given cursor.
   // Remark: Cursor Symbol = Cursor Character - 0x20
   char cursor_char;
-  switch( font_id ){
-      case FONT_ASCII:
+
+  if( font_id==FONT_ASCII ){
           switch( cursor_type ){
             case CURSOR_TYPE_DEFAULT: // default configuration (underline blinking)
               cursor_char = 0x5F;
@@ -47,9 +47,8 @@ char get_cursor_char( uint8_t font_id, uint8_t cursor_type ){
               // return the CURSOR_TYPE_DEFAULT
               cursor_char = 0x5F;
           } // switch cursor type
-          break;
+  } else if ( has_charset( font_id, CHARSET_NUPETSCII) ){
 
-        case FONT_NUPETSCII:
             switch( cursor_type ){
               case CURSOR_TYPE_DEFAULT: // default configuration (underline blinking)
                 cursor_char = 0xAF;
@@ -70,9 +69,8 @@ char get_cursor_char( uint8_t font_id, uint8_t cursor_type ){
                 // return the CURSOR_TYPE_DEFAULT
                 cursor_char = 0xAF;
             } // switch cursor type
-            break;
+  } else if ( has_charset( font_id, CHARSET_CP437 ) ) {
 
-          case FONT_CP437:
               switch( cursor_type ){
                 case CURSOR_TYPE_DEFAULT: // default configuration (underline blinking)
                   cursor_char = 0x5F;
@@ -93,14 +91,12 @@ char get_cursor_char( uint8_t font_id, uint8_t cursor_type ){
                   // return the CURSOR_TYPE_DEFAULT
                   cursor_char = 0x5F;
               } // switch cursor type
-              break;
-
-        default:
-          // UNSUPPORTED font_id
+  } else {
+          // UNSUPPORTED Charset
           // The # is used to identify this use-case. Do not modify it, just made
           // a proper implementation in the switch case.
           cursor_char = 0x23;
-  } // switch(font_id)
+  } // has_charset( font_id, ... )
   return cursor_char;
 }
 

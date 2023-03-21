@@ -1,24 +1,24 @@
-# Graphical fonts for PicoTerm
+# Graphical Charset for PicoTerm
 
-Picoterm support 2 types of fonts:
+Picoterm support 2 types of Charset:
 
-__Non graphical font__:
+__Non graphical Charset__:
 
 ASCII/VT100 mode where only 7 bits are used. The 8Th bit is used to invert the character to be displayed. This feature is used a lot under CP/M and retro boards. This font is based on Ubuntu Mono and defines only the chars from 0x20 to 0x7E.<br />At any moment, the `\ESCG` allows the terminal to returns this mode.
 
-__Graphical  font__:
+__Graphical  Charset__:
 
-ANSI mode where the 8th bit is used as part of charset encoding.<br/>When Picoterm receives a `\ESCF` it switch to graphical font.<br />This font is still based on Ubuntu Mono but includes lot additionnal chars. The font defines the chars from 0x20 to 0xFF.
+ANSI mode where the 8th bit is used as part of charset encoding.<br/>When Picoterm receives a `\ESCF` it switch to graphical font.<br />This charset is still based on Ubuntu Mono but includes lot additionnal chars. The font defines the chars from 0x20 to 0xFF.
 
-Picoterm now support several graphical fonts (selected via the configuration screen).
+Picoterm now support several graphical Charset (selected via the configuration screen).
 
 | ID  | Name       | Description                                              |
 |-----|------------|----------------------------------------------------------|
-| 1  	| NupetScii  | Initial extended graphical font combining lot of retro computer graphical chars<br />This page also contains ressource to draw graphical ressources with NupetSCII. |
+| 1  	| NupetScii  | Initial extended graphical charset combining lot of retro computer graphical chars<br />This page also contains ressource to draw graphical ressources with NupetSCII. |
 | 2	  | CP437      | English IBM/MS-DOS Codepage used on a wide variety of computerized system  |
 
 
-## NuPetSCII - ANSI font for semi-graphical rendering
+## NuPetSCII - ANSI Charset for semi-graphical rendering
 
 The `font8.c` used in the original PicoTerm 80 column only defines the ASCII charset
 (from 0 to 126. 127 is use for cursor display).
@@ -36,11 +36,14 @@ Here are the additionnal chars merged into the `font8.c` file.
 ![NuPET ASCII charset](nupet-ascii.png)
 
 ```
-font8.c + nupet.data ---( compile_font.py )---> nupetscii.c
+font8.c + nupet.data ---( compile_font.py )---> mono8_nupetscii.c
+font8.c + cp437.data ---( compile_font.py )---> mono8_cp437.c
 ```
 
+
 If you are interested in Drawing & Rendering NuPetScii ressource in PicoTerm you can read:
-* [Graphical Font readme](font-suite/readme.md): explains how to create ressource and extract data
+* [Mulitple Font-Face support ](add-font-face.md)
+* [Graphical Charset readme](font-suite/readme.md): explains how to create ressource and extract data
 * [Using NupetScii readme](docs/using-nupetscii.md): some RC2014 assembly & codes related to NuPetScii usage on RC2014.
 
 ![NuPetScii Demo example](../docs/_static/NupetSciiDemo-result.jpg)

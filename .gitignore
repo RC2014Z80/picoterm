@@ -5,6 +5,10 @@ font.h
 # Copied by the CMAKE from /font-suite -> ignore copy
 80col-mono/cp437.c
 80col-mono/nupetscii.c
+80col-mono/mono8_cp437.c
+80col-mono/mono8_nupetscii.c
+80col-mono/olivetti_thin_cp437.c
+80col-mono/olivetti_thin_nupetscii.c
 
 # Compiled files
 uart_tx.pio.h

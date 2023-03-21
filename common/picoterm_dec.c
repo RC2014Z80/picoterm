@@ -14,7 +14,7 @@ char get_dec_char( uint8_t font_id, uint8_t dec_mode, char _char ){
 		return _char;
 	char _r = 0x20;
 	switch( font_id ){
-		case FONT_NUPETSCII:
+		case FONT_NUPETSCII_MONO8:
 				switch(_char){
 					case 'j': // ┘
 						_r =  dec_mode == DEC_MODE_SINGLE_LINE ? 0xBD : 0xE7;
@@ -55,7 +55,7 @@ char get_dec_char( uint8_t font_id, uint8_t dec_mode, char _char ){
 				} // switch(_char)
 				break;
 
-		case FONT_CP437:
+		case FONT_CP437_MONO8:
 				switch(_char){
 					case 'j': // ┘
 						_r =  dec_mode == DEC_MODE_SINGLE_LINE ? 0xD9 : 0xBC;

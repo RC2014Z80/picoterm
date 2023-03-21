@@ -128,6 +128,9 @@ extern picoterm_config_t config; // Issue #13, awesome contribution of Spock64
 
 extern const lv_font_t nupetscii_mono8; // Declare the available fonts
 extern const lv_font_t cp437_mono8;
+extern const lv_font_t nupetscii_olivetti_thin; // Declare the available fonts
+extern const lv_font_t cp437_olivetti_thin;
+
 const lv_font_t *font = &nupetscii_mono8;
 
 
@@ -197,37 +200,43 @@ void setup_video() {
 #endif
 
 uint8_t pad[65536];
-uint32_t *font_raw_pixels;
 
+#define FONT_MAX_HEIGHT 15
 #define FONT_WIDTH_WORDS FRAGMENT_WORDS
 #define FONT_HEIGHT (font->line_height) // Should be identical accross all fonts.
+#define FONT_MAX_SIZE_WORDS (FONT_MAX_HEIGHT * FONT_WIDTH_WORDS)
 #define FONT_SIZE_WORDS (FONT_HEIGHT * FONT_WIDTH_WORDS)
+
+uint32_t *font_raw_pixels = NULL;
 
 void select_graphic_font( uint8_t font_id ){
   /* Assign GRAPHICAL font (nupetscii, cp437) by reassigning the `font` pointer */
   if(font_id == FONT_ASCII) // ignore for ANSI
     return;
-  if(font_id == FONT_NUPETSCII){
+  if(font_id == FONT_NUPETSCII_MONO8){
     font = &nupetscii_mono8;
     return;
   }
-  if(font_id == FONT_CP437){
+  if(font_id == FONT_CP437_MONO8){
     font = &cp437_mono8;
     return;
   }
+	if(font_id == FONT_NUPETSCII_OLIVETTITHIN ){
+		font = &nupetscii_olivetti_thin;
+		return;
+	}
+	if(font_id == FONT_CP437_OLIVETTITHIN ){
+		font = &cp437_olivetti_thin;
+		return;
+	}
 }
 
 void build_font( uint8_t font_id ){
     /* Build/fill internal structure for drawing font with PIO */
     uint16_t colors[16];
-    // Free up previous font (Issue #14  , Thanks Spock64)
-    if(font_raw_pixels)
-      free(font_raw_pixels);
-
     // extended_font (NuPetScii) doesn't required inverted char
     // non extended_font (default font) just reduce the initial charset to 95 THEN compute the reverse value
     char max_char = font_id!=FONT_ASCII ? font->dsc->cmaps->range_length : 95;
-
     for (int i = 0; i < count_of(colors); i++) {
         colors[i] = PICO_SCANVIDEO_PIXEL_FROM_RGB5(1, 1, 1) * ((i * 3) / 2);
         if (i) i != 0x8000;
@@ -235,11 +244,14 @@ void build_font( uint8_t font_id ){
 
     // We know range_length is 95 in the orginal font and full charset (up to 255)for the extended font
     // 4 is bytes per word, range_length is #chrs in font, FONT_SIZE_WORDS is words in width * font height
-    font_raw_pixels = (uint32_t *) calloc(4, 256 * FONT_SIZE_WORDS * 2 );
+
+		if( font_raw_pixels == NULL )
+    	font_raw_pixels = (uint32_t *) calloc(4, 256 * FONT_MAX_SIZE_WORDS * 2 );
 
     uint32_t *p = font_raw_pixels;
     uint32_t *pr = font_raw_pixels+( max_char * FONT_SIZE_WORDS); // pr is the reversed characters, build those in the same loop as the regular ones
-    assert(font->line_height == FONT_HEIGHT);
+
+    assert(font->line_height <= FONT_MAX_HEIGHT);
 
     for (int c = 0; c < max_char; c++) {
         // *** inefficient but simple ***

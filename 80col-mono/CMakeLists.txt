@@ -33,8 +33,10 @@ file(COPY ${PICO_SDK_PATH}/../pico-playground/scanvideo/textmode/font.h  DESTINA
 
 # FONT-SUITE: Copy the files dependencies to local folder
 #
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/cp437.c  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/nupetscii.c  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/mono8_cp437.c  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/mono8_nupetscii.c  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/olivetti_thin_cp437.c  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/olivetti_thin_nupetscii.c  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
 
 
 # Set alternative TinyUSB source code
@@ -51,7 +53,7 @@ project(picoterm LANGUAGES CXX C ASM VERSION 2.5.3 ) # see issue 36
 list( APPEND sources main.c )
 list( APPEND sources picoterm_core.c )
 list( APPEND sources picoterm_conio.c )
-list( APPEND sources cp437.c nupetscii.c  )
+list( APPEND sources mono8_cp437.c mono8_nupetscii.c olivetti_thin_cp437.c olivetti_thin_nupetscii.c )
 list( APPEND sources picoterm_logo.c picoterm_screen.c )
 list( APPEND sources ../common/picoterm_config.c )
 list( APPEND sources ../common/picoterm_debug.c )

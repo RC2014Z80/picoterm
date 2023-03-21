@@ -86,172 +86,171 @@ void print_nupet(char str[], uint8_t font_id ){
   char c;
   for(int i=0;i<strlen(str);i++){
       c = str[i];
-      switch( font_id ) {
-        case FONT_NUPETSCII:
-          break; // c is already right
+			if( has_charset(font_id,CHARSET_CP437) ){
+					switch (c) {
+						case '\x0AA':
+								c = '\x0B3';
+								break;
+						case '\x0AB':
+								c = '\x0C3';
+								break;
+						case '\x0AD':
+								c = '\x0C0';
+								break;
+						case '\x0AE':
+								c = '\x0BF';
+								break;
+						case '\x0AF':
+								c = '\x0C4';
+								break;
+						case '\x0B0':
+								c = '\x0DA';
+								break;
+						case '\x0B1':
+								c = '\x0C1';
+								break;
+						case '\x0B2':
+								c = '\x0C2';
+								break;
+						case '\x0B3':
+								c = '\x0B4';
+								break;
+						case '\x0B4':
+								c = '\x0B3';
+								break;
+						case '\x0BA':
+								c = '\x0D9';
+								break;
+						case '\x0BD':
+								c = '\x0D9';
+								break;
+						case '\x0C2':
+								c = '\x0B3';
+								break;
+						case '\x0C3':
+								c = '\x0C4';
+								break;
+						case '\x0C9':
+								c = '\x0BF';
+								break;
+						case '\x0CA':
+								c = '\x0CA';
+								break;
+						case '\x0CB':
+								c = '\x0D9';
+								break;
+						case '\x0CC':
+								c = '\x0C0';
+								break;
+						case '\x0CF':
+								c = '\x0DA';
+								break;
+						case '\x0D0':
+								c = '\x0BF';
+								break;
+						case '\x0D5':
+								c = '\x0DA';
+								break;
+						case '\x0D7':
+								c = '\x0AF';
+								break;
+						case '\x0DB':
+								c = '\x0C5';
+								break;
+						case '\x0E0':
+								c = '\x0BA';
+								break;
+						case '\x0E1':
+								c = '\x0CD';
+								break;
+						case '\x0E2':
+								c = '\x0C9';
+								break;
+						case '\x0E3':
+								c = '\x0CB';
+								break;
+						case '\x0E4':
+								c = '\x0BB';
+								break;
+						case '\x0E5':
+								c = '\x0C8';
+								break;
+						case '\x0E6':
+								c = '\x0CA';
+								break;
+						case '\x0E7': // --
+								c = '\x0BC';
+								break;
+						case '\x0E8':
+								c = '\x0CC';
+								break;
+						case '\x0E9':
+								c = '\x0B9';
+								break;
+						case '\x0EA':
+								c = '\x0CE';
+								break;
+						case '\x0D1':
+								c = '\x0F9';
+								break;
+						case '\x0A6':
+								c = '\x0B1';
+								break;
+						case '\x083':
+								c = '\x0F9';
+								break;
+						default:
+								if(c>0x7E)
+									c = '?';
+								break;
+					} // FONT_CP437
 
-        case FONT_CP437:
-            switch (c) {
-              case '\x0AA':
-                  c = '\x0B3';
-                  break;
-              case '\x0AB':
-                  c = '\x0C3';
-                  break;
-              case '\x0AD':
-                  c = '\x0C0';
-                  break;
-              case '\x0AE':
-                  c = '\x0BF';
-                  break;
-              case '\x0AF':
-                  c = '\x0C4';
-                  break;
-              case '\x0B0':
-                  c = '\x0DA';
-                  break;
-              case '\x0B1':
-                  c = '\x0C1';
-                  break;
-              case '\x0B2':
-                  c = '\x0C2';
-                  break;
-              case '\x0B3':
-                  c = '\x0B4';
-                  break;
-              case '\x0B4':
-                  c = '\x0B3';
-                  break;
-              case '\x0BA':
-                  c = '\x0D9';
-                  break;
-              case '\x0BD':
-                  c = '\x0D9';
-                  break;
-              case '\x0C2':
-                  c = '\x0B3';
-                  break;
-              case '\x0C3':
-                  c = '\x0C4';
-                  break;
-              case '\x0C9':
-                  c = '\x0BF';
-                  break;
-              case '\x0CA':
-                  c = '\x0CA';
-                  break;
-              case '\x0CB':
-                  c = '\x0D9';
-                  break;
-              case '\x0CC':
-                  c = '\x0C0';
-                  break;
-              case '\x0CF':
-                  c = '\x0DA';
-                  break;
-              case '\x0D0':
-                  c = '\x0BF';
-                  break;
-              case '\x0D5':
-                  c = '\x0DA';
-                  break;
-              case '\x0D7':
-                  c = '\x0AF';
-                  break;
-              case '\x0DB':
-                  c = '\x0C5';
-                  break;
-              case '\x0E0':
-                  c = '\x0BA';
-                  break;
-              case '\x0E1':
-                  c = '\x0CD';
-                  break;
-              case '\x0E2':
-                  c = '\x0C9';
-                  break;
-              case '\x0E3':
-                  c = '\x0CB';
-                  break;
-              case '\x0E4':
-                  c = '\x0BB';
-                  break;
-              case '\x0E5':
-                  c = '\x0C8';
-                  break;
-              case '\x0E6':
-                  c = '\x0CA';
-                  break;
-              case '\x0E7': // --
-                  c = '\x0BC';
-                  break;
-              case '\x0E8':
-                  c = '\x0CC';
-                  break;
-              case '\x0E9':
-                  c = '\x0B9';
-                  break;
-              case '\x0EA':
-                  c = '\x0CE';
-                  break;
-              case '\x0D1':
-                  c = '\x0F9';
-                  break;
-              case '\x0A6':
-                  c = '\x0B1';
-                  break;
-              case '\x083':
-                  c = '\x0F9';
-                  break;
-              default:
-                  if(c>0x7E)
-                    c = '?';
-                  break;
-            } // FONT_CP437
-            break;
+			}
+			else if( has_charset(font_id, CHARSET_NUPETSCII) ){
+				// c is already right
+			}
+			else if( font_id==FONT_ASCII ){
+					switch (c) {
+						case '\x0A6':
+								c = ' ';
+								break;
+						case '\x0C2':
+						case '\x0E0':
+								c = '|';
+								break;
+						case '\x0C3':
+						case '\x0E1':
+								c = '-';
+								break;
+						case '\x083':
+								c = '*'; // replace a bullet
+								break;
+						case '\x0B0':
+						case '\x0AD':
+						case '\x0BD':
+						case '\x0AE':
+						case '\x0AB':
+						case '\x0B3':
+						case '\x0E8':
+						case '\x0E9':
+						case '\x0B2':
+						case '\x08A':
+						case '\x0E7':
+						case '\x0E5':
+						case '\x0E2':
+						case '\x0E4':
+						case '\x0DB':
+						case '\x0B1':
+								c = '+';
+								break;
+						case '\x0D1':
+								c = '>'; // Replace a "selected item" marker
+								break;
+						default:
+								break;
+					} // ASCII & undefined
 
-        case FONT_ASCII:
-        default:
-            switch (c) {
-              case '\x0A6':
-                  c = ' ';
-                  break;
-              case '\x0C2':
-              case '\x0E0':
-                  c = '|';
-                  break;
-              case '\x0C3':
-              case '\x0E1':
-                  c = '-';
-                  break;
-              case '\x083':
-                  c = '*'; // replace a bullet
-                  break;
-              case '\x0B0':
-              case '\x0AD':
-              case '\x0BD':
-              case '\x0AE':
-              case '\x0AB':
-              case '\x0B3':
-              case '\x0E8':
-              case '\x0E9':
-              case '\x0B2':
-              case '\x08A':
-              case '\x0E7':
-              case '\x0E5':
-              case '\x0E2':
-              case '\x0E4':
-              case '\x0DB':
-              case '\x0B1':
-                  c = '+';
-                  break;
-              case '\x0D1':
-                  c = '>'; // Replace a "selected item" marker
-                  break;
-              default:
-                  break;
-            } // ASCII & undefined
-      } // switch( font_id )
+			} // test on has_charset( font_id, ... )
       handle_new_character( c );
   }
 }

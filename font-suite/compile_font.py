@@ -238,19 +238,32 @@ def inject_extension( font_source, font_destin, exts, subs ):
 
 
 if __name__ == '__main__':
-	exts = load_extensions( 'nupetscii.data' )
 	#for item in exts:
 	#	item.print_it()
-	inject_extension( 'font8.c', 'nupetscii.c', exts,
+	exts = load_extensions( 'nupetscii.data' )
+	inject_extension( 'font8.c', 'mono8_nupetscii.c', exts,
 	  [ ("#ifndef UBUNTU_MONO" , "#ifndef NUPETSCII"),
 	    ("#define UBUNTU_MONO" , "#define NUPETSCII"),
 		("const lv_font_t ubuntu_mono8 = {", "const lv_font_t nupetscii_mono8 = {"),
 		("#endif /*#if UBUNTU_MONO*/", "#endif /*#if NUPETSCII*/") ] )
-	print( 'nupetscii.c created!')
+	print( 'mono8_nupetscii.c created!')
+	inject_extension( 'olivetti_thin.c', 'olivetti_thin_nupetscii.c', exts,
+	  [ ("#ifndef OLIVETTI_THIN" , "#ifndef OLIVETTI_THIN_NUPETSCII"),
+	    ("#define OLIVETTI_THIN" , "#define OLIVETTI_THIN_NUPETSCII"),
+		("const lv_font_t olivetti_thin = {", "const lv_font_t nupetscii_olivetti_thin = {"),
+		("#endif /*#if OLIVETTI_THIN*/", "#endif /*#if OLIVETTI_THIN_NUPETSCII*/") ] )
+	print( 'olivetti_thin_nupetscii.c created!')
+
 	exts = load_extensions( 'cp437.data' )
-	inject_extension( 'font8.c', 'cp437.c', exts,
+	inject_extension( 'font8.c', 'mono8_cp437.c', exts,
 	  [ ("#ifndef UBUNTU_MONO" , "#ifndef CP437"),
 	    ("#define UBUNTU_MONO" , "#define CP437"),
 		("const lv_font_t ubuntu_mono8 = {", "const lv_font_t cp437_mono8 = {"),
 		("#endif /*#if UBUNTU_MONO*/", "#endif /*#if CP437*/") ] )
-	print( 'cp437.c created!')
+	print( 'mono8_cp437.c created!')
+	inject_extension( 'olivetti_thin.c', 'olivetti_thin_cp437.c', exts,
+	  [ ("#ifndef OLIVETTI_THIN" , "#ifndef OLIVETTI_THIN_CP437"),
+	    ("#define OLIVETTI_THIN" , "#define OLIVETTI_THIN_CP437"),
+		("const lv_font_t olivetti_thin = {", "const lv_font_t cp437_olivetti_thin = {"),
+		("#endif /*#if OLIVETTI_THIN*/", "#endif /*#if OLIVETTI_THIN_CP437*/") ] )
+	print( 'olivetti_thin_cp437.c created!')
