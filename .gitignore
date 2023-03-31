@@ -18,6 +18,7 @@ tinyusb
 MakeFile
 elf2uf2/
 cmake_install.cmake
+CopyOfCMakeCache.txt
 *.elf
 *.elf.*
 *.dis
