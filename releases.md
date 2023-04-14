@@ -17,6 +17,17 @@ From version 1.2 any publication will includes all U2F firmware files for 40 & 8
 
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
 
+## Version 1.6.0 - (ongoing)
+
+This version introduce the newer Hardware Version of PicoTerm (Hardware Revision 2.0).
+
+### Features
+* Display firmware "Hardware Revision" on welcome screen.
+
+### Fix & Improvement
+* Support for Hardware Revision with PICOTERM_HREF defines.
+* do_build.sh to generate HRev10 (1.0) and HRev20 (2.0) and rename files accordingly and store them into HRev10/ and HRev20/ subfolder.
+
 ## Version 1.5.3 - (ongoing)
 
 ### Features
