@@ -5,7 +5,7 @@ check the Shawn Hymel tutorial published at DigiKey.
 https://www.digikey.be/en/maker/projects/raspberry-pi-pico-rp2040-i2c-example-with-micropython-and-cc/47d0c922b79342779cdbd4b37b7eb7e2
 */
 
-#include "picoterm_stddef.h" // Hardware definition
+#include "picoterm_harddef.h" // Hardware definition
 #include "picoterm_i2c.h"
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"

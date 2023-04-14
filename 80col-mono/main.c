@@ -55,6 +55,7 @@
 #include "../common/picoterm_debug.h"
 #include "../common/picoterm_cursor.h"
 #include "../common/picoterm_stddef.h"
+#include "../common/picoterm_harddef.h"
 #include "../common/keybd.h"
 #include "../common/picoterm_i2c.h"
 #include "../common/pca9536.h"

@@ -2,17 +2,9 @@ cmake_minimum_required(VERSION 3.14)
 
 set( PICOTERM_VERSION 2.0.0 )
 set( PICOTERM_DESCR "Alpha" )
-if( $ENV{PICOTERM_HREV} )  # Hardware révision 10=1.0, 20=2.0
-  message("Environment variable PICOTERM_HREV detected" )
-	set( PICOTERM_HREV $ENV{PICOTERM_HREV} )
-else()
-  message("Environment variable PICOTERM_HREV not present! Set default to 2.0" )
-	set( PICOTERM_HREV 20 )
-endif()
 
 
-message("PicoTerm 80Col version = ${PICOTERM_VERSION} ${PICOTERM_DESCR} Hardware Revision = ${PICOTERM_HREV}") #  ${CMAKE_PROJECT_VERSION}
-
+message("PicoTerm 80Col version = ${PICOTERM_VERSION} ${PICOTERM_DESCR}") #  ${CMAKE_PROJECT_VERSION}
 
 
 # PICO_SDK_PATH defined in environment variable? --> Use it
@@ -120,7 +112,6 @@ foreach( exec ${to_build_list} )
 		PICO_SCANVIDEO_PLANE1_FIXED_FRAGMENT_DMA=true
 		${localise}=true
 		CMAKE_PROJECT_VERSION="${CMAKE_PROJECT_VERSION}"
-		PICOTERM_HREV=${PICOTERM_HREV}
 		)
 
 	# Link libraries to use

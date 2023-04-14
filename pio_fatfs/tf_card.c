@@ -4,8 +4,8 @@
 #include "pico/stdlib.h"
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
-#include "../common/pio_spi.h"
-#include "../common/picoterm_stddef.h"
+#include "../common/pio_spi.h"          // SPI bus over PIO
+#include "../common/picoterm_harddef.h" // Hardware definition
 
 #include "ff.h"
 #include "diskio.h"

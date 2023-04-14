@@ -322,8 +322,6 @@ void display_terminal(){
     print_string(msg);
     sprintf(msg, "%s (%s)\r\n", config.font_id==FONT_ASCII ? "ASCII" : "ANSI", get_font_name(config.graph_id) ); // ANSI graphical font name in parenthesis
     print_string(msg);
-    sprintf(msg, "H.rev=%2.1f, ", (float)PICOTERM_HREV/10 );
-    print_string(msg);
     sprintf(msg, "Buzzer/USB-power on %s\r\n", i2c_bus_available==true ? "I2C" : "GPIO" );
     print_string(msg);
     char _parity = '?';
