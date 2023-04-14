@@ -1,8 +1,19 @@
 cmake_minimum_required(VERSION 3.14)
 
-set( PICOTERM_VERSION 1.5.3.99  )
+set( PICOTERM_VERSION 2.0.0 )
 set( PICOTERM_DESCR "Alpha" )
-message("PicoTerm 80Col version = ${PICOTERM_VERSION} ${PICOTERM_DESCR}") #  ${CMAKE_PROJECT_VERSION}
+if( $ENV{PICOTERM_HREV} )  # Hardware révision 10=1.0, 20=2.0
+  message("Environment variable PICOTERM_HREV detected" )
+	set( PICOTERM_HREV $ENV{PICOTERM_HREV} )
+else()
+  message("Environment variable PICOTERM_HREV not present! Set default to 2.0" )
+	set( PICOTERM_HREV 20 )
+endif()
+
+
+message("PicoTerm 80Col version = ${PICOTERM_VERSION} ${PICOTERM_DESCR} Hardware Revision = ${PICOTERM_HREV}") #  ${CMAKE_PROJECT_VERSION}
+
+
 
 # PICO_SDK_PATH defined in environment variable? --> Use it
 # Otherwise the variable should be exported. Read docs/compiling.md for details!
@@ -64,23 +75,29 @@ list( APPEND sources ../common/picoterm_dec.c )
 list( APPEND sources ../common/keybd.c )
 list( APPEND sources ../common/picoterm_i2c.c )
 list( APPEND sources ../common/pca9536.c )
+list( APPEND sources ../common/pio_spi.c )
+list( APPEND sources ../pio_fatfs/ff.c )
+list( APPEND sources ../pio_fatfs/ffsystem.c )
+list( APPEND sources ../pio_fatfs/ffunicode.c )
+list( APPEND sources ../pio_fatfs/tf_card.c )
 
 # Define the library to includes at compile time
 #
 list( APPEND link_libs pico_scanvideo_dpi pico_multicore pico_stdlib )
 list( APPEND link_libs hardware_gpio hardware_i2c hardware_adc hardware_uart hardware_irq hardware_flash )
 list( APPEND link_libs tinyusb_device tinyusb_board tinyusb_host )
+list( APPEND hardware_clocks ) # fatfs: hardware_spi not included
 
 # Defines the executables to build
 # ===> APPEND ENTRY HERE FOR NEW KEYBOARD LAYOUT
 #
-list( APPEND to_build picoterm picoterm_US picoterm_DE picoterm_FR picoterm_BE )
-
+list( APPEND to_build_list picoterm picoterm_US picoterm_DE picoterm_FR picoterm_BE )
 
 # Common definition for all the executables
-foreach( exec ${to_build} )
+foreach( exec ${to_build_list} )
   add_executable( ${exec} ${sources} )
 	pico_generate_pio_header( ${exec} ../../common/uart_tx.pio)
+	pico_generate_pio_header( ${exec} ../../common/spi.pio)
 	pico_enable_stdio_usb( ${exec} 0 ) # Redirect printf to USB-Serial. Conflict with TinyUSB!
 	pico_enable_stdio_uart( ${exec} 0) # Redirect printf to uart0. But no room to place UART0 on GPIO!
 
@@ -103,6 +120,7 @@ foreach( exec ${to_build} )
 		PICO_SCANVIDEO_PLANE1_FIXED_FRAGMENT_DMA=true
 		${localise}=true
 		CMAKE_PROJECT_VERSION="${CMAKE_PROJECT_VERSION}"
+		PICOTERM_HREV=${PICOTERM_HREV}
 		)
 
 	# Link libraries to use
