@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-set( PICOTERM_VERSION 2.0.0 )
+set( PICOTERM_VERSION 1.6.0 )
 set( PICOTERM_DESCR "Alpha" )
 
 

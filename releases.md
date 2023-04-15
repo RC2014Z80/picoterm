@@ -19,16 +19,19 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 
 ## Version 1.6.0 - (ongoing)
 
-This version introduce the newer Hardware Version of PicoTerm (Hardware Revision 2.0).
+Newer Hardware Version 2.0 for PicoTerm (namely "RP2040 VGA Terminal Module" based on direct implementation of RP2040 chip).
 
 ### Features
-* Display firmware "Hardware Revision" on welcome screen.
+* add picoterm_harddef.h to store hardware definition
+ * SD Card initial support with pio_fatfs (version of FatFS over PIO SPI). Using GPIO 26,27,28,5.
+ * I2C bus moved to GPIO 18 & 19
+ * PoorMan Debugger moved to GPIO 22 @ 115200 bds
 
 ### Fix & Improvement
-* Support for Hardware Revision with PICOTERM_HREF defines.
-* do_build.sh to generate HRev10 (1.0) and HRev20 (2.0) and rename files accordingly and store them into HRev10/ and HRev20/ subfolder.
+* set_env.sh to quicly setup the environment. Call it with `source set_env.sh` .
 
-## Version 1.5.3 - (ongoing)
+
+## Version 1.5.3 - Apr 15, 2023
 
 ### Features
 * Adding License file (BSD 3-Clause).
