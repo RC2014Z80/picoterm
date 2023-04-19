@@ -27,8 +27,11 @@ extern picoterm_conio_config_t conio_config;
 extern uint16_t foreground_colour;
 extern uint16_t background_colour;
 
-
+// 0 = BUZZER_STOPPED, 1 = BUZZER_SIGNAL (Play Please), 2 = BUZZER_RUNNING
 char bell_state = 0;
+
+char get_bell_state() { return bell_state; }
+void set_bell_state(char state) { bell_state = state; }
 
 // early declaration
 void reset_escape_sequence();
@@ -69,9 +72,6 @@ void terminal_reset(){
     clear_cursor();  // so we have the character
     print_cursor();  // turns on
 }
-
-char get_bell_state() { return bell_state; }
-void set_bell_state(char state) { bell_state = state; }
 
 
 void reset_escape_sequence(){
@@ -463,33 +463,35 @@ void handle_new_character(unsigned char asc){
                 esc_state=ESC_ESC_RECEIVED;
             }
             else{
-                // return, backspace etc
+                // --- return, backspace etc ---
                 switch (asc){
-                    case BSP:
-                    if(conio_config.cursor.pos.x>0){
-                        conio_config.cursor.pos.x--;
-                    }
-                    break;
-                    case LF:
+										case BEL:
+												bell_state = 1; //BUZZER_SIGNAL
+												debug_print( "Buzzer_signal" );
+												break;
 
-                        if(conio_config.cursor.pos.y==TEXTROWS-1){   // visiblerows is the count, csr is zero based
+                    case BSP:
+		                    if(conio_config.cursor.pos.x>0)
+		                        conio_config.cursor.pos.x--;
+		                    break;
+
+                    case LF:
+                        if(conio_config.cursor.pos.y==TEXTROWS-1)   // visiblerows is the count, csr is zero based
                             shuffle_down();
-                        }
-                        else{
-                        conio_config.cursor.pos.y++;
-                        }
-                    break;
+                        else
+                        	conio_config.cursor.pos.y++;
+                    		break;
+
                     case CR:
                         conio_config.cursor.pos.x=0;
+                    		break;
 
-                    break;
                     case FF:
                         clear_primary_screen();
 												move_cursor_home();
                         //conio_config.cursor.pos.x=0; conio_config.cursor.pos.y=0;
-
-                    break;
-                }
+                    		break;
+                } // eof Switch
 
             }
         }

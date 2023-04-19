@@ -456,6 +456,7 @@ int main(void) {
 		usb_power_task();
 		led_blinking_task();
 		csr_blinking_task();
+		bell_task();
 
 		if( is_menu && !(old_menu) ){ // CRL+M : menu activated ?
 			// empty the keyboard buffer
