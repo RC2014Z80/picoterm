@@ -18,40 +18,29 @@
  */
 
 
+#ifndef _PICOTERM_SCREEN_H
+#define _PICOTERM_SCREEN_H
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-
-#ifndef _PICOTERM_H
-#define _PICOTERM_H
-
 #include "speccyfont.h"
 #include "pico/scanvideo.h"
 
-#define SPC         0x20
+/* #define SPC         0x20
 #define ESC         0x1b
 #define DEL         0x7f
 #define BSP         0x08
 #define LF          0x0a
 #define CR          0x0d
-#define FF          0x0c
+#define FF          0x0c */
 
-uint32_t * wordsForRow(int y);
-void prepare_text_buffer();
+char handle_default_input();
+
 void display_terminal();
-void display_menu();
-void slip_character(unsigned char ch,int x,int y);
-void clear_cursor();
-void print_cursor();
-void handle_new_character(unsigned char ch);
-void print_string(char str[]);
-// for menu support
-char read_key();
-char handle_menu_input();
-bool key_ready(); // in main.c
-unsigned char read_key_from_buffer(); // in main.c
-// for debugging purposes
-void print_ascii_value(unsigned char asc);
+
+void display_config();
+char handle_config_input();
 
 
 #endif

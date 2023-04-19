@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(picoterm VERSION 1.4)
-message("PicoTerm 40Col version = ${CMAKE_PROJECT_VERSION}")
+set( PICOTERM_VERSION 1.5.3.80)
+set( PICOTERM_DESCR "Alpha" )
+message("PicoTerm 40Col version = ${PICOTERM_VERSION} ${PICOTERM_DESCR}")
 
 # PICO_SDK_PATH defined in environment variable? --> Use it
 # Otherwise the variable should be exported. Read docs/compiling.md for details!
@@ -33,8 +34,9 @@ file(COPY ${PICO_SDK_PATH}/../pico-playground/scanvideo/textmode/font.h  DESTINA
 
 # FONT-SUITE: Copy the files dependencies to local folder
 #
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/cp437.c  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/nupetscii.c  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
+# Use the SpeccyFont.h in 40 columns
+# file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/cp437.c  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
+# file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/nupetscii.c  DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/ )
 
 
 # Set alternative TinyUSB source code
@@ -44,14 +46,21 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../font-suite/nupetscii.c  DESTINATION ${C
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
 pico_sdk_init()
-project(picoterm LANGUAGES CXX C ASM VERSION 2.5.3 ) # see issue 36
+project(picoterm LANGUAGES CXX C ASM VERSION ${PICOTERM_VERSION} DESCRIPTION ${PICOTERM_DESCR}) # see issue 36
 
 # Defines source files to compile
 #    Not included in source: font8.c font6.c font10.c lcd.c
-list( APPEND sources main.c picoterm.c  )
+list( APPEND sources main.c )
+list( APPEND sources picoterm_core.c )
+list( APPEND sources picoterm_conio.c )
+list( APPEND sources picoterm_screen.c )
 list( APPEND sources ../common/picoterm_config.c )
 list( APPEND sources ../common/picoterm_debug.c )
+list( APPEND sources ../common/picoterm_dec.c )
+list( APPEND sources ../common/picoterm_i2c.c )
+list( APPEND sources ../common/pca9536.c )
 list( APPEND sources ../common/keybd.c )
+
 
 # Define the library to includes at compile time
 #

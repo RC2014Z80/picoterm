@@ -1,6 +1,7 @@
+#ifndef _SPECCYFONT_H
+#define _SPECCYFONT_H
+
 #include <stdint.h>
-
-
 
 static const uint8_t speccy_bitmap[] = {
 
@@ -773,3 +774,5 @@ static const uint8_t speccy_bitmap[] = {
 				0b01000010,
 				0b00111100
 };
+
+#endif

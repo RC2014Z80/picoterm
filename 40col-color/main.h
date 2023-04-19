@@ -32,12 +32,8 @@
 #include "hardware/uart.h"
 #include "hardware/irq.h"
 
-//#include "hardware/flash.h"
-
-//#include "bsp/board.h"
-//#include "tusb.h"
-
 #include "../common/pmhid.h"
+
 
 
 #ifndef _MAIN_H
@@ -47,6 +43,15 @@
 #define UART_ID         uart1   // also see hid_app.c
 #define UART_TX_PIN     20
 #define UART_RX_PIN     21
+
+
+
+#define USB_POWER_GPIO 26 // this GPIO can be used with a MOSFET to power-up USB
+#define USB_POWER_DELAY 5000 // ms
+
+#define BUZZER_GPIO 27 // active buzzer
+
+uint32_t start_time;
 
 static void pico_key_down(int scancode, int keysym, int modifiers);
 static void pico_key_up(int scancode, int keysym, int modifiers);

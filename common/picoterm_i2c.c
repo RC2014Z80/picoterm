@@ -9,8 +9,8 @@ https://www.digikey.be/en/maker/projects/raspberry-pi-pico-rp2040-i2c-example-wi
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 
-#define SDA_PIN 26
-#define SCL_PIN 27
+#define SDA_PIN 26 // 18, 26
+#define SCL_PIN 27 // 19, 27
 
 // Global flag informing about the usage of gp26 & gp27 on the Picoterm expansion
 // When true, the GPIO are used as I2C, otherwise they are used as simple GPIO.

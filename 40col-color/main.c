@@ -47,13 +47,23 @@
  */
 
 #include "main.h"
-#include "picoterm.h"
+#include "picoterm_core.h"
+#include "picoterm_conio.h"
 #include "../common/picoterm_config.h"
 #include "../common/picoterm_debug.h"
 #include "../common/keybd.h"
+#include "../common/picoterm_i2c.h"
+#include "../common/pca9536.h"
+#include "picoterm_screen.h"
+
 
 #include "bsp/board.h"
 #include "tusb.h"
+
+/* picoterm_i2c.c */
+extern i2c_inst_t *i2c_bus;
+extern bool i2c_bus_available; // gp26 & gp27 are used as I2C (otherwise as simple GPIO)
+
 
 // This is 4 for the font we're using
 #define FRAGMENT_WORDS 4
@@ -65,16 +75,9 @@ bool render_scanline_test_pattern(struct scanvideo_scanline_buffer *dest, int co
 bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core);
 
 
-//#define vga_mode vga_mode_640x480_60
 #define vga_mode vga_mode_320x240_60
-//#define vga_mode vga_mode_213x160_60
-//#define vga_mode vga_mode_160x120_60
-////#define vga_mode vga_mode_tft_800x480_50
-//#define vga_mode vga_mode_tft_400x240_50
+#define COUNT 40
 
-//#define COUNT ((vga_mode.width/8)-1)  // why one less?
-#define COUNT (vga_mode.width/8)
-// #define COUNT COLUMNS      // ideally
 
 // for now we want to see second counter on native and don't need both cores
 
@@ -90,11 +93,12 @@ int vspeed = 1 * 1;
 int hspeed = 1 << COORD_SHIFT;
 int hpos;
 int vpos;
+bool is_blinking = false;
 
 static const int input_pin0 = 22;
 
 
-// this is how a line of 8 bits is stored
+// this is how a line of 8 bits is stored - remove ??????????????
 
 uint32_t block[] = {
                     PICO_SCANVIDEO_PIXEL_FROM_RGB5(31,0,0) << 16 |
@@ -119,9 +123,11 @@ static int left = 0;
 static int top = 0;
 static int x_sprites = 1;
 
-void init_render_state(int core);
-void led_blinking_task(void);
 
+void led_blinking_task();
+void usb_power_task();
+void csr_blinking_task();
+void bell_task();
 
 void render_loop() {
     /* Multithreaded execution */
@@ -129,17 +135,9 @@ void render_loop() {
     static uint32_t last_frame_num = 0;
     int core_num = get_core_num();
     assert(core_num >= 0 && core_num < 2);
-    //printf("Rendering on core %d\n", core_num);
 
     while (true) {
         struct scanvideo_scanline_buffer *scanline_buffer = scanvideo_begin_scanline_generation(true);
-//        if (scanline_buffer->data_used) {
-//            // validate the previous scanline to make sure noone corrupted it
-//            validate_scanline(scanline_buffer->data, scanline_buffer->data_used, vga_mode.width, vga_mode.width);
-//        }
-        // do any frame related logic
-        // todo probably a race condition here ... thread dealing with last line of a frame may end
-        // todo up waiting on the next frame...
 
         mutex_enter_blocking(&frame_logic_mutex);
         uint32_t frame_num = scanvideo_frame_number(scanline_buffer->scanline_id);
@@ -149,37 +147,12 @@ void render_loop() {
             // todo should we ignore if we aren't attempting the next line
             last_frame_num = frame_num;
             hpos += hspeed;
-//            if (hpos < 0) {
-//                hpos = 0;
-//                hspeed = -hspeed;
-//            } else if (hpos >= (level0_map_width*8 - vga_mode.width) << COORD_SHIFT) {
-//                hpos = (level0_map_width*8 - vga_mode.width) << COORD_SHIFT;
-//                hspeed = -hspeed;
-//            }
-//            uint8_t new_input = gpio_get(input_pin0);
-//            if (last_input && !new_input) {
-//                static int foo = 1;
-//                foo++;
-//
-//               bus_ctrl_hw->priority = (foo & 1u) << BUSCTRL_BUS_PRIORITY_DMA_R_LSB;
-
-//                hpos++;
-//            }
-//            last_input = new_input;
-//            static int bar = 1;
-
         }
         mutex_exit(&frame_logic_mutex);
-        //DEBUG_PINS_SET(frame_gen, core_num ? 2 : 4);
         render_scanline(scanline_buffer, core_num);
-        //DEBUG_PINS_CLR(frame_gen, core_num ? 2 : 4);
-#if PICO_SCANVIDEO_PLANE_COUNT > 2
-        assert(false);
-#endif
         // release the scanline into the wild
         scanvideo_end_scanline_generation(scanline_buffer);
         // do this outside mutex and scanline generation
-
 
     } // end while(true) loop
 }
@@ -211,38 +184,16 @@ uint32_t *font_raw_pixels;
 #define FONT_WIDTH_WORDS FRAGMENT_WORDS
 #if FRAGMENT_WORDS == 5
 const lv_font_t *font = &ubuntu_mono10;
-//const lv_font_t *font = &lcd;
-#elif FRAGMENT_WORDS == 4
-//const lv_font_t *font = &ubuntu_mono8;
-#else
-//const lv_font_t *font = &ubuntu_mono6;
 #endif
 #define FONT_HEIGHT 8
 #define FONT_SIZE_WORDS (FONT_HEIGHT * FONT_WIDTH_WORDS)
 
 
-
-
 int video_main(void) {
-
-
     mutex_init(&frame_logic_mutex);
-
     sem_init(&video_setup_complete, 0, 1);
-
     setup_video();
-
-    init_render_state(0);   // currently does nothing
-    init_render_state(1);   // currently oes nothing
-
-
-#ifdef RENDER_ON_CORE1
     render_on_core1();  // render_loop() on core 1
-#endif
-#ifdef RENDER_ON_CORE0
-    render_loop();
-#endif
-
 }
 
 void render_on_core1(){
@@ -253,11 +204,6 @@ void stop_core1(){
 	multicore_reset_core1();
 }
 
-// must not be called concurrently
-void init_render_state(int core) {
-
-
-}
 
 
 static __not_in_flash("x") uint16_t beginning_of_line[] = {
@@ -296,16 +242,6 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
     int y = scanvideo_scanline_number(dest->scanline_id) + vpos;
     int x = hpos;
 
-    // we handle both ends separately
-//    static const uint32_t end_of_line[] = {
-//            COMPOSABLE_RAW_1P | (0u<<16),
-//            COMPOSABLE_EOL_SKIP_ALIGN | (0xffff << 16) // eye catcher ffff
-//    };
-
-//#undef COUNT
-//#define COUNT MIN(vga_mode.width/(FRAGMENT_WORDS*2)-1, 40)   // we've defined it as 40, want 40
-
-
     dest->fragment_words = FRAGMENT_WORDS;
 
     beginning_of_line[FRAGMENT_WORDS * 2 - 2] = COUNT * 2 * FRAGMENT_WORDS - 3 + 2;
@@ -317,19 +253,14 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
     *output32++ = host_safe_hw_ptr(beginning_of_line);
     uint32_t *dbase = font_raw_pixels + FONT_WIDTH_WORDS * (y % FONT_HEIGHT);
 
-
     char ch = 0;
 
     int tr = y; // (y/FONT_HEIGHT);
     uint32_t *rowwords = wordsForRow(tr);
 
     for (int i = 0; i < COUNT; i++) {
-
           *output32++ = host_safe_hw_ptr(rowwords);
-
           rowwords+=4;      // basically every output32 assignment is a pointer to 4 words / 8 pixels
-
-
     }
 
 
@@ -394,8 +325,6 @@ bool render_scanline_bg(struct scanvideo_scanline_buffer *dest, int core) {
 #endif
     dest->status = SCANLINE_OK;
 
-
-
     return true;
 }
 
@@ -425,13 +354,10 @@ void handle_keyboard_input(){
   // normal terminal operation: if key received -> display it on term
   if(key_ready()){
     clear_cursor();
-
     do{
-
         handle_new_character(read_key_from_buffer());
         // or for analysing what comes in
         // print_ascii_value(cpmInput);
-
     }while(key_ready());
 
     print_cursor();
@@ -451,10 +377,46 @@ int main(void) {
   gpio_set_dir(LED, GPIO_OUT);
   gpio_put(LED,false);
 
-  stdio_init_all();
+  /* --- Boot Choice & Switch case with BTN_A, BNT_B, BTN_C ---
+	uint8_t bootchoice = 0;
+	*/
   load_config();
-  tusb_init(); // initialize tinyusb stack
 
+	stdio_init_all();
+
+	// Checking GP26 & GP27 will be handled as GPIO or I2C bus (with PCA9536 see issue #21)
+  // Then initialize the IO for USB_POWER &
+  i2c_bus_available = false;
+  debug_print( "Check I2C capability on GP26, GP27" );
+  init_i2c_bus(); // try to initialize the PicoTerm I2C bus
+  if( has_pca9536( i2c_bus ) ){
+    debug_print( "pca9536 detected!" );
+    i2c_bus_available = true;
+    pca9536_output_reset( i2c_bus, 0b0011 ); // preinitialize output at LOW
+    pca9536_setup_io( i2c_bus, IO_0, IO_MODE_OUT ); // USB_POWER
+    pca9536_setup_io( i2c_bus, IO_1, IO_MODE_OUT ); // BUZZER
+    pca9536_setup_io( i2c_bus, IO_2, IO_MODE_IN ); // not used yet
+    pca9536_setup_io( i2c_bus, IO_3, IO_MODE_IN ); // not used yet
+  }
+	// check other I2C GPIO expander here!
+
+  if( i2c_bus_available )
+    debug_print( "I2C bus detected on GP26, GP27" );
+
+  if( !i2c_bus_available ){
+    debug_print( "Using GPIO capability on GP26, GP27" );
+    deinit_i2c_bus();
+
+    gpio_init(USB_POWER_GPIO); // GPIO 26
+    gpio_set_dir(USB_POWER_GPIO, GPIO_OUT);
+    gpio_put(USB_POWER_GPIO,false);
+
+    gpio_init(BUZZER_GPIO);
+    gpio_set_dir(BUZZER_GPIO, GPIO_OUT);
+    gpio_put(BUZZER_GPIO,false);
+  }
+
+  start_time = board_millis();
 
   uart_init(UART_ID, config.baudrate);
   uart_set_hw_flow(UART_ID,false,false);
@@ -479,10 +441,10 @@ int main(void) {
 
 	// Initialise keyboard module
 	keybd_init( pico_key_down, pico_key_up );
-
-	prepare_text_buffer();
-	display_terminal(); // display terminal entry screen
+	terminal_init();
 	video_main();
+	//terminal_reset();
+	display_terminal(); // display terminal entry screen
 	tusb_init(); // initialize tinyusb stack
 
 	char _ch = 0;
@@ -491,13 +453,15 @@ int main(void) {
 	while(true){
 		// TinyUsb Host Task (see keybd.c:process_kdb_report() callback and pico_key_down() here below)
 		tuh_task();
+		usb_power_task();
 		led_blinking_task();
+		csr_blinking_task();
 
 		if( is_menu && !(old_menu) ){ // CRL+M : menu activated ?
 			// empty the keyboard buffer
 			while( key_ready() )
 				read_key_from_buffer();
-			display_menu();
+			display_config();
 			old_menu = is_menu;
 		}
 		else if( !(is_menu) && old_menu ){ // CRL+M : menu de-activated ?
@@ -506,7 +470,7 @@ int main(void) {
 		}
 
 		if( is_menu ){ // Under menu display
-			_ch = handle_menu_input(); // manage keyboard input for menu
+			_ch = handle_config_input(); // manage keyboard input for menu
 			if( _ch==ESC ) // ESC will also close the menu
 					is_menu = false;
 		}
@@ -517,11 +481,12 @@ int main(void) {
 }
 
 //--------------------------------------------------------------------+
-// Blinking Task
+//  Tasks
 //--------------------------------------------------------------------+
 bool led_state = false;
+bool usb_power_state = false;
 
-void led_blinking_task(void) {
+void led_blinking_task() {
   const uint32_t interval_ms = 1000;
   static uint32_t start_ms = 0;
 
@@ -538,6 +503,57 @@ void led_blinking_task(void) {
         board_led_write(led_state);
         led_state = 1 - led_state; // toggle
       }
+  }
+}
+
+void usb_power_task() {
+  if( !usb_power_state && ((board_millis() - start_time)>USB_POWER_DELAY )){
+    usb_power_state = true;
+    if( i2c_bus_available ){
+      // USB_POWER wired on the IO_0 of PCA9536
+      pca9536_output_io( i2c_bus, IO_0, true );
+    }
+    else
+      // USB_POWER wired directly on the GPIO
+      gpio_put( USB_POWER_GPIO, true );
+  }
+}
+
+void csr_blinking_task() {
+  const uint32_t interval_ms_csr = 525;
+  static uint32_t start_ms_csr = 0;
+
+  // Blink every interval ms
+  if ( board_millis() - start_ms_csr > interval_ms_csr) {
+
+	  start_ms_csr += interval_ms_csr;
+
+	  is_blinking = !is_blinking;
+	  set_cursor_blink_state( 1 - cursor_blink_state() );
+
+	  refresh_cursor();
+  }
+}
+
+void bell_task() {
+  const uint32_t interval_ms_bell = 100;
+  static uint32_t start_ms_bell = 0;
+
+  if(get_bell_state() == 1){
+    start_ms_bell = board_millis();
+    if(i2c_bus_available) // BuZZER wired on the IO_1 of PCA9536
+      pca9536_output_io( i2c_bus, IO_1, true );
+    else
+      gpio_put(BUZZER_GPIO, true); // buzzer Wired directly on GPIO
+    set_bell_state(2);
+  }
+
+  else if (get_bell_state() == 2 && board_millis() - start_ms_bell > interval_ms_bell) {
+    if(i2c_bus_available)
+      pca9536_output_io( i2c_bus, IO_1, false ); // BuZZER wired on the IO_1 of PCA9536
+    else
+      gpio_put(BUZZER_GPIO, false); // buzzer Wired directly on GPIO
+    set_bell_state(0);
   }
 }
 

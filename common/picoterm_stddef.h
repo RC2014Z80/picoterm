@@ -4,10 +4,31 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include "pico/scanvideo.h"
 
 /* ==========================================================================
                    Standard definition for Picoterm
    ========================================================================== */
+
+static uint16_t palette[] = {
+      PICO_SCANVIDEO_PIXEL_FROM_RGB8(0, 0, 0),        //black
+      PICO_SCANVIDEO_PIXEL_FROM_RGB8(0xAA, 0, 0),     // red
+      PICO_SCANVIDEO_PIXEL_FROM_RGB8(0, 0xAA, 0),     //green
+      PICO_SCANVIDEO_PIXEL_FROM_RGB8(0xAA, 0x55, 0),  //brown
+      PICO_SCANVIDEO_PIXEL_FROM_RGB8(0, 0, 0xAA),     //blue
+      PICO_SCANVIDEO_PIXEL_FROM_RGB8(0xAA, 0, 0xAA),  // magenta
+      PICO_SCANVIDEO_PIXEL_FROM_RGB8(0, 0xAA, 0xAA),  // cyan
+      PICO_SCANVIDEO_PIXEL_FROM_RGB8(0xAA, 0xAA, 0xAA),//light grey
+      PICO_SCANVIDEO_PIXEL_FROM_RGB8(0x55, 0x55, 0x55),//grey
+      PICO_SCANVIDEO_PIXEL_FROM_RGB8(0xFF, 0x55, 0x55),//bright red
+      PICO_SCANVIDEO_PIXEL_FROM_RGB8(0x55, 0xFF, 0x55),//bright green
+      PICO_SCANVIDEO_PIXEL_FROM_RGB8(0xFF, 0xFF, 0x55),//yellow
+      PICO_SCANVIDEO_PIXEL_FROM_RGB8(0, 0, 0xFF),      //bright blue
+      PICO_SCANVIDEO_PIXEL_FROM_RGB8(0xFF, 0x55, 0xFF),//bright magenta
+      PICO_SCANVIDEO_PIXEL_FROM_RGB8(0x55, 0xFF, 0xFF),//bright cyan
+      PICO_SCANVIDEO_PIXEL_FROM_RGB8(0xFF, 0xFF, 0xFF),//white
+};
+
 
 // Font Face - High Nibble 0x00, 0x10, 0x20 ... (up to 16 font face)
 #define FFACE_MONO8  0x00
