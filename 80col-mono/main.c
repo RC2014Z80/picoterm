@@ -199,7 +199,7 @@ void setup_video() {
   volatile uint32_t scanline_color = 0;
 #endif
 
-uint8_t pad[65536];
+uint8_t pad[65536]; // to check!!!
 
 #define FONT_MAX_HEIGHT 15
 #define FONT_WIDTH_WORDS FRAGMENT_WORDS
@@ -645,10 +645,10 @@ int main(void) {
           break;
   }
 
-  // AFTER   reading and writing
+	// AFTER   reading and writing
   stdio_init_all();
 
-  // Checking GP26 & GP27 will be handled as GPIO or I2C bus (with PCA9536 see issue #21)
+	// Checking GP26 & GP27 will be handled as GPIO or I2C bus (with PCA9536 see issue #21)
   // Then initialize the IO for USB_POWER &
   i2c_bus_available = false;
   debug_print( "Check I2C capability on GP26, GP27" );
@@ -773,10 +773,10 @@ int main(void) {
 }
 
 //--------------------------------------------------------------------+
-// Blinking Task
+//  Tasks
 //--------------------------------------------------------------------+
 bool led_state = false;
-bool usb_power_state = false; // GPIO 5
+bool usb_power_state = false;
 
 void led_blinking_task() {
   const uint32_t interval_ms_led = 1000;

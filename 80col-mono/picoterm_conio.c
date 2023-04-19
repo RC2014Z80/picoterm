@@ -28,7 +28,7 @@ array_of_row_text_pointer ptr;           // primary screen content
 array_of_row_text_pointer secondary_ptr; // secondary screen content
 
 // Private members
-unsigned char __chr_under_csr;
+unsigned char __chr_under_csr; // Character under the cursor
 bool __inv_under_csr;
 bool __blk_under_csr;
 
