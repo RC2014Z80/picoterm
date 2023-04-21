@@ -255,6 +255,30 @@ def test_char_insert( ser ):
 	ser.write_str("\ESC[2;3H") # Line 2, Col 3
 	ser.write_str("\ESC[8@") # Line 2, Col 3
 
+def test_40col_char_insert( ser ):
+	""" Send Lorem Ipsum, go first line at third character, insert 8 spaces """
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[1;3H") # Line 2, Col 3
+	time.sleep(3)
+	ser.write_str("\ESC[8@") # Line 2, Col 3
+
+def test_line_insert( ser ):
+	""" Send Lorem Ipsum, go second line at third character, insert 1 line """
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[2;3H") # Line 2, Col 3
+	time.sleep(3)
+	ser.write_str("\ESC[1L") # Insert 1 Line
+
+def test_line_delete( ser ):
+	""" Send Lorem Ipsum, go second line at third character, delete 1 line """
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[2;3H") # Line 2, Col 3
+	time.sleep(3)
+	ser.write_str("\ESC[1M") # Delete 1 Line
+
 def test_blink( ser ):
 	""" Display text with blinking parts and no blinking parts  """
 	ser.write_str("This text should NOT BLINK!\r\n")
@@ -341,12 +365,30 @@ def test_clear_line( ser ):
 	ser.write_str("\ESC[2K") # clear the while line
 
 def test_char_delete( ser ):
-	""" Send Lorem Ipsum, set cursor to 5th line & 50th char, delete 10 chars.
+	""" Send Lorem Ipsum, set cursor to 5th line & 20th char, delete 10 chars.
 	The end-of-line should shift left of 10 chars from cursor (cursor position included)."""
 	test_clear(ser)
 	test_lorem(ser)
-	ser.write_str("\ESC[5;50H") # Line 5, Col 5
+	ser.write_str("\ESC[5;20H") # Line 5, Col 20
 	ser.write_str("\ESC[10P") # delete 10 characters
+
+def test_40col_char_delete( ser ):
+	""" Send Lorem Ipsum, set cursor to 3th line & 20th char, delete 10 chars.
+	The end-of-line should shift left of 10 chars from cursor (cursor position included)."""
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[3;20H") # Line 3, Col 20
+	time.sleep(3)
+	ser.write_str("\ESC[10P") # delete 10 characters
+
+def test_40col_char_erase( ser ):
+	""" Send Lorem Ipsum, set cursor to 3th line & 20th char, Erase 10 chars.
+	The char under the cursor and next 9 chars should be blank (10 chars cursor position included)."""
+	test_clear(ser)
+	test_lorem(ser)
+	ser.write_str("\ESC[3;20H") # Line 3, Col 20
+	time.sleep(3)
+	ser.write_str("\ESC[10X") # erase 10 characters
 
 def test_char_delete80( ser ):
 	""" Send Lorem Ipsum, set cursor to 5th line & 80th char, delete 10 chars.
@@ -732,5 +774,6 @@ if __name__ == '__main__':
 			ser.run_test( _cmd )
 			print('') # add a spacer
 		else:
-			print("Unknown command %s" % _cmd )
+			print("UNKNOWN COMMAND %s !" % _cmd )
+			print( "'%s' could match: %s" % (_cmd,", ".join( [_name for _name in _names if _cmd.upper() in _name.upper()])) )
 	print( "That's all folks!" )

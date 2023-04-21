@@ -75,8 +75,8 @@ The [release notes](releases.md) is a great to discover the history.
 | \ESC[0c   | Ask VT100 ID                                                               | vt100_status       |
 | \ESC[s    | Save the cursor position                                                   | cursor_save        |
 | \ESC[u    | Move cursor to previously saved position                                   | cursor_save        |
-| \ESC[*{row}*;*{col}*H | Move to *{row}*,*{col}*                                        | move_at_2_3        |
-| \ESC[*{row}*;*{col}*f | Move to *{row}*,*{col}*  (same as H)                           | move_at_2_3_v2     |
+| \ESC[{row};{col}H | Move to *{row}*,*{col}*                                        | move_at_2_3        |
+| \ESC[{row};{col}f | Move to *{row}*,*{col}*  (same as H)                           | move_at_2_3_v2     |
 | \ESC[0K   | Clear from cursor to the end of the line                                   | clear_to_eol       |
 | \ESC[1K   | Clear from the beginning of the current line to the cursor                 | clear_from_bol     |
 | \ESC[2K   | Clear the whole line                                                       | clear_line         |
@@ -84,17 +84,19 @@ The [release notes](releases.md) is a great to discover the history.
 | \ESC[1J   | clear screen to cursor                                                     | clear_to_cursor    |
 | \ESC[2J   | Clear the screen and move the cursor to 0-0                                | clear              |
 | \ESC[3J   | same as \ESC[2J<br/>__[Not accordinly to that documentation](https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797)__    |                    |
-| \ESC[*{n}*@	| Insert *{n}* Space Characters                                            | char_insert        |
-| \ESC[*{n}*P	| Delete *{n}* Characters, shifting in space characters<br />The end-of-line shift left of *{n}* chars from cursor position | char_delete, char_delete80 |
-| \ESC[*{n}*X	| Erase *{n}* Characters on the right of cursor (cursor position included), erased char are replace with space character.   | char_erase, char_erase80   |
-| \ESC[*{n}*A | Move the cursor up *{n}* lines                                           | cursor_move        |
-| \ESC[*{n}*B | Move the cursor down *{n}* lines                                         | cursor_move        |
-| \ESC[*{n}*C | Move the cursor forward *{n}* characters                                 | cursor_move        |
-| \ESC[*{n}*D | Move the cursor backward *{n}* characters                                | cursor_move        |
-| \ESC[*{n}*d	| Move the cursor to an absolute *{n}* line                                | cursor_at_line     |
-| \ESC[*{n}*E	| Move the cursor to beginning of next line, *{n}* lines down              | cursor_down_bol    |
-| \ESC[*{n}*F	| Move the cursor to beginning of previous line, *{n}* lines up            | cursor_up_bol      |
-| \ESC[*{n}*G	| Move the cursor to column *{n}*                                          | cursor_at_col      |
+| \ESC[{n}@	| Insert *{n}* Space Characters                                            | char_insert, 40col_insert_char   |
+| \ESC[{n}L	| Insert *{n}* lines                                                       | line_insert                      |
+| \ESC[{n}M	| Delete *{n}* lines                                                       | line_delete                      |
+| \ESC[{n}P	| Delete *{n}* Characters, shifting in space characters<br />The end-of-line shift left of *{n}* chars from cursor position | char_delete, char_delete80, 40col_char_delete |
+| \ESC[{n}X	| Erase *{n}* Characters on the right of cursor (cursor position included), erased char are replace with space character.   | char_erase, char_erase80, 40col_char_erase   |
+| \ESC[{n}A | Move the cursor up *{n}* lines                                           | cursor_move        |
+| \ESC[{n}B | Move the cursor down *{n}* lines                                         | cursor_move        |
+| \ESC[{n}C | Move the cursor forward *{n}* characters                                 | cursor_move        |
+| \ESC[{n}D | Move the cursor backward *{n}* characters                                | cursor_move        |
+| \ESC[{n}d	| Move the cursor to an absolute *{n}* line                                | cursor_at_line     |
+| \ESC[{n}E	| Move the cursor to beginning of next line, *{n}* lines down              | cursor_down_bol    |
+| \ESC[{n}F	| Move the cursor to beginning of previous line, *{n}* lines up            | cursor_up_bol      |
+| \ESC[{n}G	| Move the cursor to column *{n}*                                          | cursor_at_col      |
 | \ESC[0m     | Normal text (should also set foreground & background colours to normal)  | back_to_normal     |
 | \ESC[5m	  | Blink ON                                                                   | blink              |
 | \ESC[7m   | reverse text                                                               | reverse            |
@@ -102,7 +104,7 @@ The [release notes](releases.md) is a great to discover the history.
 | \ESC[27m	| reset inverse/reverse mode                                                 | reverse            |
 | \ESC[0J   | clear screen from cursor                                                   | clearscr           |
 | \ESC[nS   | scroll whole page up by n rows (default 1 if n missing). No cursor move.<br />(Look for "CSI Ps S" in [XTerm Control Sequences](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Functions-using-CSI-_-ordered-by-the-final-character_s), VT420)<br />>NupetScii font is overseed by DEC lines when issuing a "DEC line drawing" escape sequence after graphical mode. | scroll_up, scroll_up3 |
-| \ESC[*{n}*T	| scroll down *{n}* lines (default 1 if n missing). No cursor move.<br />(Look for "CSI Ps T" in [XTerm Control Sequences](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Functions-using-CSI-_-ordered-by-the-final-character_s), VT420)  | scroll_down, scroll_down3 |
+| \ESC[{n}T	| scroll down *{n}* lines (default 1 if n missing). No cursor move.<br />(Look for "CSI Ps T" in [XTerm Control Sequences](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Functions-using-CSI-_-ordered-by-the-final-character_s), VT420)  | scroll_down, scroll_down3 |
 | \ESCF     | Enter graphic mode - special ANSI graphic charset, NuPetScii/CP437. (vt52, vt100) <br/>[Sample](docs/using-nupetscii.md). |  ansi_charset, ansi_charset2   |
 | \ESCG     | Exit graphic mode - ASCII charset (vt52, vt100)                       |  ascii_charset      |
 
