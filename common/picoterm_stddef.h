@@ -6,6 +6,21 @@
 #include <stdio.h>
 #include "pico/scanvideo.h"
 
+#define max(a,b)             \
+({                           \
+    __typeof__ (a) _a = (a); \
+    __typeof__ (b) _b = (b); \
+    _a > _b ? _a : _b;       \
+})
+
+#define min(a,b)             \
+({                           \
+    __typeof__ (a) _a = (a); \
+    __typeof__ (b) _b = (b); \
+    _a < _b ? _a : _b;       \
+})
+
+
 /* ==========================================================================
                    Standard definition for Picoterm
    ========================================================================== */
@@ -28,7 +43,6 @@ static uint16_t palette[] = {
       PICO_SCANVIDEO_PIXEL_FROM_RGB8(0x55, 0xFF, 0xFF),//bright cyan
       PICO_SCANVIDEO_PIXEL_FROM_RGB8(0xFF, 0xFF, 0xFF),//white
 };
-
 
 // Font Face - High Nibble 0x00, 0x10, 0x20 ... (up to 16 font face)
 #define FFACE_MONO8  0x00

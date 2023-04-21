@@ -36,6 +36,10 @@ void slip_character(unsigned char ch,int x,int y);
 void clear_scanline_from_cursor(int r);
 void clear_scanline_to_cursor(int r);
 void clear_entire_scanline(int r);
+void clear_scanline_between( int r, int y, int x, int to_x );
+void copy_scanline_between( int r, int y, int to_x, int from_x, int x_len );
+void clear_line_between( int y, int x, int to_x); // private usage
+void copy_line_between( int y, int to_x, int from_x, int x_len ); // private
 
 
 void clrscr(); // clear the primary screen
@@ -46,29 +50,32 @@ void clear_primary_screen();
 void clear_screen_from_cursor();
 void clear_screen_to_cursor();
 void shuffle_down(); // screen page scrolling UP
-// void shuffle_up();
+void shuffle_up();
 
-// void insert_line();
-// void delete_line();
-// void insert_lines(int n);
-// void delete_lines(int n);
+void insert_line();
+void delete_line();
+void insert_lines(int n);
+void delete_lines(int n);
 void clear_line_from_cursor();
 void clear_line_to_cursor();
 void clear_entire_line();
 
+void delete_chars(int n);
+void erase_chars(int n);
+void insert_chars(int n);
 
 void clear_cursor();
 void print_cursor();
 void refresh_cursor();
-//void move_cursor_lf( bool reverse ); // move cursor
+void move_cursor_lf( bool reverse );
 void move_cursor_at(int y, int x);
 void move_cursor_home();
-//void move_cursor_up(int n);
-//void move_cursor_down(int n);
-//void move_cursor_forward(int n);
-//void move_cursor_backward(int n);
+void move_cursor_up(int n);
+void move_cursor_down(int n);
+void move_cursor_forward(int n);
+void move_cursor_backward(int n);
 void constrain_cursor_values();
-//void wrap_constrain_cursor_values();
+void wrap_constrain_cursor_values();
 
 
 void cursor_visible(bool v);
