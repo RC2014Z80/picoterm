@@ -323,30 +323,37 @@ void shuffle_up(){
 
 
 void insert_line(){
-		debug_print( "picoterm_conio: insert_line() - entering (to check)");
-		// Note, Is ptr[r] is really a row (from 0 to 25) or scanline (25*8)
-		struct scanline *tempRow = ptr[ROWS-1];
-
-		for(int r=ROWS-1;r>conio_config.cursor.pos.y;r--){
-        ptr[r] = ptr[r-1];
+		struct scanline *ptrTemp[8];
+		// store the last LINE pointer for further recyle
+		int i = 0;
+		for( int r=ROWS-8; r<ROWS; r++ )
+				ptrTemp[i++] = ptr[r];
+		// move scan lines down of ONE LiNE line
+		for( int r=ROWS; r>(conio_config.cursor.pos.y*8)+8; r-- )
+				ptr[r] = ptr[r-8];
+    // finally recycled temporary stored scanline
+		for( int i = 0; i < 8; i++ ){
+        ptr[(conio_config.cursor.pos.y*8)+i]=ptrTemp[i];
+        clear_entire_scanline( (conio_config.cursor.pos.y*8)+i );
     }
-
-		ptr[conio_config.cursor.pos.y] = tempRow;
-
-		// recycled row needs blanking
-		clear_entire_scanline( conio_config.cursor.pos.y );
 }
 
 void delete_line(){
 		debug_print( "picoterm_conio: delete_line() - entering (to check)");
-		struct scanline *tempRow = ptr[conio_config.cursor.pos.y];
-
-		for(int r=conio_config.cursor.pos.y;r<ROWS-1;r++){
-        ptr[r]=ptr[r+1];
+		struct scanline *ptrTemp[8];
+		// store the "to delete" LINE pointer for further recyle
+		int i = 0;
+		for( int r=conio_config.cursor.pos.y*8; r<(conio_config.cursor.pos.y*8)+8; r++ )
+				ptrTemp[i++] = ptr[r];
+		// move scan lines up of ONE LiNE line
+		for( int r=(conio_config.cursor.pos.y*8); r<ROWS-8; r++ )
+				ptr[r] = ptr[r+8];
+    // finally recycled temporary stored scanline
+		i = 0;
+		for( int r = ROWS-8; r < ROWS; r++ ){
+        ptr[r]=ptrTemp[i++];
+        clear_entire_scanline( r );
     }
-
-		ptr[ROWS-1] = tempRow;
-		clear_entire_scanline( ROWS-1 );
 }
 
 void insert_lines(int n){
