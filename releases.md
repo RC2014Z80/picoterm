@@ -17,7 +17,8 @@ From version 1.2 any publication will includes all U2F firmware files for 40 & 8
 
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
 
-## Version 1.5.3 - (ongoing)
+## Version 1.5.3 - Apr 23 2023
+Notice: 40col-color upgraded _at the best_ to 80col features. Read specific remarks.md in the target build folder.
 
 ### Features
 * Adding License file (BSD 3-Clause).

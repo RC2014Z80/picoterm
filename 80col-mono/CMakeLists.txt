@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 
-set( PICOTERM_VERSION 1.5.3.99  )
-set( PICOTERM_DESCR "Alpha" )
+set( PICOTERM_VERSION 1.5.3  )
+set( PICOTERM_DESCR "Final" )
 message("PicoTerm 80Col version = ${PICOTERM_VERSION} ${PICOTERM_DESCR}") #  ${CMAKE_PROJECT_VERSION}
 
 # PICO_SDK_PATH defined in environment variable? --> Use it
