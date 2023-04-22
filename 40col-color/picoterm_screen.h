@@ -38,9 +38,10 @@
 char handle_default_input();
 
 void display_terminal();
+void display_charset();
+void display_help();
 
 void display_config();
 char handle_config_input();
-
 
 #endif

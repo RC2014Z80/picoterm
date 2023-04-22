@@ -28,6 +28,8 @@
 #include "hardware/watchdog.h"
 #include "../common/picoterm_stddef.h"
 
+#include "../common/picoterm_debug.h"
+
 #define LINEWRAP        // comment out to disable line wrapping
 
 
@@ -72,7 +74,7 @@ void display_config(){
     clear_primary_screen();
 		move_cursor_home();
 
-    print_string("       >>>>  PicoTerm Menu <<<<\r\n");
+    print_string("  >>>>  PicoTerm Config <<<<\r\n");
 		print_string("\r\n");
 		print_string("+- Term. color (80col only) ---+\r\n");
 		print_string("| 0 reserved  3 reserved       |\r\n" );
@@ -211,6 +213,73 @@ char handle_config_input(){
   return _ch;
 }
 
+/* --- CHARSET ----------------------------------------------------------------
+   -
+   ---------------------------------------------------------------------------*/
+
+void display_charset(){
+  char msg[80];
+  char _c;
+  // reset_escape_sequence(); LOOKS not usefull from screen!
+  clrscr();
+  move_cursor_home(); //csr.x = 0; csr.y = 0;
+
+  print_string( "   +- Charset -----------------------+\r\n"  ); // strip Nupetscii when not activated
+  print_string( "   | 0 1 2 3 4 5 6 7 8 9 A B C D E F |\r\n");
+  print_string( "   +---------------------------------+\r\n"  );
+  for( char line=2; line<16; line++ ){
+    sprintf( msg, "%02X | ", line*16 );
+    print_string( msg  );
+    for( char index=0; index<=15; index++ ){
+      _c = line*16+index;
+      sprintf( msg, "%c ", _c );
+      print_string( msg );
+    }
+    print_string("|\r\n" );
+    // Insert a index line in the middle for easier reading
+    if( line==8 ){
+      print_string( "   +---------------------------------+\r\n" );
+      print_string( "   | 0 1 2 3 4 5 6 7 8 9 A B C D E F |\r\n"  );
+      print_string( "   +---------------------------------+\r\n" );
+    }
+  }
+	print_string( "   +---------------------------------+\r\n" );
+  print_string( "     0 1 2 3 4 5 6 7 8 9 A B C D E F\r\n");
+
+  print_string("\r\n(ESC=close) ? ");
+  cursor_visible(true);
+  clear_cursor();  // so we have the character
+  print_cursor();  // turns on
+}
+
+/* --- HELP -------------------------------------------------------------------
+   -
+   ---------------------------------------------------------------------------*/
+
+void display_help(){
+  char msg[80];
+  char _c;
+  // reset_escape_sequence(); LOOKS not usefull from screen!
+  clrscr();
+  move_cursor_home(); // csr.x = 0; csr.y = 0;
+	debug_print( "display_help" );
+  print_string("\r\n" );
+	print_string("       >>>>  PicoTerm Help <<<< \r\n");
+  print_string("+-- Keyboard Shortcut ----------------+\r\n" );
+  print_string("| Shift+Ctrl+H : Help screen          |\r\n" ); // strip Nupetscii when not activated
+  //print_string("| * Shift+Ctrl+L : Toggle ASCII/ANSI charset  |\r\n" );
+  print_string("| Shift+Ctrl+M : Configuration menu   |\r\n" );
+  print_string("| Shift+Ctrl+N : Display charset      |\r\n" );
+  print_string("|                                     |\r\n" );
+  print_string("+-------------------------------------+\r\n" );
+
+  print_string("\r\n(ESC=close) ? ");
+  cursor_visible(true);
+  clear_cursor();  // so we have the character
+  print_cursor();  // turns on
+		debug_print( "display_hel : donep" );
+}
+
 
 /* --- TERMINAL ---------------------------------------------------------------
    -
@@ -229,24 +298,29 @@ void print_row_of_logo(char str[], int x, int scanlineNumber){
 }
 
 void print_logo(){
-    print_row_of_logo("XXXXXX   XXXXX   XXXXX   XXXXX    XX   XX XX ",7,1);
-    print_row_of_logo("XX   XX XX   XX XX   XX XX  XXX  XXX   XX XX ",6,6);
-    print_row_of_logo("XX   XX XX          XX  XX X XX   XX  XX  XX ",5,11);
-    print_row_of_logo("XXXXXX  XX       XXXX   XX X XX   XX  XX  XX ",4,16);
-    print_row_of_logo("XX   XX XX      XX      XX X XX   XX  XXXXXXX",3,21);
-    print_row_of_logo("XX   XX XX   XX XX   XX XXX  XX   XX      XX ",2,26);
-    print_row_of_logo("XX   XX  XXXXX  XXXXXXX  XXXXX  XXXXXX    XX",1,31);
+		int base_scanline = 15;
+		int base_x_offset = 40;
+    print_row_of_logo("XXXXXX   XXXXX   XXXXX   XXXXX    XX   XX XX ", base_x_offset+7, base_scanline+1 );
+    print_row_of_logo("XX   XX XX   XX XX   XX XX  XXX  XXX   XX XX ", base_x_offset+6, base_scanline+6 );
+    print_row_of_logo("XX   XX XX          XX  XX X XX   XX  XX  XX ", base_x_offset+5, base_scanline+11 );
+    print_row_of_logo("XXXXXX  XX       XXXX   XX X XX   XX  XX  XX ", base_x_offset+4, base_scanline+16 );
+    print_row_of_logo("XX   XX XX      XX      XX X XX   XX  XXXXXXX", base_x_offset+3, base_scanline+21 );
+    print_row_of_logo("XX   XX XX   XX XX   XX XXX  XX   XX      XX ", base_x_offset+2, base_scanline+26 );
+    print_row_of_logo("XX   XX  XXXXX  XXXXXXX  XXXXX  XXXXXX    XX" , base_x_offset+1, base_scanline+31 );
 }
 
 
 void display_terminal(){
     char msg[80];
     clear_primary_screen();
+		move_cursor_home();
+		print_string("-[ PicoTerm ]----[S.Dixon & D.Meurisse]-");
     print_logo();
 
     // csr.y=9;
 		move_cursor_at( 9, 1 );
-		print_string("\r\nS.Dixon & D.Meurisse  Menu:CTRL+SHIF+M\r\n");
+		print_string("-[3-Clause BSD]-------[(c) RC2014 2023]-\r\n");
+		print_string("                     Help: CTRL+SHIFT+H \r\n");
 		sprintf(msg, "\r\nTinyUSB=%d.%d.%d, ", TUSB_VERSION_MAJOR, TUSB_VERSION_MINOR,TUSB_VERSION_REVISION);
 		print_string(msg);
 		// Should only displays ASCII - Graphical font is not supported (ANSI) in 40 COLs

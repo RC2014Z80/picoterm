@@ -68,7 +68,9 @@ extern bool i2c_bus_available; // gp26 & gp27 are used as I2C (otherwise as simp
 // This is 4 for the font we're using
 #define FRAGMENT_WORDS 4
 
-static bool is_menu = false; // toggle with CTRL+SHIFT+M
+static bool is_menu = false;   // switch between Terminal mode and Menu mode
+static uint8_t id_menu = 0x00; // toggle with CTRL+SHIFT+M
+
 
 typedef bool (*render_scanline_func)(struct scanvideo_scanline_buffer *dest, int core);
 bool render_scanline_test_pattern(struct scanvideo_scanline_buffer *dest, int core);
@@ -197,11 +199,11 @@ int video_main(void) {
 }
 
 void render_on_core1(){
-	multicore_launch_core1(render_loop);
+  multicore_launch_core1(render_loop);
 }
 
 void stop_core1(){
-	multicore_reset_core1();
+  multicore_reset_core1();
 }
 
 
@@ -378,13 +380,13 @@ int main(void) {
   gpio_put(LED,false);
 
   /* --- Boot Choice & Switch case with BTN_A, BNT_B, BTN_C ---
-	uint8_t bootchoice = 0;
-	*/
+  uint8_t bootchoice = 0;
+  */
   load_config();
 
-	stdio_init_all();
+  stdio_init_all();
 
-	// Checking GP26 & GP27 will be handled as GPIO or I2C bus (with PCA9536 see issue #21)
+  // Checking GP26 & GP27 will be handled as GPIO or I2C bus (with PCA9536 see issue #21)
   // Then initialize the IO for USB_POWER &
   i2c_bus_available = false;
   debug_print( "Check I2C capability on GP26, GP27" );
@@ -398,7 +400,7 @@ int main(void) {
     pca9536_setup_io( i2c_bus, IO_2, IO_MODE_IN ); // not used yet
     pca9536_setup_io( i2c_bus, IO_3, IO_MODE_IN ); // not used yet
   }
-	// check other I2C GPIO expander here!
+  // check other I2C GPIO expander here!
 
   if( i2c_bus_available )
     debug_print( "I2C bus detected on GP26, GP27" );
@@ -422,13 +424,13 @@ int main(void) {
   uart_set_hw_flow(UART_ID,false,false);
   uart_set_format(UART_ID, config.databits, config.stopbits, config.parity);
 
-	// Set the TX and RX pins by using the function select on the GPIO
-	// Set datasheet for more information on function select
+  // Set the TX and RX pins by using the function select on the GPIO
+  // Set datasheet for more information on function select
   gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
   gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
 
-	// This should enable rx interrupt handling
-	// Turn off FIFO's - we want to do this character by character
+  // This should enable rx interrupt handling
+  // Turn off FIFO's - we want to do this character by character
   uart_set_fifo_enabled(UART_ID, false);
   int UART_IRQ = UART_ID == uart0 ? UART0_IRQ : UART1_IRQ;
 
@@ -439,46 +441,71 @@ int main(void) {
   // enable the UART
   uart_set_irq_enables(UART_ID, true, false);
 
-	// Initialise keyboard module
-	keybd_init( pico_key_down, pico_key_up );
-	terminal_init();
-	video_main();
-	//terminal_reset();
-	display_terminal(); // display terminal entry screen
-	tusb_init(); // initialize tinyusb stack
+  // Initialise keyboard module
+  keybd_init( pico_key_down, pico_key_up );
+  terminal_init();
+  video_main();
+  //terminal_reset();
+  display_terminal(); // display terminal entry screen
+  tusb_init(); // initialize tinyusb stack
 
-	char _ch = 0;
-	bool old_menu = false; // used to trigger when is_menu is changed
+  char _ch = 0;
+  bool old_menu = false; // used to trigger when is_menu is changed
 
-	while(true){
-		// TinyUsb Host Task (see keybd.c:process_kdb_report() callback and pico_key_down() here below)
-		tuh_task();
-		usb_power_task();
-		led_blinking_task();
-		csr_blinking_task();
-		bell_task();
+  while(true){
+    // TinyUsb Host Task (see keybd.c:process_kdb_report() callback and pico_key_down() here below)
+    tuh_task();
+    usb_power_task();
+    led_blinking_task();
+    csr_blinking_task();
+    bell_task();
 
-		if( is_menu && !(old_menu) ){ // CRL+M : menu activated ?
-			// empty the keyboard buffer
-			while( key_ready() )
-				read_key_from_buffer();
-			display_config();
-			old_menu = is_menu;
-		}
-		else if( !(is_menu) && old_menu ){ // CRL+M : menu de-activated ?
+    if( is_menu && !(old_menu) ){ // CRL+M : menu activated ?
+      //copy_main_to_secondary_screen(); // copy terminal screen
+      //save_cursor_position();
+      clear_key_buffer(); // empty the keyboard buffer
+
+      switch( id_menu ){
+        case MENU_CONFIG:
+          display_config();
+          break;
+        case MENU_CHARSET:
+          display_charset();
+          break;
+        case MENU_HELP:
+          display_help();
+          break;
+      };
+      old_menu = is_menu;
+    }
+    else if( !(is_menu) && old_menu ){ // menu de-activated ?
+      clrscr();
+			//*** No secondary buffer on 40COL *** => display back the terminal instead
+      //copy_secondary_to_main_screen(); // restore terminal screen
+      //restore_cursor_position();
 			display_terminal();
-			old_menu = is_menu;
-		}
+      clear_key_buffer(); // empty the keyboard buffer
+      old_menu = is_menu;
+    }
 
-		if( is_menu ){ // Under menu display
-			_ch = handle_config_input(); // manage keyboard input for menu
-			if( _ch==ESC ) // ESC will also close the menu
-					is_menu = false;
-		}
-		else
-			handle_keyboard_input(); // normal terminal management
-	} // while(true)
-	return 0;
+    if( is_menu ){ // Under menu display
+      switch( id_menu ){
+        case MENU_CONFIG:
+          // Specialized handler manage keyboard input for menu
+          _ch = handle_config_input();
+          break;
+        default:
+          _ch = handle_default_input();
+      }
+      if( _ch==ESC ){ // ESC will also close the menu
+          is_menu = false;
+          id_menu = 0x00;
+      }
+    }
+    else
+      handle_keyboard_input(); // normal terminal management
+  }
+  return 0;
 }
 
 //--------------------------------------------------------------------+
@@ -491,10 +518,10 @@ void led_blinking_task() {
   const uint32_t interval_ms = 1000;
   static uint32_t start_ms = 0;
 
-	// No HID keyboard --> Led blink
-	// HID Keyboard    --> Led off
-	if( keyboard_attached() )
-		board_led_write(false);
+  // No HID keyboard --> Led blink
+  // HID Keyboard    --> Led off
+  if( keyboard_attached() )
+    board_led_write(false);
     //board_led_write(true);
   else {
       // Blink every interval ms
@@ -527,12 +554,12 @@ void csr_blinking_task() {
   // Blink every interval ms
   if ( board_millis() - start_ms_csr > interval_ms_csr) {
 
-	  start_ms_csr += interval_ms_csr;
+    start_ms_csr += interval_ms_csr;
 
-	  is_blinking = !is_blinking;
-	  set_cursor_blink_state( 1 - cursor_blink_state() );
+    is_blinking = !is_blinking;
+    set_cursor_blink_state( 1 - cursor_blink_state() );
 
-	  refresh_cursor();
+    refresh_cursor();
   }
 }
 
@@ -565,34 +592,57 @@ void bell_task() {
 static void pico_key_down(int scancode, int keysym, int modifiers) {
     //printf("Key down, %i, %i, %i \r\n", scancode, keysym, modifiers);
 
-    if( scancode_is_mod(scancode)==false ){
-      // which char at that key?
-      uint8_t ch = keycode2ascii[scancode][0];
-      // Is there a modifier key under use while pressing the key?
-      if( (ch=='m') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
-        is_menu = !(is_menu);
-        return; // do not add key to "Keyboard buffer"
-      }
-      if( modifiers & WITH_SHIFT ){
-          ch = keycode2ascii[scancode][1];
-      }
-      else if((modifiers & WITH_CAPSLOCK) && ch>='a' && ch<='z'){
-          ch = keycode2ascii[scancode][1];
-      }
-      else if(modifiers & WITH_CTRL && ch>95){
-          ch=ch-96;
-      }
-      else if(modifiers & WITH_ALTGR){
-          ch = keycode2ascii[scancode][2];
-      }
-      //printf("Character: %c\r\n", ch);
-      // foward key-pressed to UART (only when typing in the terminal)
-      // otherwise, send it directly to the keyboard buffer
-      if( is_menu )
-        insert_key_into_buffer( ch );
-      else
-         uart_putc (UART_ID, ch);
-    }
+		if( scancode_is_mod(scancode)==false ){
+	      // which char at that key?
+	      uint8_t ch = keycode2ascii[scancode][0];
+	      // Is there a modifier key under use while pressing the key?
+	      if( (ch=='m') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
+	        id_menu = MENU_CONFIG;
+	        is_menu = !(is_menu);
+	        return; // do not add key to "Keyboard buffer"
+	      }
+	      if( (ch=='n') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
+	        id_menu = MENU_CHARSET;
+	        is_menu = !(is_menu);
+	        return; // do not add key to "Keyboard buffer"
+	      }
+
+	      if( (ch=='h') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
+	        id_menu = MENU_HELP;
+	        is_menu = !(is_menu);
+	        return; // do not add key to "Keyboard buffer"
+	      }
+	      /*
+				if( (ch=='l') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
+	        // toggle between graphical font and ANSI font
+	        config.font_id = (config.font_id == 0 ? config.graph_id : 0);
+	        build_font( config.font_id );
+	        return; // do not add key to "Keyboard buffer"
+	      } */
+	      if( modifiers & WITH_SHIFT ){
+	          ch = keycode2ascii[scancode][1];
+	      }
+	      else if((modifiers & WITH_CAPSLOCK) && ch>='a' && ch<='z'){
+	          ch = keycode2ascii[scancode][1];
+	      }
+
+	    if((modifiers & WITH_CTRL) && ch>63 && ch<=95){
+	          ch=ch-64;
+	      }
+	      else if((modifiers & WITH_CTRL) && ch>95){
+	          ch=ch-96;
+	      }
+	      else if(modifiers & WITH_ALTGR){
+	          ch = keycode2ascii[scancode][2];
+	      }
+	      //printf("Character: %c\r\n", ch);
+	      // foward key-pressed to UART (only when typing in the terminal)
+	      // otherwise, send it directly to the keyboard buffer
+	      if( is_menu )
+	        insert_key_into_buffer( ch );
+	      else
+	         uart_putc (UART_ID, ch);
+	    }
 }
 
 static void pico_key_up(int scancode, int keysym, int modifiers) {
