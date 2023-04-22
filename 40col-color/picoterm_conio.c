@@ -31,34 +31,33 @@ struct point __saved_csr = {0,0};
 typedef struct scanline { uint16_t pixels[(COLUMNS*8)]; } scanline;
 static struct scanline *ptr[ROWS];
 
-//static uint16_t cursor_buffer[64] = {0};
 uint16_t  __chr_under_csr[64] ={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-																0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-																0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-																0,0,0,0};
+                                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                                0,0,0,0};
 bool __has_chr_under_csr = false; // indicates is __chr_under_csr is supposed to contains a char (so not all black or bg_color)
 
 
 void conio_init( uint16_t fg_color, uint16_t bg_color ){
-	foreground_colour = fg_color;
-	background_colour = bg_color;
-	for(int i=0;i<64;i++)
-		__chr_under_csr[i] = bg_color;
+  foreground_colour = fg_color;
+  background_colour = bg_color;
+  for(int i=0;i<64;i++)
+    __chr_under_csr[i] = bg_color;
 
-	for(int c=0;c<ROWS;c++){
-			struct scanline *newRow;
-			/* Create structure in memory */
-			newRow=(struct scanline *)malloc(sizeof(struct scanline));
-			if(newRow==NULL)
-			{
-					exit(1);
-			}
-			ptr[c] = newRow;
-	}
+  for(int c=0;c<ROWS;c++){
+      struct scanline *newRow;
+      /* Create structure in memory */
+      newRow=(struct scanline *)malloc(sizeof(struct scanline));
+      if(newRow==NULL)
+      {
+          exit(1);
+      }
+      ptr[c] = newRow;
+  }
 }
 
 void conio_reset(){
-	// Reset the terminal
+  // Reset the terminal
   conio_config.rvs = false;
   conio_config.blk = false;
   conio_config.wrap_text = true;
@@ -86,27 +85,26 @@ char read_key(){
 
 
 void print_string(char str[]){
-	// Move it to CONIO
-    for(int i=0;i<strlen(str);i++){
+  // Move it to CONIO
+  for(int i=0;i<strlen(str);i++)
         handle_new_character(str[i]);
-    }
 }
 
 
 void print_element (int x,int scanlineNumber, uint8_t* custom_bitmap ){
-	// Used to print a bitmap of custom bitmap as declared in picoterm_core.h
-	uint8_t rawdata;
-	for (int r=0;r<6;r++){
-			rawdata = custom_bitmap[r];  // at startup, first char in custom bitmaps is the block
-			for(int bit=0;bit<6;bit++){
-					if(rawdata & ( 0b10000000 >> bit)){
-							ptr[scanlineNumber+r]->pixels[x+bit] = foreground_colour;
-					}
-					else{
-							// ptr[scanlineNumber]->pixels[x+bit] = palette[0];
-					}
-			}
-	}
+  // Used to print a bitmap of custom bitmap as declared in picoterm_core.h
+  uint8_t rawdata;
+  for (int r=0;r<6;r++){
+      rawdata = custom_bitmap[r];  // at startup, first char in custom bitmaps is the block
+      for(int bit=0;bit<6;bit++){
+          if(rawdata & ( 0b10000000 >> bit)){
+              ptr[scanlineNumber+r]->pixels[x+bit] = foreground_colour;
+          }
+          else{
+              // ptr[scanlineNumber]->pixels[x+bit] = palette[0];
+          }
+      }
+  }
 
 }
 
@@ -168,8 +166,8 @@ void slip_character(unsigned char ch,int x,int y){
                             = background_colour;
                         }
                     }
-										if (conio_config.just_wrapped)
-												conio_config.just_wrapped = false;
+                    if (conio_config.just_wrapped)
+                        conio_config.just_wrapped = false;
                 }
             }
         }
@@ -177,7 +175,7 @@ void slip_character(unsigned char ch,int x,int y){
 
 
 void clear_scanline_from_cursor(int r){
-		// TODO: rely on clear_scanline_between
+    // TODO: rely on clear_scanline_between
     uint16_t *sl = &ptr[r]->pixels[conio_config.cursor.pos.x*8];
     for(int i=conio_config.cursor.pos.x*8;i<COLUMNS*8;i++){
         *sl++ = background_colour;
@@ -185,7 +183,7 @@ void clear_scanline_from_cursor(int r){
 }
 
 void clear_scanline_to_cursor(int r){
-		// TODO: rely on clear_scanline_between
+    // TODO: rely on clear_scanline_between
     uint16_t *sl = &ptr[r]->pixels[0];
     for(int i=0;i<conio_config.cursor.pos.x*8;i++){
         *sl++ = background_colour;
@@ -193,31 +191,31 @@ void clear_scanline_to_cursor(int r){
 }
 
 void clear_scanline_between( int r, int y, int x, int to_x ){
-	// mimic the r' clear_scanline_from_cursor BUT gets y,x position instead of
-	// cursor location AND can clear few column (instead of until-end-of-line)
-	uint16_t *sl = &ptr[r]->pixels[x*8];
-	for(int i=x*8;i<to_x*8;i++){
-			*sl++ = background_colour;
-	}
+  // mimic the r' clear_scanline_from_cursor BUT gets y,x position instead of
+  // cursor location AND can clear few column (instead of until-end-of-line)
+  uint16_t *sl = &ptr[r]->pixels[x*8];
+  for(int i=x*8;i<to_x*8;i++){
+      *sl++ = background_colour;
+  }
 }
 
 void copy_scanline_between( int r, int y, int to_x, int from_x, int x_len ){
-	// just copy the content of the r' scanline from_x position into the to_x position
-	// Just copy x_len characters from_x into to_x
-	if( to_x < from_x ) {
-		// Forward copy
-		uint16_t *sl_to = &ptr[r]->pixels[to_x*8];
-		uint16_t *sl_from = &ptr[r]->pixels[from_x*8];
-		for(int i=to_x*8;i<(to_x+x_len)*8;i++)
-				*sl_to++ = *sl_from++;
-	}
-	else {
-		// Backward copy
-		uint16_t *sl_to = &ptr[r]->pixels[(to_x+x_len)*8];
-		uint16_t *sl_from = &ptr[r]->pixels[(from_x+x_len)*8];
-		for(int i=(to_x+x_len)*8;i>to_x*8;i--)
-				*sl_to-- = *sl_from--;
-	}
+  // just copy the content of the r' scanline from_x position into the to_x position
+  // Just copy x_len characters from_x into to_x
+  if( to_x < from_x ) {
+    // Forward copy
+    uint16_t *sl_to = &ptr[r]->pixels[to_x*8];
+    uint16_t *sl_from = &ptr[r]->pixels[from_x*8];
+    for(int i=to_x*8;i<(to_x+x_len)*8;i++)
+        *sl_to++ = *sl_from++;
+  }
+  else {
+    // Backward copy
+    uint16_t *sl_to = &ptr[r]->pixels[(to_x+x_len)*8];
+    uint16_t *sl_from = &ptr[r]->pixels[(from_x+x_len)*8];
+    for(int i=(to_x+x_len)*8;i>to_x*8;i--)
+        *sl_to-- = *sl_from--;
+  }
 }
 
 
@@ -232,22 +230,10 @@ void clear_entire_scanline(int r){
 
 // === Screen based function ===================================================
 void clrscr(){ // standard definition for clear screen
-  /* From 80Col
-	for(int r=0;r<ROWS;r++){
-      // tighter method, as too much of a delay here can cause dropped characters
-      void *sl = &ptr[r]->slot[0];
-      memset(sl, 0, COLUMNS);
-
-      sl = &ptr[r]->inv[0];
-      memset(sl, 0, COLUMNS);
-
-      sl = &ptr[r]->blk[0];
-      memset(sl, 0, COLUMNS);
-  } */
-	/* From 40col */
-	for(int r=0;r<ROWS;r++){
-			clear_entire_scanline(r);
-	}
+  /* From 40col */
+  for(int r=0;r<ROWS;r++){
+      clear_entire_scanline(r);
+  }
 }
 
 void clear_primary_screen(){
@@ -256,12 +242,6 @@ void clear_primary_screen(){
 
 void clear_screen_from_cursor(){
     clear_line_from_cursor();
-    /* for(int r=conio_config.cursor.pos.y+1;r<ROWS;r++){
-        for(int c=0;c<COLUMNS;c++){
-            slip_character(0,c,r);    // todo: should use the new method in clear_entire_screen
-        }
-    } */
-		// clear_text_row_from_cursor();
     for(int r=((conio_config.cursor.pos.y+1)*8);r<TEXTROWS*8;r++){
         clear_entire_scanline(r);
     }
@@ -269,14 +249,9 @@ void clear_screen_from_cursor(){
 
 void clear_screen_to_cursor(){
     clear_line_to_cursor();
-    /* for(int r=0;r<conio_config.cursor.pos.y;r++){
-        for(int c=0;c<COLUMNS;c++){
-            slip_character(0,c,r);  // todo: should use the new method in clear_entire_screen
-        }
-    }*/
-		for(int r=((conio_config.cursor.pos.y+1)*8);r<TEXTROWS*8;r++){
-				clear_entire_scanline(r);
-		}
+    for(int r=((conio_config.cursor.pos.y+1)*8);r<TEXTROWS*8;r++){
+        clear_entire_scanline(r);
+    }
 }
 
 void shuffle_down(){
@@ -303,8 +278,8 @@ void shuffle_down(){
 void shuffle_up(){
     // this is our scroll UP
     // (domeu: adapted from shuffle_down)
-		debug_print( "picoterm_conio: shuffle_up() - scroll_down3 test have issue");
-		for(int r=0;r<8;r++){
+    debug_print( "picoterm_conio: shuffle_up() - scroll_down3 test have issue");
+    for(int r=0;r<8;r++){
         ptr[r]=ptr[(ROWS-8)+r];
         clear_entire_scanline((ROWS-8)+r);
     }
@@ -323,33 +298,33 @@ void shuffle_up(){
 
 
 void insert_line(){
-		struct scanline *ptrTemp[8];
-		// store the last LINE pointer for further recyle
-		int i = 0;
-		for( int r=ROWS-8; r<ROWS; r++ )
-				ptrTemp[i++] = ptr[r];
-		// move scan lines down of ONE LiNE line
-		for( int r=ROWS; r>(conio_config.cursor.pos.y*8)+8; r-- )
-				ptr[r] = ptr[r-8];
+    struct scanline *ptrTemp[8];
+    // store the last LINE pointer for further recyle
+    int i = 0;
+    for( int r=ROWS-8; r<ROWS; r++ )
+        ptrTemp[i++] = ptr[r];
+    // move scan lines down of ONE LiNE line
+    for( int r=ROWS; r>(conio_config.cursor.pos.y*8)+8; r-- )
+        ptr[r] = ptr[r-8];
     // finally recycled temporary stored scanline
-		for( int i = 0; i < 8; i++ ){
+    for( int i = 0; i < 8; i++ ){
         ptr[(conio_config.cursor.pos.y*8)+i]=ptrTemp[i];
         clear_entire_scanline( (conio_config.cursor.pos.y*8)+i );
     }
 }
 
 void delete_line(){
-		struct scanline *ptrTemp[8];
-		// store the "to delete" LINE pointer for further recyle
-		int i = 0;
-		for( int r=conio_config.cursor.pos.y*8; r<(conio_config.cursor.pos.y*8)+8; r++ )
-				ptrTemp[i++] = ptr[r];
-		// move scan lines up of ONE LiNE line
-		for( int r=(conio_config.cursor.pos.y*8); r<ROWS-8; r++ )
-				ptr[r] = ptr[r+8];
+    struct scanline *ptrTemp[8];
+    // store the "to delete" LINE pointer for further recyle
+    int i = 0;
+    for( int r=conio_config.cursor.pos.y*8; r<(conio_config.cursor.pos.y*8)+8; r++ )
+        ptrTemp[i++] = ptr[r];
+    // move scan lines up of ONE LiNE line
+    for( int r=(conio_config.cursor.pos.y*8); r<ROWS-8; r++ )
+        ptr[r] = ptr[r+8];
     // finally recycled temporary stored scanline
-		i = 0;
-		for( int r = ROWS-8; r < ROWS; r++ ){
+    i = 0;
+    for( int r = ROWS-8; r < ROWS; r++ ){
         ptr[r]=ptrTemp[i++];
         clear_entire_scanline( r );
     }
@@ -376,34 +351,34 @@ void clear_line_from_cursor(){
 }
 
 void clear_line_between( int y, int x, int to_x){
-	// mimic clear_line_from_cursor but got y, x as starting position THEN reduce
-	// the clearing between x and to_x column
+  // mimic clear_line_from_cursor but got y, x as starting position THEN reduce
+  // the clearing between x and to_x column
 
-	// keeps value into a good range
-	if( to_x > COLUMNS)
-		to_x = COLUMNS;
+  // keeps value into a good range
+  if( to_x > COLUMNS)
+    to_x = COLUMNS;
 
-	for(int r=(y*8);r<(y*8)+8;r++) // iterate the 8 scanlines for the line
-			clear_scanline_between(r, y, x, to_x );
+  for(int r=(y*8);r<(y*8)+8;r++) // iterate the 8 scanlines for the line
+      clear_scanline_between(r, y, x, to_x );
 }
 
 void copy_line_between( int y, int to_x, int from_x, int x_len ){
-	// Copy part of ONE line content between two X distinct position.
-	// -> copy x_len chars of line Y from from_x position into to_x position
+  // Copy part of ONE line content between two X distinct position.
+  // -> copy x_len chars of line Y from from_x position into to_x position
 
-	// keeps value into correct range
-	if( (to_x + x_len) > COLUMNS )
-		x_len = COLUMNS - to_x;
-	if( (from_x + x_len) > COLUMNS )
-		x_len = COLUMNS - from_x;
+  // keeps value into correct range
+  if( (to_x + x_len) > COLUMNS )
+    x_len = COLUMNS - to_x;
+  if( (from_x + x_len) > COLUMNS )
+    x_len = COLUMNS - from_x;
 
-	for(int r=(y*8);r<(y*8)+8;r++) // iterate the 8 scanlines for the line
-		copy_scanline_between( r, y, to_x, from_x, x_len );
+  for(int r=(y*8);r<(y*8)+8;r++) // iterate the 8 scanlines for the line
+    copy_scanline_between( r, y, to_x, from_x, x_len );
 }
 
 void clear_line_to_cursor(){
     for(int r=(conio_config.cursor.pos.y*8);r<(conio_config.cursor.pos.y*8)+8;r++){
-    	clear_scanline_to_cursor(r);
+      clear_scanline_to_cursor(r);
     }
 }
 
@@ -416,153 +391,100 @@ void clear_entire_line(){
 // === Char based function =====================================================
 
 void delete_chars(int n){
-	// Delete character under the cursor and move the remaining on the line to
-	// the left.
-	// copy the "not deleted" char in the current cursor position
-	copy_line_between( conio_config.cursor.pos.y, conio_config.cursor.pos.x, conio_config.cursor.pos.x+n, n );
-	// Clear the end of the line
-	clear_line_between( conio_config.cursor.pos.y, conio_config.cursor.pos.x+n, COLUMNS );
+  // Delete character under the cursor and move the remaining on the line to
+  // the left.
+  // copy the "not deleted" char in the current cursor position
+  copy_line_between( conio_config.cursor.pos.y, conio_config.cursor.pos.x, conio_config.cursor.pos.x+n, n );
+  // Clear the end of the line
+  clear_line_between( conio_config.cursor.pos.y, conio_config.cursor.pos.x+n, COLUMNS );
 }
 
 void erase_chars(int n) {
-	// Erase/Clean the n chars on the right of the cursor (cursor included)
- 	clear_line_between( conio_config.cursor.pos.y, conio_config.cursor.pos.x, conio_config.cursor.pos.x+n);
+  // Erase/Clean the n chars on the right of the cursor (cursor included)
+   clear_line_between( conio_config.cursor.pos.y, conio_config.cursor.pos.x, conio_config.cursor.pos.x+n);
 }
 
 void insert_chars(int n) {
   copy_line_between( conio_config.cursor.pos.y, conio_config.cursor.pos.x+n, conio_config.cursor.pos.x, COLUMNS-conio_config.cursor.pos.x-n  );
-	clear_line_between( conio_config.cursor.pos.y, conio_config.cursor.pos.x, conio_config.cursor.pos.x+n);
+  clear_line_between( conio_config.cursor.pos.y, conio_config.cursor.pos.x, conio_config.cursor.pos.x+n);
 }
 
 // === Cursor based function ===================================================
 
 void clear_cursor(){
-	// Just restore memoriser character (buffer content) right in place on the screen
-	int scanlineNumber;
-	int characterPosition;
-	int cursor_buffer_counter;
-	uint16_t pixel;
+  // Just restore memoriser character (buffer content) right in place on the screen
+  int scanlineNumber;
+  int characterPosition;
+  int cursor_buffer_counter;
+  uint16_t pixel;
 
-	cursor_buffer_counter = 0;
-	for(int r=0;r<8;r++){   // r is a row offset
-			scanlineNumber = (conio_config.cursor.pos.y*8)+r;
-			characterPosition = (conio_config.cursor.pos.x*8);
-			for(int bit=0;bit<8;bit++){
-					pixel = __chr_under_csr[cursor_buffer_counter++];
-					ptr[scanlineNumber]->pixels[characterPosition+bit] = pixel;
-			}
-	}
-	// Reset the flag for print_cursor
-	__has_chr_under_csr = false;
+  cursor_buffer_counter = 0;
+  for(int r=0;r<8;r++){   // r is a row offset
+      scanlineNumber = (conio_config.cursor.pos.y*8)+r;
+      characterPosition = (conio_config.cursor.pos.x*8);
+      for(int bit=0;bit<8;bit++){
+          pixel = __chr_under_csr[cursor_buffer_counter++];
+          ptr[scanlineNumber]->pixels[characterPosition+bit] = pixel;
+      }
+  }
+  // Reset the flag for print_cursor
+  __has_chr_under_csr = false;
 }
-/*
-void clear_cursor(){
-    if(conio_config.cursor.state.visible==false) return;
 
-    // put back what's in the cursor_buffer
-    int scanlineNumber;
-    int characterPosition;
-    int cursor_buffer_counter = 0;
-    for(int r=0;r<8;r++){   // r is a row offset
-        scanlineNumber = (conio_config.cursor.pos.y*8)+r;
-        characterPosition = (conio_config.cursor.pos.x*8);
-        for(int bit=0;bit<8;bit++){
-            uint16_t newPixel = cursor_buffer[cursor_buffer_counter++];
-            ptr[scanlineNumber]->pixels[characterPosition+bit] = newPixel;
-
-        }
-    }
-}
-*/
-
-
-/* void print_cursor(){
-    // these are the same
-    if(conio_config.cursor.state.visible==false) return;
-		//debug_print("print_cursor");
-    int scanlineNumber;
-    int characterPosition;
-    int cursor_buffer_counter = 0;
-		uint16_t newPixel;
-		uint16_t pixel;
-    for(int r=0;r<8;r++){   // r is a row offset
-        scanlineNumber = (conio_config.cursor.pos.y*8)+r;
-        characterPosition = (conio_config.cursor.pos.x*8);
-        for(int bit=0;bit<8;bit++){
-
-						//if( conio_config.cursor.state.blink_state ){
-							pixel = ptr[scanlineNumber]->pixels[characterPosition+bit];
-							//  Domeu: Line removed because pixel could be different from foreground or background color
-							//         it is the case at boot up and it avoids the cursor to blink on the screen at boot up.
-							newPixel = pixel==background_colour ? foreground_colour : background_colour;
-							//newPixel = foreground_colour;
-							//debug_write("X");
-							cursor_buffer[cursor_buffer_counter++]=pixel;
-						//} else {
-						///	newPixel = background_colour;
-							//debug_write("_");
-						//}
-						ptr[scanlineNumber]->pixels[characterPosition+bit] = newPixel;
-
-        }
-    }
-		//debug_print("-"); // ensure a carriage return
-}
-*/
 
 void print_cursor(){
-	int scanlineNumber;
-	int characterPosition;
-	int cursor_buffer_counter;
-	uint16_t pixel, newPixel;
-	int pixel_count;
+  int scanlineNumber;
+  int characterPosition;
+  int cursor_buffer_counter;
+  uint16_t pixel, newPixel;
+  int pixel_count;
 
-	// Make copy of the character under the cursor
-	// (don't make it twice, be sure we called clear_cursor before another copy)
-	if (__has_chr_under_csr==false ){
-				cursor_buffer_counter = 0;
-				pixel_count = 0;
-				for(int r=0;r<8;r++){   // r is a row offset
-						scanlineNumber = (conio_config.cursor.pos.y*8)+r;
-						characterPosition = (conio_config.cursor.pos.x*8);
-						for(int bit=0;bit<8;bit++){
-									pixel = ptr[scanlineNumber]->pixels[characterPosition+bit];
-									__chr_under_csr[cursor_buffer_counter++]=pixel;
-									// count number of colored pixels
-									if( (pixel!=0) && (pixel!=background_colour) ){
-									 	pixel_count+=1;
-									}
-						}
-						// Whem mode than 10 colored pixel => We have a char under the cursor
-						__has_chr_under_csr = (pixel_count > 10);
-				}
-	}
+  // Make copy of the character under the cursor
+  // (don't make it twice, be sure we called clear_cursor before another copy)
+  if (__has_chr_under_csr==false ){
+        cursor_buffer_counter = 0;
+        pixel_count = 0;
+        for(int r=0;r<8;r++){   // r is a row offset
+            scanlineNumber = (conio_config.cursor.pos.y*8)+r;
+            characterPosition = (conio_config.cursor.pos.x*8);
+            for(int bit=0;bit<8;bit++){
+                  pixel = ptr[scanlineNumber]->pixels[characterPosition+bit];
+                  __chr_under_csr[cursor_buffer_counter++]=pixel;
+                  // count number of colored pixels
+                  if( (pixel!=0) && (pixel!=background_colour) ){
+                     pixel_count+=1;
+                  }
+            }
+            // Whem mode than 10 colored pixel => We have a char under the cursor
+            __has_chr_under_csr = (pixel_count > 10);
+        }
+  }
 
-	if(conio_config.cursor.state.visible==false || (conio_config.cursor.state.blinking_mode && conio_config.cursor.state.blink_state)) return;
+  if(conio_config.cursor.state.visible==false || (conio_config.cursor.state.blinking_mode && conio_config.cursor.state.blink_state)) return;
 
-	if( !(__has_chr_under_csr) ){
-				// display cursor Symbol
-				for(int r=0;r<8;r++){   // r is a row offset
-						scanlineNumber = (conio_config.cursor.pos.y*8)+r;
-						characterPosition = (conio_config.cursor.pos.x*8);
-						for(int bit=0;bit<8;bit++)
-									ptr[scanlineNumber]->pixels[characterPosition+bit] = foreground_colour ; // Bloc cursor
-				}
-	} else {
-				// Display the invert of memorised char
-				// put back what's in the cursor_buffer
-		    cursor_buffer_counter = 0;
-		    for(int r=0;r<8;r++){   // r is a row offset
-		        scanlineNumber = (conio_config.cursor.pos.y*8)+r;
-		        characterPosition = (conio_config.cursor.pos.x*8);
-		        for(int bit=0;bit<8;bit++){
-		            pixel = __chr_under_csr[cursor_buffer_counter++];
-								newPixel = (pixel==background_colour)|(pixel==0) ? foreground_colour : background_colour;
-		            ptr[scanlineNumber]->pixels[characterPosition+bit] = newPixel;
+  if( !(__has_chr_under_csr) ){
+        // display cursor Symbol
+        for(int r=0;r<8;r++){   // r is a row offset
+            scanlineNumber = (conio_config.cursor.pos.y*8)+r;
+            characterPosition = (conio_config.cursor.pos.x*8);
+            for(int bit=0;bit<8;bit++)
+                  ptr[scanlineNumber]->pixels[characterPosition+bit] = foreground_colour ; // Bloc cursor
+        }
+  } else {
+        // Display the invert of memorised char
+        // put back what's in the cursor_buffer
+        cursor_buffer_counter = 0;
+        for(int r=0;r<8;r++){   // r is a row offset
+            scanlineNumber = (conio_config.cursor.pos.y*8)+r;
+            characterPosition = (conio_config.cursor.pos.x*8);
+            for(int bit=0;bit<8;bit++){
+                pixel = __chr_under_csr[cursor_buffer_counter++];
+                newPixel = (pixel==background_colour)|(pixel==0) ? foreground_colour : background_colour;
+                ptr[scanlineNumber]->pixels[characterPosition+bit] = newPixel;
 
-		        }
-		    }
-	}
+            }
+        }
+  }
 
 }
 
@@ -608,7 +530,7 @@ void move_cursor_lf( bool reverse ){
 }
 
 void wrap_constrain_cursor_values(){
-	if(conio_config.cursor.pos.x>=COLUMNS) {
+  if(conio_config.cursor.pos.x>=COLUMNS) {
     conio_config.cursor.pos.x=0;
     if(conio_config.cursor.pos.y==VISIBLEROWS-1){   // visiblerows is the count, csr is zero based
       shuffle_down();
@@ -628,17 +550,17 @@ void constrain_cursor_values(){
 }
 
 void move_cursor_at(int y, int x){
-	// Set the cursor at position Y:1..nRows, X:1..nRows
-	y--;
-	x--;
+  // Set the cursor at position Y:1..nRows, X:1..nRows
+  y--;
+  x--;
 
-	// Moves the cursor to row n, column m
-	// The values are 1-based, and default to 1
+  // Moves the cursor to row n, column m
+  // The values are 1-based, and default to 1
 
-	// these are zero based
-	conio_config.cursor.pos.x = x;
-	conio_config.cursor.pos.y = y;
-	constrain_cursor_values();
+  // these are zero based
+  conio_config.cursor.pos.x = x;
+  conio_config.cursor.pos.y = y;
+  constrain_cursor_values();
 }
 
 void move_cursor_home(){
