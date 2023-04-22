@@ -86,7 +86,7 @@ The [release notes](releases.md) is a great to discover the history.
 | \ESC[3J   | same as \ESC[2J<br/>__[Not accordinly to that documentation](https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797)__    |                    |
 | \ESC[{n}@	| Insert *{n}* Space Characters                                            | char_insert, 40col_insert_char   |
 | \ESC[{n}L	| Insert *{n}* lines                                                       | line_insert                      |
-| \ESC[{n}M	| Delete *{n}* lines                                                       | line_delete                      |
+| \ESC[{n}M	| Delete *{n}* lines                                                       | line_delete, line_delete3        |
 | \ESC[{n}P	| Delete *{n}* Characters, shifting in space characters<br />The end-of-line shift left of *{n}* chars from cursor position | char_delete, char_delete80, 40col_char_delete |
 | \ESC[{n}X	| Erase *{n}* Characters on the right of cursor (cursor position included), erased char are replace with space character.   | char_erase, char_erase80, 40col_char_erase   |
 | \ESC[{n}A | Move the cursor up *{n}* lines                                           | cursor_move        |
