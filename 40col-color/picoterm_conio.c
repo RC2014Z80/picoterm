@@ -339,7 +339,6 @@ void insert_line(){
 }
 
 void delete_line(){
-		debug_print( "picoterm_conio: delete_line() - entering (to check)");
 		struct scanline *ptrTemp[8];
 		// store the "to delete" LINE pointer for further recyle
 		int i = 0;
