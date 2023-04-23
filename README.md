@@ -72,7 +72,7 @@ remark: VGA display is suspended 1 second when plug-in an USB keyboard
 
 
 ## Know issues
-1. USB keyboard is not detected if already connected at power-up. Disconnect and reconnect it! __Hardware workaround available see the [picoterm-port](docs/picoterm-conn.md)__.
+1. USB keyboard is not detected if already connected at power-up. Disconnect and reconnect it! __Hardware workaround available see the [picoterm-conn](docs/picoterm-conn.md)__.
 2. Not all USB keyboards currently works. Most cheap generic keyboards seem to work fine, however, the testing sample is still fairly small. Hopefully with more data it will be easier to identify exactly which keyboards are likely to work and which aren’t, or, better still, a simple software fix will get more working.
 3. VGA rendering sometime hangs when connecting a keyboard (rare). Press reset button (on PicoTerm) and try again.
 4. Saving the configuration into Flash fails from time to time (rare). Just press reset button (on PicoTerm) and try again.
