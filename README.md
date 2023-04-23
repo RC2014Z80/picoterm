@@ -1,4 +1,4 @@
-# PicoTerm
+# PicoTerm - VGA Terminal for RP2014
 
 __PicoTerm is a VGA terminal emulator__ with several keyboard layout written specifically for the [RC2014 Pi Pico VGA Terminal](https://rc2014.co.uk/modules/pi-pico-vga-terminal/).<br />It runs 80 columns by 30 lines in monochrome mode. It also exists in basic 40 columns colour version as a separate firmware.
 
@@ -8,7 +8,32 @@ Once wired to the UART of the RC2014 (or any retro-computer) your get an autonom
 
 ![PicoTerm](docs/_static/picoterm.jpg)
 
-## Features
+## Hardware History
+
+### v1.0 board
+
+[RC2014 Pi PICO VGA Terminal](https://z80kits.com/shop/rc2014-pi-pico-vga-terminal/) _hardware version 1.0_ was the first iteration supporting the PicoTerm software (Terminal Emulator).
+
+It was used to develop the intial software features. The [expansion connector](docs/picoterm-conn.md) was also ised to append expansion  like Buzzer, USB Power-Up, SD Card.
+
+![RC2014 Pi PICO VGA Terminal](docs/_static/picoterm-pi-pico.jpg)
+
+### v1.1 board
+
+The newer _hardware version 1.1_ namely [RP2040 VGA Terminal](https://z80kits.com/shop/rp2040-vga-terminal/) includes various hardware expansion on board. The Raspberry-Pi Pico MCU (RP2040) is also integrated directly on board.
+
+The project is still fully compatible with the Raspberry-Pi Pico based version (v1.0). Only few GPIO attribution have been modified on the expansion connector to allow SDCard operation (see "picoterm-conn" in the Documentation section).
+
+![RC2014 VGA Terminal](docs/_static/rc2014-vga-terminal.jpg)
+
+This hardware revision 1.1 offers:
+* USB-A connector: plug directly the USB keyboard on the Picoterm
+* Delayed USB-A power-up: avoids keyboard detection issue.
+* Buzzer: can produce sound on request (press CTRL-G).
+* SDCard: Can read FAT & FAT32 filesystems (still under development).
+* Picoterm Reset pad: See test point near of Reset button to break it out on a front panel.
+
+# PicoTerm features
 
 PicoTerm offers the following features:
 * Super easy firmware upgrade (see [firmware upgrading](docs/firmware-upgrade.md) doc)
@@ -36,7 +61,7 @@ PicoTerm offers the following features:
  * SHIFT+CTRL+M : Configuration screen with storage into flash.
 * Extensive documentation included in the repository (see below).<br />_A great project without documentation is a useless project (Meurisse D)._
 
-## How PicoTerm works
+## How PicoTerm does works
 * Textmode version (from v1.1) allows choice of green, amber or white on black, by holding button A, B or C on power-up. (Configuration can also be done via the configuration menu).
 * Help screen available via CTRL+SHIFT+H
 * Configuration screen is available via CTRL+SHIFT+M (configuration can be stored in Flash)

@@ -26,7 +26,7 @@ _Remark:_ Trust it or not but I'm using a simple text editor and a command line 
 ## Wire it to your computer
 We will use a FTDI Friend (Adafruit 284) to convert serial line (rx) to an USB-Serial.
 
-![PicoTerm debug uart](_static/picoterm-debug-uart.jpg)
+![PicoTerm debug uart](_static/picoterm-debug-uart-hr11.jpg)
 
 ## Reading the messages
 
@@ -69,4 +69,6 @@ sprintf( debug_msg, "  colour_preference=%u", c->colour_preference );
 debug_print( debug_msg );
 ```
 
-__Remarks:__ debug_print() will send a \r\n after each message.
+__Remarks:__
+* `debug_print()` will send a \r\n after each message.
+* `debug_write()` just write the bytes (no \r\n added).

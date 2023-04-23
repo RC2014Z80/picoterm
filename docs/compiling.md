@@ -43,6 +43,9 @@ REM   It is better to have absolute path instead of relative path
 REM   export PICO_SDK_PATH=../../../../../pico/pico-sdk
 export PICO_SDK_PATH=/home/__YOUR_USER__/pico/pico-sdk
 
+REM Indicates which hardware revision to build (2.0=20 when omitted)
+export PICOTERM_HREV=20
+
 REM Since jan 4, 2023 this operation is made by Cmake
 REM
 REM adding the required cmake file for this build

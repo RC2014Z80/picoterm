@@ -1,3 +1,4 @@
+#include "picoterm_harddef.h" // Hardware definition
 #include "picoterm_debug.h"
 #include "uart_tx.pio.h"
 #include <stdio.h>

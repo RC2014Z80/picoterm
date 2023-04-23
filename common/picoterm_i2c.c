@@ -5,12 +5,11 @@ check the Shawn Hymel tutorial published at DigiKey.
 https://www.digikey.be/en/maker/projects/raspberry-pi-pico-rp2040-i2c-example-with-micropython-and-cc/47d0c922b79342779cdbd4b37b7eb7e2
 */
 
+#include "picoterm_harddef.h" // Hardware definition
 #include "picoterm_i2c.h"
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 
-#define SDA_PIN 26 // 18, 26
-#define SCL_PIN 27 // 19, 27
 
 // Global flag informing about the usage of gp26 & gp27 on the Picoterm expansion
 // When true, the GPIO are used as I2C, otherwise they are used as simple GPIO.

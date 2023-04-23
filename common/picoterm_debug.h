@@ -3,9 +3,6 @@
 
 #include "hardware/pio.h"
 
-#define DEBUG_TX  28
-#define DEBUG_BAUD  115200
-
 static char debug_msg[100];
 
 void debug_init();
