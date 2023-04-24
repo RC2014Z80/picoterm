@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-set( PICOTERM_VERSION 1.5.3.80)
+set( PICOTERM_VERSION 1.6.0.10)
 set( PICOTERM_DESCR "Alpha" )
 message("PicoTerm 40Col version = ${PICOTERM_VERSION} ${PICOTERM_DESCR}")
 
@@ -62,6 +62,11 @@ list( APPEND sources ../common/picoterm_dec.c )
 list( APPEND sources ../common/picoterm_i2c.c )
 list( APPEND sources ../common/pca9536.c )
 list( APPEND sources ../common/keybd.c )
+list( APPEND sources ../common/pio_spi.c )
+list( APPEND sources ../pio_fatfs/ff.c )
+list( APPEND sources ../pio_fatfs/ffsystem.c )
+list( APPEND sources ../pio_fatfs/ffunicode.c )
+list( APPEND sources ../pio_fatfs/tf_card.c )
 
 
 # Define the library to includes at compile time
@@ -69,6 +74,7 @@ list( APPEND sources ../common/keybd.c )
 list( APPEND link_libs pico_scanvideo_dpi pico_multicore pico_stdlib )
 list( APPEND link_libs hardware_gpio hardware_i2c hardware_adc hardware_uart hardware_irq hardware_flash )
 list( APPEND link_libs tinyusb_device tinyusb_board tinyusb_host )
+list( APPEND hardware_clocks ) # fatfs: hardware_spi not included
 
 # Defines the executables to build
 # ===> APPEND ENTRY HERE FOR NEW KEYBOARD LAYOUT
@@ -79,6 +85,7 @@ list( APPEND to_build picoterm picoterm_US picoterm_DE picoterm_FR picoterm_BE )
 foreach( exec ${to_build} )
   add_executable( ${exec} ${sources} )
 	pico_generate_pio_header( ${exec} ../../common/uart_tx.pio)
+	pico_generate_pio_header( ${exec} ../../common/spi.pio)
 	pico_enable_stdio_usb( ${exec} 0)  # Redirect printf to USB-Serial. Conflict with TinyUSB!
 	pico_enable_stdio_uart( ${exec} 0) # Redirect printf to uart0. But no room to place UART0 on GPIO!
 

@@ -12,6 +12,7 @@ font.h
 
 # Compiled files
 uart_tx.pio.h
+spi.pio.h
 CMakeCache.txt
 CMakeFiles/
 tinyusb
