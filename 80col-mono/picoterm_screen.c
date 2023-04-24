@@ -8,6 +8,7 @@
 #include "../common/pmhid.h" // keyboard definitions
 #include "../common/picoterm_config.h"
 #include "../common/picoterm_stddef.h"
+#include "../common/picoterm_stdio.h"
 #include "picoterm_core.h" // handle_new_character
 #include "tusb_option.h"
 #include "picoterm_conio.h"
@@ -15,7 +16,7 @@
 #include "hardware/watchdog.h"
 #include <stdio.h>
 
-#include "../common/picoterm_debug.h"
+
 
 /* Picoterm_i2c.c */
 extern bool i2c_bus_available; // gp26 & gp27 are used as I2C (otherwise as simple GPIO)

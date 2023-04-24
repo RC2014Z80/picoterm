@@ -29,10 +29,10 @@ void conio_init( uint16_t fg_color, uint16_t bg_color );
 void conio_reset();
 
 char read_key();
-void print_string( char str[] );
+void put_char(unsigned char ch,int x,int y);
+
 void print_element (int x,int scanlineNumber, uint8_t* custom_bitmap );
 
-void slip_character(unsigned char ch,int x,int y);
 void clear_scanline_from_cursor(int r);
 void clear_scanline_to_cursor(int r);
 void clear_entire_scanline(int r);

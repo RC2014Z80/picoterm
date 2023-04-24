@@ -83,14 +83,6 @@ char read_key(){
   return read_key_from_buffer();
 }
 
-
-void print_string(char str[]){
-  // Move it to CONIO
-  for(int i=0;i<strlen(str);i++)
-        handle_new_character(str[i]);
-}
-
-
 void print_element (int x,int scanlineNumber, uint8_t* custom_bitmap ){
   // Used to print a bitmap of custom bitmap as declared in picoterm_core.h
   uint8_t rawdata;
@@ -113,7 +105,7 @@ uint32_t * wordsForRow(int y){
     return (uint32_t * )&ptr[y]->pixels[0];
 }
 
-void slip_character(unsigned char ch,int x,int y){
+void put_char(unsigned char ch,int x,int y){
     // basically put character at chr position x,y
 
     // ch is 'screen code, or asc-32

@@ -1,7 +1,12 @@
 /* ==========================================================================
-        Manage the console interaction for the PicoTerm software
-              * printing string
-              * reading key from keyboard, etc
+    Manage the basic console interaction for the PicoTerm software
+          * put_char on the screen
+					* read_key from keyboard
+          * managing everything regarding the Console display (moving
+					  cursor, inverting content, etc)
+
+		Advanced interaction with the console (printing string, request input
+	  is provided by common/picoterm_stdlio.c)
    ========================================================================== */
 
 #include <stdbool.h>
@@ -255,12 +260,6 @@ void print_nupet(char str[], uint8_t font_id ){
   }
 }
 
-void print_string(char str[] ){
-  //print_nupet( str, config.font_id ); // FONT_ASCII
-  for(int i=0;i<strlen(str);i++)
-    handle_new_character( str[i] );
-}
-
 char read_key(){
   // read a key from input buffer (the keyboard or serial line). This is used
   // for menu handling. Return 0 if no char available
@@ -341,7 +340,7 @@ void clear_screen_from_cursor(){
     clear_line_from_cursor();
     for(int r=conio_config.cursor.pos.y+1;r<ROWS;r++){
         for(int c=0;c<COLUMNS;c++){
-            slip_character(0,c,r);    // todo: should use the new method in clear_entire_screen
+            put_char(0,c,r);    // todo: should use the new method in clear_entire_screen
         }
     }
 }
@@ -350,7 +349,7 @@ void clear_screen_to_cursor(){
     clear_line_to_cursor();
     for(int r=0;r<conio_config.cursor.pos.y;r++){
         for(int c=0;c<COLUMNS;c++){
-            slip_character(0,c,r);  // todo: should use the new method in clear_entire_screen
+            put_char(0,c,r);  // todo: should use the new method in clear_entire_screen
         }
     }
 }
@@ -560,7 +559,7 @@ unsigned char blk_character(int x,int y){
     return ptr[y]->blk[x];
 }
 
-void slip_character(unsigned char ch,int x,int y){
+void put_char(unsigned char ch,int x,int y){
     if(conio_config.cursor.pos.x>=COLUMNS || conio_config.cursor.pos.y>=VISIBLEROWS){
         return;
     }

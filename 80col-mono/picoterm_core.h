@@ -36,7 +36,6 @@ void terminal_reset();
 char get_bell_state();
 void set_bell_state(char state);
 void handle_new_character(unsigned char ch);
-//unsigned char read_key_from_buffer(); // in main.c
 
 
 // for debugging purposes

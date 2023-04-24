@@ -33,6 +33,7 @@ Still compatible with Hardware Version 1.0 by relocating usage on the GPIO expan
 
 ### Fix & Improvement
 * set_env.sh to quicly setup the environment. Call it with `source set_env.sh` .
+* rename conio slip_character() to put_char() - more conform with putc()
 
 
 

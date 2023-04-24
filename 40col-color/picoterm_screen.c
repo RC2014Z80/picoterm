@@ -21,17 +21,13 @@
 #include "picoterm_screen.h"
 #include "tusb_option.h"
 #include "../common/picoterm_config.h"
+#include "../common/picoterm_stddef.h"
+#include "../common/picoterm_stdio.h"
 #include "../common/pmhid.h"
 #include "main.h"
 #include "picoterm_core.h"
 #include "picoterm_conio.h"
 #include "hardware/watchdog.h"
-#include "../common/picoterm_stddef.h"
-
-#include "../common/picoterm_debug.h"
-
-#define LINEWRAP        // comment out to disable line wrapping
-
 
 
 /* #define CSRCHAR     128 */
@@ -99,8 +95,6 @@ void display_config(){
 		print_string(msg);
 		print_string("+------------------------------+\r\n" );
 		print_string("\r\n(S upcase=save / ESC=close) ? ");
-
-
 
     cursor_visible(true);
     clear_cursor();  // so we have the character
@@ -262,7 +256,6 @@ void display_help(){
   // reset_escape_sequence(); LOOKS not usefull from screen!
   clrscr();
   move_cursor_home(); // csr.x = 0; csr.y = 0;
-	debug_print( "display_help" );
   print_string("\r\n" );
 	print_string("       >>>>  PicoTerm Help <<<< \r\n");
   print_string("+-- Keyboard Shortcut ----------------+\r\n" );
@@ -277,7 +270,6 @@ void display_help(){
   cursor_visible(true);
   clear_cursor();  // so we have the character
   print_cursor();  // turns on
-		debug_print( "display_hel : donep" );
 }
 
 
