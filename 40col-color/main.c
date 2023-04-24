@@ -536,6 +536,7 @@ int main(void) {
     usb_power_task();
     led_blinking_task();
     csr_blinking_task();
+    key_repeat_task();
     bell_task();
 
     if( is_menu && !(old_menu) ){ // CRL+M : menu activated ?
