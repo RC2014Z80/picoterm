@@ -9,5 +9,6 @@
 #define _PICOTERM_STDIO_H_
 
 void print_string(char str[] );
+void get_string(char *str, int max_size);
 
 #endif // _PICOTERM_STDIO_H_

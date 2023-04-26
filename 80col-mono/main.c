@@ -607,7 +607,7 @@ void spi_sd_init( void ){
 	// printf("spi_sd program loaded at %d\n", offset);
 	pio_spi_init(spi_sd.pio, spi_sd.sm, offset,
 							 8,       // 8 bits per SPI frame
-							 31.25f,  // 31.25 for 1 MHz @ 125 clk_sys
+							 31.25f, // 31.25f,  // 31.25 for 1 MHz @ 125 clk_sys
 							 false,   // CPHA = 0
 							 false,   // CPOL = 0
 							 SPI_SD_SCK_PIN,
@@ -821,6 +821,9 @@ int main(void) {
         case MENU_HELP:
           display_help();
           break;
+				case MENU_COMMAND:
+					display_command();
+					break;
       };
       old_menu = is_menu;
     }
@@ -839,6 +842,9 @@ int main(void) {
           // Specialized handler manage keyboard input for menu
           _ch = handle_config_input();
           break;
+				case MENU_COMMAND:
+					// Specialized handler managing keyboard input for command
+					handle_command_input();
         default:
           _ch = handle_default_input();
       }
@@ -958,12 +964,20 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
         is_menu = !(is_menu);
         return; // do not add key to "Keyboard buffer"
       }
+
       if( (ch=='l') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
         // toggle between graphical font and ANSI font
         config.font_id = (config.font_id == 0 ? config.graph_id : 0);
         build_font( config.font_id );
         return; // do not add key to "Keyboard buffer"
       }
+
+			if( (ch=='c') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
+        id_menu = MENU_COMMAND;
+        is_menu = !(is_menu);
+        return; // do not add key to "Keyboard buffer"
+      }
+
       if( modifiers & WITH_SHIFT ){
           ch = keycode2ascii[scancode][1];
       }

@@ -15,6 +15,7 @@
 #include "main.h" // UART_ID
 #include "hardware/watchdog.h"
 #include <stdio.h>
+#include "../common/picoterm_debug.h"
 
 
 
@@ -42,6 +43,32 @@ char handle_default_input(){
   return _ch;
 }
 
+/* --- COMMAND ----------------------------------------------------------------
+   -
+   ---------------------------------------------------------------------------*/
+
+ void display_command(){
+   clrscr();
+   move_cursor_home();
+
+	 print_string( "--- Command Console ----\r\n\r\n" );
+	 print_string( "$ " );
+
+}
+
+
+char handle_command_input(){
+  // check if user selected an option THEN execute the appropriate action
+  // return the pressed key if any.
+  //char _ch = read_key();
+	char _cmd[80];
+	get_string( _cmd, sizeof(_cmd) );
+	debug_print( _cmd );
+  //if( (_ch==0) || (_ch==ESC) )
+  //  return _ch;
+
+	return 0;
+}
 /* --- CHARSET ----------------------------------------------------------------
    -
    ---------------------------------------------------------------------------*/

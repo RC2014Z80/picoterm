@@ -51,6 +51,7 @@
 #define MENU_CONFIG    0x01 // support several menu
 #define MENU_CHARSET   0x02 // display current charset
 #define MENU_HELP      0x03 // display the HELP menu
+#define MENU_COMMAND   0x04 // Key-in interpreter command
 
 #define USB_POWER_GPIO 26 // this GPIO can be used with a MOSFET to power-up USB
 #define USB_POWER_DELAY 5000 // ms
