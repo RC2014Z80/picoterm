@@ -8,32 +8,7 @@ Once wired to the UART of the RC2014 (or any retro-computer) your get an autonom
 
 ![PicoTerm](docs/_static/picoterm.jpg)
 
-## Hardware History
-
-### v1.0 board
-
-[RC2014 Pi PICO VGA Terminal](https://z80kits.com/shop/rc2014-pi-pico-vga-terminal/) _hardware version 1.0_ was the first iteration supporting the PicoTerm software (Terminal Emulator).
-
-It was used to develop the intial software features. The [expansion connector](docs/picoterm-conn.md) was also ised to append expansion  like Buzzer, USB Power-Up, SD Card.
-
-![RC2014 Pi PICO VGA Terminal](docs/_static/picoterm-pi-pico.jpg)
-
-### v1.1 board
-
-The newer _hardware version 1.1_ namely [RP2040 VGA Terminal](https://z80kits.com/shop/rp2040-vga-terminal/) includes various hardware expansion on board. The Raspberry-Pi Pico MCU (RP2040) is also integrated directly on board.
-
-The project is still fully compatible with the Raspberry-Pi Pico based version (v1.0). Only few GPIO attribution have been modified on the expansion connector to allow SDCard operation (see "picoterm-conn" in the Documentation section).
-
-![RC2014 VGA Terminal](docs/_static/rc2014-vga-terminal.jpg)
-
-This hardware revision 1.1 offers:
-* USB-A connector: plug directly the USB keyboard on the Picoterm
-* Delayed USB-A power-up: avoids keyboard detection issue.
-* Buzzer: can produce sound on request (press CTRL-G).
-* SDCard: Can read FAT & FAT32 filesystems (still under development).
-* Picoterm Reset pad: See test point near of Reset button to break it out on a front panel.
-
-# PicoTerm features
+## PicoTerm features
 
 PicoTerm offers the following features:
 * Super easy firmware upgrade (see [firmware upgrading](docs/firmware-upgrade.md) doc)
@@ -70,15 +45,51 @@ PicoTerm offers the following features:
 * Pico LED off --> USB device/keyboard connected
 remark: VGA display is suspended 1 second when plug-in an USB keyboard
 
+## Release notes
+The [release notes](releases.md) is a great to discover the history.
 
-## Know issues
+# Picoterm Boards
+
+The Picoterm board exists in two version flavor:
+* __Pi Pico VGA Terminal__ : based on Raspberry-Pi Pico board, it offers a basic terminal features with VGA output and USB keyboard. This version is expandable throught its expansion connector.
+* __RP2040 VGA Terminal__ : directly implement the RP2040 MCU (from Raspberry-Pi Pico) including several expansion (SDCard, Buzzer, USB-A, delayed USB Power).
+
+The Picoterm Firmware (>= 1.6) is fully compatible with the "Pi Pico VGA Terminal" and the "RP2040 VGA Terminal".
+
+The __RP2040 VGA Terminal__ is not designed to replace the __Pi Pico VGA Terminal__, and they are both going to be available together.  Although the hardware is very similar, and they can both run the current software (firmware >= 1.6), they are two different products.  
+
+## Pi Pico VGA terminal
+
+[Pi PICO VGA Terminal](https://z80kits.com/shop/rc2014-pi-pico-vga-terminal/) was the first board supporting the PicoTerm firmware (the terminal emulator).
+
+![Pi PICO VGA Terminal](docs/_static/picoterm-pi-pico.jpg)
+
+It is used to develop the firmware and Picoterm features. The [expansion connector](docs/picoterm-conn.md) is used to develop harware expansion like Buzzer, USB Power-Up, SD Card.
+
+Feature can be append to existing [Pi PICO VGA Terminal](https://z80kits.com/shop/rc2014-pi-pico-vga-terminal/) by reading [expansion connector](docs/picoterm-conn.md) document.
+
+## RP2040 VGA Terminal
+
+The [RP2040 VGA Terminal](https://z80kits.com/shop/rp2040-vga-terminal/) includes the RP2040 MCU integrated on the board togheter with various hardware expansion onboard. The Raspberry-Pi Pico MCU (RP2040) is also integrated directly on board.
+
+Note:
+* GPIO attribution on the expansion connector have been modified to allow proper SDCard operations (see [expansion connector](docs/picoterm-conn.md) documentation).
+* "RP2040 VGA Terminal" requires the PicoTerm Firmware >= 1.6 with newer GPIO attribution.
+
+![RC2014 VGA Terminal](docs/_static/rc2014-vga-terminal.jpg)
+
+The "RP2040 VGA Terminal" offers:
+* USB-A connector: plug directly the USB keyboard on the Picoterm
+* Delayed USB-A power-up: avoids keyboard detection issue.
+* Buzzer: can produce sound on request (press CTRL-G).
+* SDCard: Can read FAT & FAT32 filesystems (still under development).
+* Picoterm Reset pad: See test point near of Reset button to break it out on a front panel.
+
+# Know issues
 1. USB keyboard is not detected if already connected at power-up. Disconnect and reconnect it! __Hardware workaround available see the [picoterm-conn](docs/picoterm-conn.md)__.
 2. Not all USB keyboards currently works. Most cheap generic keyboards seem to work fine, however, the testing sample is still fairly small. Hopefully with more data it will be easier to identify exactly which keyboards are likely to work and which aren’t, or, better still, a simple software fix will get more working.
 3. VGA rendering sometime hangs when connecting a keyboard (rare). Press reset button (on PicoTerm) and try again.
 4. Saving the configuration into Flash fails from time to time (rare). Just press reset button (on PicoTerm) and try again.
-
-## Release notes
-The [release notes](releases.md) is a great to discover the history.
 
 # Supported escape sequence
 

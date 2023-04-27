@@ -1,6 +1,6 @@
 # Picoterm Expansion Connector
 
-__All the GPIO assignation here below ONLY concern the Hardware Revision 1.1 used FROM FIRMWARE 1.6.__
+__All the GPIO assignation here below ONLY APPLIED FROM FIRMWARE 1.6.__ for previous firmware version check [this document version](picoterm-conn-hr10.md).
 
 From firmware 1.6, expansion port GPIO complies with a newer I/O assignation for SDCard, Buzzer, USB-A Power-Up. If you do use such features, just move your connexions around the expansion port.
 
@@ -9,17 +9,17 @@ The newer [RP2040 VGA Terminal](https://z80kits.com/shop/rp2040-vga-terminal/) b
 ![RC2014 PI Pico VGA Terminal](_static/rc2014-vga-terminal-hr11.jpg)
 
 
-Extra features can still be implemented on the initial [RC2014 Pi Pico VGA Terminal](https://z80kits.com/shop/rc2014-pi-pico-vga-terminal/) by reordering the connexions on the expansion port.
+Extra features can be implemented on the initial [RC2014 Pi Pico VGA Terminal](https://z80kits.com/shop/rc2014-pi-pico-vga-terminal/) by doing appropriate connexions on the expansion port.
 
 ![RC2014 PI Pico VGA Terminal 1.1](_static/rc2014-pi-pico-vga-terminal.jpg)
 
-## Hardware Revision 1.1 connexions
+## Firmware 1.6 expansion port GPIO assignation
 
 The expansion connector is available just below the Pico and can be used to connect additionnal hardware.
 
 ![Picoterm expansion port](_static/picoterm-conn.jpg)
 
-On the RP2040 VGA Terminal, the connector is also available (but hardware is already connected on it).
+On the RP2040 VGA Terminal, the connector is also available and hardware (sdcard, USB-Power, ....) are already connected on it.
 
 ![Picoterm expansion port](_static/picoterm-conn-hr11.jpg)
 
@@ -101,3 +101,7 @@ Thanks to fatfs over PIO SPI (emulation of SPI bus) the picoterm is now able to 
 List of material:
 * [3V MicroSD Adapter](https://shop.mchobby.be/fr/cartes-breakout/2049-adaptateur-micro-sd-version-3v-3232100020498-adafruit.html) @ MC Hobby
 * [3V MicroSD Adapter](https://www.adafruit.com/product/4682) @ Adafruit
+
+## Poor Man debugger
+
+Using the poor-man debugger gpio is described into the [debug.md](debug.md) document.

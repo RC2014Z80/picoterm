@@ -19,12 +19,11 @@ A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate deve
 
 ## Version 1.6.0.10 - (ongoing)
 
-__New Hardware Version 1.1__ for PicoTerm (namely "RP2040 VGA Terminal Module" based on direct implementation of RP2040 chip).
+__New GPIO assignation on the Picoterm connector__ required to use the SDCard.
 
-Still compatible with Hardware Version 1.0 by relocating usage on the GPIO expansion port as described on EXPANSION the documentations.
 
 ### Features
-* Documentation review for hardware version 1.1.
+* Documentation review.
 * add `picoterm_harddef.h` to store hardware definition
  * SD Card initial support with pio_fatfs (version of FatFS over PIO SPI). Using GPIO 26,27,28,5. Voir main.c, spi_sd_init() et spi_sd_init().
  * I2C bus moved to GPIO 18 & 19

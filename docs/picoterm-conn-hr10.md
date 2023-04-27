@@ -1,11 +1,11 @@
-# Picoterm Expansion Connector - Hardware Revision 1.0 only
+# Picoterm Expansion Connector - Firmware < 1.6
 
-__All the GPIO assignation here below ONLY concern the Hardware Revision 1.0 used with FIRMWARE STRICTLY BELOW 1.6.__
+__All the GPIO assignation here below ONLY concern the FIRMWAREs STRICTLY BELOW 1.6.__
 
-From firmware 1.6, expansion port usage must comply with Hardware Revision 1.1. GPIO connector assignation is different to allow SDCard usage.
+Firmware prior to 1.6 used different GPIO assignation on the expansion connector. Here are the corresponding description.
 
 
-## Connector version 1.0
+## Firmware PRIOR TO 1.6 expansion port GPIO assignation
 
 The expansion connector is available just below the Pico.
 
