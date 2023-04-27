@@ -19,7 +19,10 @@
 #include "picoterm_core.h"
 #include "../common/picoterm_config.h"
 #include <stdlib.h>
+#include "bsp/board.h" // board_millis()
 
+/* picoterm_cursor.c */
+extern bool is_blinking;
 
 /* picoterm_config.c */
 extern picoterm_config_t config; // required to read config.font_id
@@ -721,6 +724,10 @@ void move_cursor_home(){
 
 void cursor_visible(bool v){
     conio_config.cursor.state.visible=v;
+		if( v==true )
+			print_cursor();
+	  else
+			clear_cursor();
 }
 
 bool cursor_blink_state() {
@@ -744,4 +751,24 @@ void restore_cursor_position(){
 void reset_saved_cursor(){
   __saved_csr.x = conio_config.cursor.pos.x;
   __saved_csr.y = conio_config.cursor.pos.y;
+}
+
+//--------------------------------------------------------------------+
+//  ConIO Specific Tasks
+//--------------------------------------------------------------------+
+
+void csr_blinking_task() {
+  const uint32_t interval_ms_csr = 525;
+  static uint32_t start_ms_csr = 0;
+
+  // Blink every interval ms
+  if ( board_millis() - start_ms_csr > interval_ms_csr) {
+
+  start_ms_csr += interval_ms_csr;
+
+  is_blinking = !is_blinking;
+  set_cursor_blink_state( 1 - cursor_blink_state() );
+
+  refresh_cursor();
+  }
 }

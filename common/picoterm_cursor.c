@@ -5,7 +5,9 @@
 #include "picoterm_cursor.h"
 #include "picoterm_stddef.h"
 #include <stdio.h>
+#include <stdbool.h>
 
+bool is_blinking = false; // double check if it replicates the picoterm_cursor.c::get_cursor_blinking()
 
 void cursor_state_init( cursor_state_t *this ){
   this->visible = true;

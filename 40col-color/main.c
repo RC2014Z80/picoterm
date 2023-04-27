@@ -63,6 +63,9 @@
 #include "bsp/board.h"
 #include "tusb.h"
 
+/* picoterm_cursor.c */
+extern bool is_blinking;
+
 /* picoterm_i2c.c */
 extern i2c_inst_t *i2c_bus;
 extern bool i2c_bus_available; // gp26 & gp27 are used as I2C (otherwise as simple GPIO)
@@ -98,7 +101,7 @@ int vspeed = 1 * 1;
 int hspeed = 1 << COORD_SHIFT;
 int hpos;
 int vpos;
-bool is_blinking = false;
+
 
 static const int input_pin0 = 22;
 
@@ -131,7 +134,6 @@ static int x_sprites = 1;
 
 void led_blinking_task();
 void usb_power_task();
-void csr_blinking_task();
 void bell_task();
 
 void render_loop() {
@@ -554,6 +556,9 @@ int main(void) {
         case MENU_HELP:
           display_help();
           break;
+				case MENU_COMMAND:
+					display_command();
+					break;
       };
       old_menu = is_menu;
     }
@@ -573,6 +578,10 @@ int main(void) {
           // Specialized handler manage keyboard input for menu
           _ch = handle_config_input();
           break;
+				case MENU_COMMAND:
+					// Specialized handler managing keyboard input for command
+					_ch = handle_command_input();
+					break;
         default:
           _ch = handle_default_input();
       }
@@ -626,21 +635,7 @@ void usb_power_task() {
   }
 }
 
-void csr_blinking_task() {
-  const uint32_t interval_ms_csr = 525;
-  static uint32_t start_ms_csr = 0;
 
-  // Blink every interval ms
-  if ( board_millis() - start_ms_csr > interval_ms_csr) {
-
-    start_ms_csr += interval_ms_csr;
-
-    is_blinking = !is_blinking;
-    set_cursor_blink_state( 1 - cursor_blink_state() );
-
-    refresh_cursor();
-  }
-}
 
 void bell_task() {
   const uint32_t interval_ms_bell = 100;
@@ -677,6 +672,11 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
 	      // Is there a modifier key under use while pressing the key?
 	      if( (ch=='m') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
 	        id_menu = MENU_CONFIG;
+	        is_menu = !(is_menu);
+	        return; // do not add key to "Keyboard buffer"
+	      }
+				if( (ch=='c') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
+	        id_menu = MENU_COMMAND;
 	        is_menu = !(is_menu);
 	        return; // do not add key to "Keyboard buffer"
 	      }

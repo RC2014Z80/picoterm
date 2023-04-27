@@ -27,17 +27,13 @@
 #include "speccyfont.h"
 #include "pico/scanvideo.h"
 
-/* #define SPC         0x20
-#define ESC         0x1b
-#define DEL         0x7f
-#define BSP         0x08
-#define LF          0x0a
-#define CR          0x0d
-#define FF          0x0c */
-
 char handle_default_input();
 
 void display_terminal();
+
+void display_command(); // command line console
+char handle_command_input();
+
 void display_charset();
 void display_help();
 

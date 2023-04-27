@@ -32,13 +32,6 @@
 
 /* #define CSRCHAR     128 */
 
-/* #define SPC         0x20
-#define ESC         0x1b
-#define DEL         0x7f
-#define BSP         0x08
-#define LF          0x0a
-#define CR          0x0d
-#define FF          0x0c */
 
 /* Picoterm_i2c.c */
 extern bool i2c_bus_available; // gp26 & gp27 are used as I2C (otherwise as simple GPIO)
@@ -58,6 +51,37 @@ char handle_default_input(){
   // and call it as needed from main.c::main()
   char _ch = read_key();
   return _ch;
+}
+
+/* --- COMMAND Interpreter ----------------------------------------------------
+   -
+   ---------------------------------------------------------------------------*/
+
+ void display_command(){
+   clrscr();
+   move_cursor_home();
+
+	 print_string( "---- Picoterm command interpreter ----\r\nType 'exit' to quit the console!\r\n" );
+}
+
+
+char handle_command_input(){
+  // Ask user to enter command followed by RETURN key then execute it!
+  //
+	char _cmd[80];
+	while (strcmp( _cmd, "exit") != 0) {
+		print_string( "\r\n$ " );
+		cursor_visible( true );
+		get_string( _cmd, sizeof(_cmd) );
+		cursor_visible( false );
+		//debug_print( _cmd );
+		print_string("\r\n this is a test command.");
+
+	}
+
+	// Inform callee to close the screen
+	cursor_visible( true );
+	return ESC;
 }
 
 /* --- CONFIG ----------------------------------------------------------------

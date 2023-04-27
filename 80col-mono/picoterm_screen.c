@@ -43,7 +43,7 @@ char handle_default_input(){
   return _ch;
 }
 
-/* --- COMMAND ----------------------------------------------------------------
+/* --- COMMAND Interpreter ----------------------------------------------------
    -
    ---------------------------------------------------------------------------*/
 
@@ -51,23 +51,27 @@ char handle_default_input(){
    clrscr();
    move_cursor_home();
 
-	 print_string( "--- Command Console ----\r\n\r\n" );
-	 print_string( "$ " );
-
+	 print_string( "---- Picoterm command interpreter ----\r\nType 'exit' to quit the console!\r\n" );
 }
 
 
 char handle_command_input(){
-  // check if user selected an option THEN execute the appropriate action
-  // return the pressed key if any.
-  //char _ch = read_key();
+  // Ask user to enter command followed by RETURN key then execute it!
+  //
 	char _cmd[80];
-	get_string( _cmd, sizeof(_cmd) );
-	debug_print( _cmd );
-  //if( (_ch==0) || (_ch==ESC) )
-  //  return _ch;
+	while (strcmp( _cmd, "exit") != 0) {
+		print_string( "\r\n$ " );
+		cursor_visible( true );
+		get_string( _cmd, sizeof(_cmd) );
+		cursor_visible( false );
+		debug_print( _cmd );
+		print_string("\r\n this is a test command.");
 
-	return 0;
+	}
+
+	// Inform callee to close the screen
+	cursor_visible( true );
+	return ESC;
 }
 /* --- CHARSET ----------------------------------------------------------------
    -

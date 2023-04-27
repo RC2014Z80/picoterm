@@ -30,8 +30,9 @@ void conio_reset();
 
 char read_key();
 void put_char(unsigned char ch,int x,int y);
-
 void print_element (int x,int scanlineNumber, uint8_t* custom_bitmap );
+
+void csr_blinking_task();
 
 void clear_scanline_from_cursor(int r);
 void clear_scanline_to_cursor(int r);

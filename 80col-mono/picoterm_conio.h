@@ -48,9 +48,10 @@ void conio_reset( char default_cursor_symbol );
 // char available (this is used by the menu handling)
 char read_key();
 void put_char(unsigned char ch,int x,int y);
-//void print_string(char str[]);
+//void print_string(char str[]); --> picoterm_stdio.C
 void print_nupet(char str[], uint8_t font_id ); // Print a NupetSCII encoded string to terminal with current font_id
 
+void csr_blinking_task();
 
 void clrscr(); // clear the primary screen
 void clear_primary_screen();
