@@ -55,6 +55,7 @@
 #include "../common/keybd.h"
 #include "../common/picoterm_i2c.h"
 #include "../common/pca9536.h"
+#include "../cli/cli.h"
 #include "picoterm_screen.h"
 
 #include "../common/pio_spi.h"
@@ -524,6 +525,7 @@ int main(void) {
   // Initialise keyboard module
   keybd_init( pico_key_down, pico_key_up );
   terminal_init();
+	cli_init();
   video_main();
   //terminal_reset();
   display_terminal(); // display terminal entry screen

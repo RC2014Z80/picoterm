@@ -28,6 +28,9 @@
 #include "picoterm_core.h"
 #include "picoterm_conio.h"
 #include "hardware/watchdog.h"
+#include <stdio.h>
+#include "../cli/cli.h"
+#include "../common/picoterm_debug.h"
 
 
 /* #define CSRCHAR     128 */
@@ -61,7 +64,7 @@ char handle_default_input(){
    clrscr();
    move_cursor_home();
 
-	 print_string( "---- Picoterm command interpreter ----\r\nType 'exit' to quit the console!\r\n" );
+	 print_string( "---- Picoterm command interpreter ----\r\nUse: exit, list, command ?,\r\ncommand --help\r\n" );
 }
 
 
@@ -74,9 +77,10 @@ char handle_command_input(){
 		cursor_visible( true );
 		get_string( _cmd, sizeof(_cmd) );
 		cursor_visible( false );
-		//debug_print( _cmd );
-		print_string("\r\n this is a test command.");
-
+		debug_print( "Invoke cli to execute:");
+		debug_print( _cmd );
+		print_string( "\r\n" );
+		cli_execute( _cmd, sizeof(_cmd) );
 	}
 
 	// Inform callee to close the screen
@@ -283,10 +287,11 @@ void display_help(){
   print_string("\r\n" );
 	print_string("       >>>>  PicoTerm Help <<<< \r\n");
   print_string("+-- Keyboard Shortcut ----------------+\r\n" );
-  print_string("| Shift+Ctrl+H : Help screen          |\r\n" ); // strip Nupetscii when not activated
+	print_string("| Shift+Ctrl+C: Command Line Interface|\r\n" ); // strip Nupetscii when not activated
+  print_string("| Shift+Ctrl+H: Help screen           |\r\n" ); // strip Nupetscii when not activated
   //print_string("| * Shift+Ctrl+L : Toggle ASCII/ANSI charset  |\r\n" );
-  print_string("| Shift+Ctrl+M : Configuration menu   |\r\n" );
-  print_string("| Shift+Ctrl+N : Display charset      |\r\n" );
+  print_string("| Shift+Ctrl+M: Configuration menu    |\r\n" );
+  print_string("| Shift+Ctrl+N: Display charset       |\r\n" );
   print_string("|                                     |\r\n" );
   print_string("+-------------------------------------+\r\n" );
 

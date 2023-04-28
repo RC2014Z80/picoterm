@@ -46,6 +46,7 @@ void cli_execute( char *cmd, int max_size ){
 		// loop through the user defined functions and execute
 		// one if found
 		for (int i = 0; i < MAX_USER_FUNCTIONS; i++) {
+			debug_print( user_functions[i].command_name );
 			//presumably end of user functions
 			if (strcmp(user_functions[i].command_name, "") == 0)
 				break;
