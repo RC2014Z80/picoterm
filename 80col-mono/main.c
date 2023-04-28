@@ -51,6 +51,7 @@
 #include "main.h"
 #include "picoterm_core.h"
 #include "picoterm_conio.h"
+#include "picoterm_screen.h"
 #include "../common/picoterm_config.h"
 #include "../common/picoterm_debug.h"
 #include "../common/picoterm_cursor.h"
@@ -59,7 +60,7 @@
 #include "../common/keybd.h"
 #include "../common/picoterm_i2c.h"
 #include "../common/pca9536.h"
-#include "picoterm_screen.h"
+#include "../cli/cli.h"
 //#include "hardware/structs/bus_ctrl.h"
 #include "bsp/board.h"
 #include "tusb.h"
@@ -80,7 +81,6 @@ extern bool i2c_bus_available; // gp26 & gp27 are used as I2C (otherwise as simp
 
 static bool is_menu = false;   // switch between Terminal mode and Menu mode
 static uint8_t id_menu = 0x00; // toggle with CTRL+SHIFT+M
-
 
 
 //CU_REGISTER_DEBUG_PINS(frame_gen)
@@ -730,7 +730,6 @@ int main(void) {
 	spi_sd_init();
 	spi_sd_test();
 
-
   // Checking GP26 & GP27 will be handled as GPIO or I2C bus (with PCA9536 see issue #21)
   // Then initialize the IO for USB_POWER &
   i2c_bus_available = false;
@@ -765,7 +764,6 @@ int main(void) {
 
   start_time = board_millis();
 
-
   uart_init(UART_ID, config.baudrate); // UART 1
   uart_set_hw_flow(UART_ID,false,false);
   uart_set_format(UART_ID, config.databits, config.stopbits, config.parity);
@@ -791,6 +789,7 @@ int main(void) {
   // Initialise keyboard module
   keybd_init( pico_key_down, pico_key_up );
   terminal_init();
+	cli_init();
 
   video_main();       // also build the font
   terminal_reset();
