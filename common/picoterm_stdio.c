@@ -7,10 +7,9 @@
 
 #include "picoterm_core.h" // handle_new_character
 #include "picoterm_conio.h" // readkey
+#include "../common/picoterm_debug.h"
 
 #include "tusb.h"
-
-//#include "../common/picoterm_debug.h"
 
 /* picoterm_conio.c */
 extern picoterm_conio_config_t conio_config;
@@ -33,10 +32,22 @@ void get_string(char *str, int max_size){
 		tuh_task(); // allow keyboard input to get into the input buffer
 		csr_blinking_task();
 		ch = read_key(); // get last key-pressed from the buffer
-		//debug_print("read_key done");
-		if( (ch != 0) && (ch >= 32)){
-			// sprintf(debug_msg,"%c", ch);
-			// debug_print(debug_msg);
+		if( (ch != 0) && (ch < 32)){
+			switch (ch) {
+			    case BSP: // backspace
+			      // statements
+						if( pos>0 ){
+							cursor_visible( false );
+							pos--;
+							conio_config.cursor.pos.x--;
+							str[pos]=0;
+							put_char( ' '-32,  conio_config.cursor.pos.x, conio_config.cursor.pos.y );
+							cursor_visible( true );
+						}
+			      break;
+			} // eof switch(ch)
+		}
+		else if( (ch != 0) && (ch >= 32)){
 			cursor_visible( false );
 			put_char( ch-32, conio_config.cursor.pos.x, conio_config.cursor.pos.y ); // ascii -32
 			str[pos] = ch;
