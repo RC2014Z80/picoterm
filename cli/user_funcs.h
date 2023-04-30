@@ -23,6 +23,6 @@ void calc(int token_count, char tokens[][MAX_STRING_SIZE]);
 void cli_sd_info(int token_count, char tokens[][MAX_STRING_SIZE]);
 void cli_dir(int token_count, char tokens[][MAX_STRING_SIZE]);
 void cli_type( int token_count, char tokens[][MAX_STRING_SIZE]);
-
+void cli_send_file( int token_count, char tokens[][MAX_STRING_SIZE]);
 
 #endif /* USER_FUNCS_H */

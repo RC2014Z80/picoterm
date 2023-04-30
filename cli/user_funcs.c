@@ -6,6 +6,7 @@
 #include "tinyexpr.h"
 #include "../common/picoterm_stdio.h"
 #include "../common/picoterm_stddef.h"
+#include "../common/picoterm_harddef.h"
 #include "../common/picoterm_conio_config.h"
 #include "../common/picoterm_debug.h"
 #include "../pio_fatfs/ff.h"
@@ -43,6 +44,10 @@ void register_user_functions() {
 	strcpy(user_functions[3].command_name, "type");
   strcpy(user_functions[3].command_help, "type filename [-p]\r\nShow file content.");
   user_functions[3].user_function = cli_type;
+
+	strcpy(user_functions[4].command_name, "send_file");
+  strcpy(user_functions[4].command_help, "send_file filename \r\nSend file content to UART.");
+  user_functions[4].user_function = cli_send_file;
 
 }
 
@@ -323,4 +328,82 @@ void cli_type( int token_count, char tokens[][MAX_STRING_SIZE]){
 			}
 		}
 		f_close(&file);
+}
+
+//--------------------------------------------------------------------+
+//  cli_send_file
+//--------------------------------------------------------------------+
+
+void cli_send_file( int token_count, char tokens[][MAX_STRING_SIZE]){
+	char *filename;
+	char ch;
+	FIL file;
+	FATFS fs;
+	FRESULT fr;     /* FatFs return code */
+	uint16_t size, readed;
+
+	UINT bytesRead;
+
+	if( token_count<1 ){
+		print_string("Missing filename!\r\n" );
+		return;
+	}
+	// file to open
+	filename = tokens[1];
+
+	// Mount SD_Card
+	//
+	fr = f_mount(&fs, "", 1);
+	if (fr != FR_OK) { // see FRESULT in ff.h
+			sprintf( debug_msg, "SD mount error %d\r\n", fr);
+			print_string( debug_msg );
+			return;
+	}
+
+	// Read the file
+	//
+	fr = f_open(&file, filename, FA_READ);
+	if (fr != FR_OK) { // see FRESULT in ff.h
+			sprintf( debug_msg, "File open error %d\r\n", fr);
+			print_string( debug_msg );
+			return;
+	}
+
+	// file size
+	size = f_size(&file);
+
+	// using debug_msg buffer to read FIRST CHUNCK of file content
+	fr = f_read(&file, debug_msg, sizeof(debug_msg), &bytesRead);
+	if (fr != FR_OK) { // see FRESULT in ff.h
+			sprintf( debug_msg, "File read error %d\r\n", fr);
+			print_string( debug_msg );
+			f_close(&file);
+			return;
+	}
+
+	readed = 0;
+	char line[40];
+	print_string("\r\nSending...");
+	while( bytesRead > 0 ){
+		// send file CHUNCK over serial
+		for( int i=0; i<bytesRead; i++) {
+				uart_putc( UART_ID, debug_msg[i] );
+				sleep_ms( 1 );
+    }
+		// Chunck sent!
+		readed = readed + bytesRead;
+		sprintf( line, "\r%d / %d sent!", readed, size );
+		print_string( line );
+		// read next CHUNCK
+		fr = f_read(&file, debug_msg, sizeof(debug_msg), &bytesRead);
+		if (fr != FR_OK) { // see FRESULT in ff.h
+				sprintf( debug_msg, "\r\nFile read error %d\r\n", fr);
+				print_string( debug_msg );
+				f_close(&file);
+				return;
+		}
+	}
+	sprintf( line, "\r%d / %d sent!\r\n", size, size );
+
+	f_close(&file);
 }
