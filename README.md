@@ -213,7 +213,8 @@ The picoterm projet contains a wide variety of documentation and ressources abou
 
 | Document                    | Description                                              |
 |-----------------------------|----------------------------------------------------------|
-| [Release notes](releases.md)       | History of changes                                |
+| [Release notes](releases.md)| History of changes                                        |
+| [CLI](docs/cli.md)          | Command Line Interpreter for Picoterm                     |       
 | [Firmware upgrade](docs/firmware-upgrade.md) | How to upload a new firmware on picoterm.|
 | [Graphical charset](font-suite/readme.md) | Discovering the NuppetScii & CP437 graphical charset (128 to 255) append behind ASCII charset. Discover Playscii software used to draw screen with NuPetScii. |
 | [Font-Face](font-suite/add-font-face.md) | Adding new font-face to picoterm. |

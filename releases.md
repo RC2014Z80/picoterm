@@ -17,19 +17,23 @@ From version 1.2 any publication will includes all U2F firmware files for 40 & 8
 
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
 
-## Version 1.6.0.10 - (ongoing)
+## Version 1.6.0.20 - (ongoing)
 
-__New Hardware Version 1.1__ for PicoTerm (namely "RP2040 VGA Terminal Module" based on direct implementation of RP2040 chip).
-
-Still compatible with Hardware Version 1.0 by relocating usage on the GPIO expansion port as described on EXPANSION the documentations.
+__New GPIO attribution for expansion connector__ for PicoTerm applying to "Pico Vga Terminal" and "RP2040 VGA Terminal".
 
 ### Features
-* Documentation review for hardware version 1.1.
+* Documentation review (see [GPIO usage on expansion connector](docs/picoterm-conn.md)).
 * add `picoterm_harddef.h` to store hardware definition
  * SD Card initial support with pio_fatfs (version of FatFS over PIO SPI). Using GPIO 26,27,28,5. Voir main.c, spi_sd_init() et spi_sd_init().
  * I2C bus moved to GPIO 18 & 19
  * PoorMan Debugger moved to GPIO 22 @ 115200 bds
 * __initial support of [fatfs](http://elm-chan.org/fsw/ff/00index_e.html) over PIO SPI__.<br />Read more about this from [pio_fatfs/readme.txt](pio_fatfs/readme.txt) file and [pure SPI pico_fatfs_test]((https://github.com/elehobica/pico_fatfs_test) repository.
+* CLI: Command Line Interpreter activated with SHIFT+CTRL+C with [docs/cli.md](several commands).
+ * sd_info
+ * dir
+ * type
+ * send_file
+
 
 ### Fix & Improvement
 * set_env.sh to quicly setup the environment. Call it with `source set_env.sh` .
