@@ -21,6 +21,24 @@ void print_string(char str[] ){
 		handle_new_character( str[i] );
 }
 
+void print_char( char c ){
+	// do like conio put_char() but without requiring the x, y cursor position
+	handle_new_character( c );
+}
+
+char get_key( bool ascii ){
+	// BLOCKING read_key with option to ascii only char
+	char ch;
+	while( true ){
+		tuh_task(); // allow keyboard input to get into the input buffer
+		csr_blinking_task();
+		ch = read_key();
+		if( ((ch >= 32) && ascii) || ((ch>0) && !(ascii)) )
+			return ch;
+	}
+}
+
+
 void get_string(char *str, int max_size){
 	// key-in a null terminated string (so max_size-1) until Return Key
 	int pos = 0;

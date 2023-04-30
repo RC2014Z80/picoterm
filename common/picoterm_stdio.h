@@ -9,6 +9,8 @@
 #define _PICOTERM_STDIO_H_
 
 void print_string(char str[] );
+void print_char( char c );
+char get_key( bool ascii ); // BLOCKING read_key with option to ascii only char
 void get_string(char *str, int max_size);
 
 #endif // _PICOTERM_STDIO_H_

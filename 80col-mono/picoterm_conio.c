@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "picoterm_conio.h"
+#include "../common/picoterm_conio_config.h"
 #include "../common/picoterm_cursor.h"
 #include "../common/picoterm_dec.h"
 #include "../common/picoterm_stddef.h"
@@ -27,10 +28,8 @@ extern bool is_blinking;
 /* picoterm_config.c */
 extern picoterm_config_t config; // required to read config.font_id
 
-picoterm_conio_config_t conio_config  = { .rvs = false, .blk = false, .just_wrapped = false,
-    .wrap_text = true, .dec_mode = DEC_MODE_NONE, .cursor.pos.x = 0, .cursor.pos.y = 0,
-    .cursor.state.visible = true, .cursor.state.blink_state = false,
-    .cursor.state.blinking_mode = true, .cursor.symbol = 143 };
+/* picoterm_conio_config.c */
+extern picoterm_conio_config_t conio_config;
 
 array_of_row_text_pointer ptr;           // primary screen content
 array_of_row_text_pointer secondary_ptr; // secondary screen content
@@ -63,11 +62,12 @@ void conio_init( uint8_t ansi_font_id ){
 
 void conio_reset( char default_cursor_symbol ){
   // Reset the terminal
-  conio_config.rvs = false;
+  /*conio_config.rvs = false;
   conio_config.blk = false;
   conio_config.wrap_text = true;
   conio_config.just_wrapped = false;
-  conio_config.dec_mode = DEC_MODE_NONE; // single/double lines
+  conio_config.dec_mode = DEC_MODE_NONE; // single/double lines */
+	conio_config_init();
   // initialized @ init()
   // conio_config.ansi_font_id = FONT_NUPETSCII; // selected font_id for graphical operation
 
@@ -75,9 +75,9 @@ void conio_reset( char default_cursor_symbol ){
   __inv_under_csr = 0;
   __blk_under_csr = 0;
 
-  conio_config.cursor.state.visible = true;
+  /* conio_config.cursor.state.visible = true;
   conio_config.cursor.state.blink_state = false; // blinking cursor is in hidden state
-  conio_config.cursor.state.blinking_mode = true;
+  conio_config.cursor.state.blinking_mode = true; */
   conio_config.cursor.symbol = default_cursor_symbol;
 
   clrscr();

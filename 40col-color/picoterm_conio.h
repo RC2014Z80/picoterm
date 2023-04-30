@@ -6,11 +6,13 @@
 #include "../common/picoterm_cursor.h"
 #include "speccyfont.h"
 
+/* Those are defined in the CMakeList !!!!
 #define COLUMNS     40
 #define ROWS        256 // yes this is 16 more than the number of scanlines we have
                         // for scrolling to work we need 8 spare pointers
-#define TEXTROWS    29 // ROWS/8  // must be 2 text rows less than the max number of scanlines
 #define VISIBLEROWS 29 // (as defined in the 80col version)
+*/
+#define TEXTROWS    29 // ROWS/8  // must be 2 text rows less than the max number of scanlines
 
 /* console IO configuration */
 typedef struct picoterm_conio_config {

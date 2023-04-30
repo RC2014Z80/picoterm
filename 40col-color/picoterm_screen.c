@@ -61,10 +61,11 @@ char handle_default_input(){
    ---------------------------------------------------------------------------*/
 
  void display_command(){
+	 // Display the Command Line Interpreter Screen
    clrscr();
    move_cursor_home();
 
-	 print_string( "---- Picoterm command interpreter ----\r\nUse: exit, list, command ?,\r\ncommand --help\r\n" );
+	 print_string( "---- Picoterm command interpreter ----\r\nUse: exit, list, command ?,\r\ncommand -h\r\n" );
 }
 
 
