@@ -52,7 +52,7 @@ char handle_default_input(){
    clrscr();
    move_cursor_home();
 
-	 print_string( "---- Picoterm command interpreter ----\r\nUse: exit, list, <command> ?, <command> --help\r\n" );
+	 print_string( "---- Picoterm command interpreter ----\r\nUse: exit, list, <command> ?, <command> -h\r\n" );
 }
 
 

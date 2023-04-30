@@ -6,7 +6,7 @@
 
 #define MAX_USER_FUNCTIONS 5
 
-typedef void (*user_func)(char tokens[][MAX_STRING_SIZE]);
+typedef void (*user_func)(int token_count, char tokens[][MAX_STRING_SIZE]);
 
 typedef  struct usr_funcs {
        char  command_name[20] ;
@@ -15,7 +15,14 @@ typedef  struct usr_funcs {
  } usr_funcs;
 
 
-void init_user_functions();
+void register_user_functions();
+
+
+// Should not be called directly outside of CLI
+void calc(int token_count, char tokens[][MAX_STRING_SIZE]);
+void cli_sd_info(int token_count, char tokens[][MAX_STRING_SIZE]);
+void cli_dir(int token_count, char tokens[][MAX_STRING_SIZE]);
+void cli_type( int token_count, char tokens[][MAX_STRING_SIZE]);
 
 
 #endif /* USER_FUNCS_H */

@@ -56,6 +56,7 @@ project(picoterm LANGUAGES CXX C ASM VERSION ${PICOTERM_VERSION} DESCRIPTION ${P
 #    Not included in source: font6.c font10.c lcd.c font8.c
 list( APPEND sources main.c )
 list( APPEND sources picoterm_core.c )
+list( APPEND sources ../common/picoterm_conio_config.c )
 list( APPEND sources picoterm_conio.c )
 list( APPEND sources mono8_cp437.c mono8_nupetscii.c olivetti_thin_cp437.c olivetti_thin_nupetscii.c )
 list( APPEND sources picoterm_logo.c picoterm_screen.c )
@@ -69,6 +70,7 @@ list( APPEND sources ../common/keybd.c )
 list( APPEND sources ../common/picoterm_i2c.c )
 list( APPEND sources ../common/pca9536.c )
 list( APPEND sources ../common/pio_spi.c )
+list( APPEND sources ../common/pio_sd.c )
 list( APPEND sources ../cli/cli.c )
 list( APPEND sources ../cli/tinyexpr.c )
 list( APPEND sources ../cli/user_funcs.c )
@@ -114,6 +116,9 @@ foreach( exec ${to_build_list} )
 	target_compile_definitions( ${exec} PRIVATE
 		PICO_SCANVIDEO_SCANLINE_BUFFER_COUNT=4
 		PICO_SCANVIDEO_PLANE1_FIXED_FRAGMENT_DMA=true
+		COLUMNS=80
+		ROWS=34
+		VISIBLEROWS=30
 		${localise}=true
 		CMAKE_PROJECT_VERSION="${CMAKE_PROJECT_VERSION}"
 		)

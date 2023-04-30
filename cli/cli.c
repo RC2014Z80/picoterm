@@ -4,15 +4,13 @@
 
    ========================================================================== */
 
+#include "cli.h"
 #include "user_funcs.h"
 #include "tinyexpr.h"
 #include <stdio.h>
 #include <string.h>
 #include "../common/picoterm_stdio.h"
 #include "../common/picoterm_debug.h"
-
-#define NUMBER_OF_STRING 10 // number of tokens in the decomposed command
-#define MAX_STRING_SIZE 25
 
 unsigned long int word_count(const char *string);
 int parse_string(char *str, char tokens[][MAX_STRING_SIZE], char *delim);
@@ -28,7 +26,15 @@ char tokens[NUMBER_OF_STRING][MAX_STRING_SIZE];
 
 void cli_init(){
 		// initialize the user functions
-		init_user_functions();
+		register_user_functions();
+}
+
+bool has_flag( char *flag_str,  char tokens[][MAX_STRING_SIZE] ){
+	// flags are not counted in the tokens. So we ave to tested all the entries.
+	for( int i=0; i<NUMBER_OF_STRING; i++ )
+		if( strcmp( flag_str, tokens[i] )==0 )
+			return true;
+	return false;
 }
 
 void cli_execute( char *cmd, int max_size ){
@@ -43,6 +49,12 @@ void cli_execute( char *cmd, int max_size ){
 	  if (token_cnt <= 0)
 			return;
 
+		// rectify token count to remove "-flag" entries
+		// they are tested with has_flag('-p')
+		for( int i=token_cnt-1; i>0; i-- )
+			if( strlen(tokens[i])>0 && tokens[i][0]=='-' )
+				token_cnt--;
+
 		// loop through the user defined functions and execute
 		// one if found
 		for (int i = 0; i < MAX_USER_FUNCTIONS; i++) {
@@ -53,7 +65,7 @@ void cli_execute( char *cmd, int max_size ){
 			//display help
 			if (strcmp(user_functions[i].command_name, tokens[0]) == 0) {
 				if ((strcmp(tokens[1], "?") == 0) ||
-						(strcmp(tokens[1], "--help") == 0)) {
+						(strcmp(tokens[1], "-h") == 0)) {
 					print_string( user_functions[i].command_help );
 					return;
 				} // end if
@@ -70,8 +82,9 @@ void cli_execute( char *cmd, int max_size ){
 
 			//execute the command function
 			if (strcmp(user_functions[i].command_name, tokens[0]) == 0) {
-				user_functions[i].user_function(tokens);
-				//break;
+				sprintf( debug_msg, "%d", token_cnt );
+				debug_print( debug_msg );
+				user_functions[i].user_function(token_cnt, tokens);
 				return;
 			}
 		} // eof for
