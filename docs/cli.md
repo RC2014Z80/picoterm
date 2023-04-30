@@ -23,7 +23,7 @@ Commands syntax are the following
 
 List the files availables on the SDCard (either the root, either a sub-path).
 
-The `-p` flag can be used to display the list of files per page!
+The `-p` flag can be used to display the list of files per page! Press ESC to cancel.
 
 Examples:
 * __dir__ : list the files at root.
@@ -40,4 +40,4 @@ Try to mount the SDCard and display informations about the identified filesystem
 
 `type [filename] [-p]`
 
-Display the content of a file on the screen. The `-p` flag can be used to display the list of files per page!
+Display the content of a file on the screen. The `-p` flag can be used to display the list of files per page! Press ESC to cancel.
