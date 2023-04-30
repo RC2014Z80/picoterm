@@ -89,6 +89,8 @@ ROM page out test: Pass
 *
 ```
 
+The send_file command can also be used with some [basic program ](https://github.com/RC2014Z80/RC2014-BASIC-Programs) when the basic is already started.
+
 ## type
 
 `type [filename] [-p]`
