@@ -6,6 +6,7 @@
    ========================================================================== */
 
 #include "picoterm_core.h" // handle_new_character
+#include "picoterm_conio_config.h"
 #include "picoterm_conio.h" // readkey
 #include "../common/picoterm_debug.h"
 

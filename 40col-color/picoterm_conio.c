@@ -6,6 +6,7 @@
 
 #include <stdbool.h>
 #include <string.h>
+#include "../common/picoterm_conio_config.h"
 #include "picoterm_conio.h"
 #include "picoterm_core.h" // scanline functions
 #include "../common/keybd.h"
@@ -20,10 +21,8 @@
 /* picoterm_cursor.c */
 extern bool is_blinking;
 
-picoterm_conio_config_t conio_config  = { .rvs = false, .blk = false, .just_wrapped = false,
-    .wrap_text = true, .dec_mode = DEC_MODE_NONE, .cursor.pos.x = 0, .cursor.pos.y = 0,
-    .cursor.state.visible = true, .cursor.state.blink_state = false,
-    .cursor.state.blinking_mode = true, .cursor.symbol = 143 };
+/* picoterm_conio_config.c */
+extern picoterm_conio_config_t conio_config;
 
 // Current color
 uint16_t foreground_colour;
@@ -62,17 +61,20 @@ void conio_init( uint16_t fg_color, uint16_t bg_color ){
 
 void conio_reset(){
   // Reset the terminal
-  conio_config.rvs = false;
+	conio_config_init();
+  /* conio_config.rvs = false;
   conio_config.blk = false;
   conio_config.wrap_text = true;
   conio_config.just_wrapped = false;
   conio_config.dec_mode = DEC_MODE_NONE; // single/double lines
+	*/
   // initialized @ init()
   // conio_config.ansi_font_id = FONT_NUPETSCII; // selected font_id for graphical operation
 
-  conio_config.cursor.state.visible = true;
+  /*conio_config.cursor.state.visible = true;
   conio_config.cursor.state.blink_state = false; // blinking cursor is in hidden state
   conio_config.cursor.state.blinking_mode = true;
+	*/
   conio_config.cursor.symbol = 143;
 
   clrscr();
@@ -592,7 +594,7 @@ void cursor_visible(bool v){
 		if( v==true )
 			print_cursor();
 	  else
-			clear_cursor();		
+			clear_cursor();
 }
 
 bool cursor_blink_state() {

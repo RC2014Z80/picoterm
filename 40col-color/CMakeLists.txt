@@ -52,6 +52,7 @@ project(picoterm LANGUAGES CXX C ASM VERSION ${PICOTERM_VERSION} DESCRIPTION ${P
 #    Not included in source: font8.c font6.c font10.c lcd.c
 list( APPEND sources main.c )
 list( APPEND sources picoterm_core.c )
+list( APPEND sources ../common/picoterm_conio_config.c )
 list( APPEND sources picoterm_conio.c )
 list( APPEND sources picoterm_screen.c )
 list( APPEND sources ../common/picoterm_stddef.c )
@@ -110,6 +111,9 @@ foreach( exec ${to_build} )
 	target_compile_definitions( ${exec} PRIVATE
 		PICO_SCANVIDEO_SCANLINE_BUFFER_COUNT=4
 		PICO_SCANVIDEO_PLANE1_FIXED_FRAGMENT_DMA=true
+		COLUMNS=40
+		ROWS=256 # yes this is 16 more than the number of scanlines we have for scrolling to work we need 8 spare pointers
+		VISIBLEROWS=29 # (as defined in the 80col version)
 		${localise}=true
 		CMAKE_PROJECT_VERSION="${CMAKE_PROJECT_VERSION}"
 		)

@@ -22,6 +22,7 @@
 #include "picoterm_conio.h"
 #include "../common/picoterm_debug.h"
 #include "../common/picoterm_config.h"
+#include "../common/picoterm_conio_config.h"
 #include "../common/picoterm_dec.h"
 #include "../common/picoterm_cursor.h"
 
