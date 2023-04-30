@@ -27,8 +27,8 @@ __New GPIO attribution for expansion connector__ for PicoTerm applying to "Pico 
  * SD Card initial support with pio_fatfs (version of FatFS over PIO SPI). Using GPIO 26,27,28,5. Voir main.c, spi_sd_init() et spi_sd_init().
  * I2C bus moved to GPIO 18 & 19
  * PoorMan Debugger moved to GPIO 22 @ 115200 bds
-* __initial support of [fatfs](http://elm-chan.org/fsw/ff/00index_e.html) over PIO SPI__.<br />Read more about this from [pio_fatfs/readme.txt](pio_fatfs/readme.txt) file and [pure SPI pico_fatfs_test]((https://github.com/elehobica/pico_fatfs_test) repository.
-* CLI: Command Line Interpreter activated with SHIFT+CTRL+C with [docs/cli.md](several commands).
+* __initial support of [fatfs](http://elm-chan.org/fsw/ff/00index_e.html) over PIO SPI__.<br />Read more about this from [pio_fatfs/readme.txt](pio_fatfs/readme.txt) file and [pure SPI pico_fatfs_test](https://github.com/elehobica/pico_fatfs_test) repository.
+* __initial support of CLI__: Command Line Interpreter activated with SHIFT+CTRL+C with [several commands](docs/cli.md).
  * sd_info
  * dir
  * type
