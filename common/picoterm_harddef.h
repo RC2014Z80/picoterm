@@ -6,6 +6,17 @@
                    Hardware definition for Picoterm
    ========================================================================== */
 
+#define LED             25
+#define UART_ID         uart1   // also see hid_app.c
+#define UART_TX_PIN     20
+#define UART_RX_PIN     21
+
+#define USB_POWER_GPIO 26 // this GPIO can be used with a MOSFET to power-up USB
+#define USB_POWER_DELAY 5000 // ms
+
+#define BUZZER_GPIO 27 // active buzzer
+
+
 // Hardware Rev 1.0 - Original Picoterm based on the Raspberry Pi Pico
 /*
 #define SDA_PIN 26

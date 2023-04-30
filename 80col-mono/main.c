@@ -66,6 +66,7 @@
 #include "bsp/board.h"
 #include "tusb.h"
 #include "hardware/i2c.h"
+#include "hardware/uart.h"
 
 
 /* picoterm_cursor.c */

@@ -19,6 +19,7 @@
 
 
 #include "picoterm_core.h"
+#include "hardware/uart.h"
 #include "../common/pmhid.h" // keyboard definitions
 #include "../common/picoterm_config.h"
 #include "../common/picoterm_dec.h" // DEC lines
@@ -26,7 +27,7 @@
 #include "picoterm_screen.h" // display_x screen function
 #include "picoterm_conio.h" // basic input/output function for console
 //#include "tusb_option.h"
-#include "main.h" // UART_ID
+#include "../common/picoterm_harddef.h" // UART_ID
 #include "../common/picoterm_debug.h"
 
 

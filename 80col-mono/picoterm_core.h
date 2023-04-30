@@ -25,11 +25,6 @@
 #define _PICOTERM_CORE_H
 
 
-unsigned char slop_character(int x,int y);
-unsigned char * slotsForRow(int y);
-unsigned char * slotsForInvRow(int y);
-unsigned char * slotsForBlkRow(int y);
-
 void terminal_init();
 void terminal_reset();
 

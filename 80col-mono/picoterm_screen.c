@@ -8,6 +8,7 @@
 #include "../common/pmhid.h" // keyboard definitions
 #include "../common/picoterm_config.h"
 #include "../common/picoterm_stddef.h"
+#include "../common/picoterm_harddef.h"
 #include "../common/picoterm_stdio.h"
 #include "picoterm_core.h" // handle_new_character
 #include "tusb_option.h"
