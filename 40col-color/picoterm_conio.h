@@ -6,22 +6,13 @@
 #include "../common/picoterm_cursor.h"
 #include "speccyfont.h"
 
+/* Those are defined in the CMakeList !!!!
 #define COLUMNS     40
 #define ROWS        256 // yes this is 16 more than the number of scanlines we have
                         // for scrolling to work we need 8 spare pointers
-#define TEXTROWS    29 // ROWS/8  // must be 2 text rows less than the max number of scanlines
 #define VISIBLEROWS 29 // (as defined in the 80col version)
-
-/* console IO configuration */
-typedef struct picoterm_conio_config {
-  bool rvs; // draw in reverse
-  bool blk; // draw in blinking
-  bool just_wrapped;
-  bool wrap_text;   // terminal configured to warp_text around
-  uint8_t dec_mode; // current DEC mode (ligne drawing single/double/none)
-  uint8_t ansi_font_id; // ID of the ANSI Graphical font to use
-  cursor_term_t cursor; // full definition of a terminal cursor
-} picoterm_conio_config_t;
+*/
+#define TEXTROWS    29 // ROWS/8  // must be 2 text rows less than the max number of scanlines
 
 uint32_t * wordsForRow(int y);
 
@@ -29,10 +20,11 @@ void conio_init( uint16_t fg_color, uint16_t bg_color );
 void conio_reset();
 
 char read_key();
-void print_string( char str[] );
+void put_char(unsigned char ch,int x,int y);
 void print_element (int x,int scanlineNumber, uint8_t* custom_bitmap );
 
-void slip_character(unsigned char ch,int x,int y);
+void csr_blinking_task();
+
 void clear_scanline_from_cursor(int r);
 void clear_scanline_to_cursor(int r);
 void clear_entire_scanline(int r);

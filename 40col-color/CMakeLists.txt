@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-set( PICOTERM_VERSION 1.6.0.10)
+set( PICOTERM_VERSION 1.6.0.20)
 set( PICOTERM_DESCR "Alpha" )
 message("PicoTerm 40Col version = ${PICOTERM_VERSION} ${PICOTERM_DESCR}")
 
@@ -52,9 +52,11 @@ project(picoterm LANGUAGES CXX C ASM VERSION ${PICOTERM_VERSION} DESCRIPTION ${P
 #    Not included in source: font8.c font6.c font10.c lcd.c
 list( APPEND sources main.c )
 list( APPEND sources picoterm_core.c )
+list( APPEND sources ../common/picoterm_conio_config.c )
 list( APPEND sources picoterm_conio.c )
 list( APPEND sources picoterm_screen.c )
 list( APPEND sources ../common/picoterm_stddef.c )
+list( APPEND sources ../common/picoterm_stdio.c )
 list( APPEND sources ../common/picoterm_config.c )
 list( APPEND sources ../common/picoterm_cursor.c )
 list( APPEND sources ../common/picoterm_debug.c )
@@ -63,6 +65,9 @@ list( APPEND sources ../common/picoterm_i2c.c )
 list( APPEND sources ../common/pca9536.c )
 list( APPEND sources ../common/keybd.c )
 list( APPEND sources ../common/pio_spi.c )
+list( APPEND sources ../cli/cli.c )
+list( APPEND sources ../cli/tinyexpr.c )
+list( APPEND sources ../cli/user_funcs.c )
 list( APPEND sources ../pio_fatfs/ff.c )
 list( APPEND sources ../pio_fatfs/ffsystem.c )
 list( APPEND sources ../pio_fatfs/ffunicode.c )
@@ -106,6 +111,9 @@ foreach( exec ${to_build} )
 	target_compile_definitions( ${exec} PRIVATE
 		PICO_SCANVIDEO_SCANLINE_BUFFER_COUNT=4
 		PICO_SCANVIDEO_PLANE1_FIXED_FRAGMENT_DMA=true
+		COLUMNS=40
+		ROWS=256 # yes this is 16 more than the number of scanlines we have for scrolling to work we need 8 spare pointers
+		VISIBLEROWS=29 # (as defined in the 80col version)
 		${localise}=true
 		CMAKE_PROJECT_VERSION="${CMAKE_PROJECT_VERSION}"
 		)

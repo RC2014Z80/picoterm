@@ -25,18 +25,12 @@
 #define _PICOTERM_CORE_H
 
 
-unsigned char slop_character(int x,int y);
-unsigned char * slotsForRow(int y);
-unsigned char * slotsForInvRow(int y);
-unsigned char * slotsForBlkRow(int y);
-
 void terminal_init();
 void terminal_reset();
 
 char get_bell_state();
 void set_bell_state(char state);
 void handle_new_character(unsigned char ch);
-//unsigned char read_key_from_buffer(); // in main.c
 
 
 // for debugging purposes

@@ -21,28 +21,20 @@
 #include "picoterm_screen.h"
 #include "tusb_option.h"
 #include "../common/picoterm_config.h"
+#include "../common/picoterm_stddef.h"
+#include "../common/picoterm_stdio.h"
 #include "../common/pmhid.h"
 #include "main.h"
 #include "picoterm_core.h"
 #include "picoterm_conio.h"
 #include "hardware/watchdog.h"
-#include "../common/picoterm_stddef.h"
-
+#include <stdio.h>
+#include "../cli/cli.h"
 #include "../common/picoterm_debug.h"
-
-#define LINEWRAP        // comment out to disable line wrapping
-
 
 
 /* #define CSRCHAR     128 */
 
-/* #define SPC         0x20
-#define ESC         0x1b
-#define DEL         0x7f
-#define BSP         0x08
-#define LF          0x0a
-#define CR          0x0d
-#define FF          0x0c */
 
 /* Picoterm_i2c.c */
 extern bool i2c_bus_available; // gp26 & gp27 are used as I2C (otherwise as simple GPIO)
@@ -62,6 +54,39 @@ char handle_default_input(){
   // and call it as needed from main.c::main()
   char _ch = read_key();
   return _ch;
+}
+
+/* --- COMMAND Interpreter ----------------------------------------------------
+   -
+   ---------------------------------------------------------------------------*/
+
+ void display_command(){
+	 // Display the Command Line Interpreter Screen
+   clrscr();
+   move_cursor_home();
+
+	 print_string( "---- Picoterm command interpreter ----\r\nUse: exit, list, command ?,\r\ncommand -h\r\n" );
+}
+
+
+char handle_command_input(){
+  // Ask user to enter command followed by RETURN key then execute it!
+  //
+	char _cmd[80];
+	while (strcmp( _cmd, "exit") != 0) {
+		print_string( "\r\n$ " );
+		cursor_visible( true );
+		get_string( _cmd, sizeof(_cmd) );
+		cursor_visible( false );
+		debug_print( "Invoke cli to execute:");
+		debug_print( _cmd );
+		print_string( "\r\n" );
+		cli_execute( _cmd, sizeof(_cmd) );
+	}
+
+	// Inform callee to close the screen
+	cursor_visible( true );
+	return ESC;
 }
 
 /* --- CONFIG ----------------------------------------------------------------
@@ -99,8 +124,6 @@ void display_config(){
 		print_string(msg);
 		print_string("+------------------------------+\r\n" );
 		print_string("\r\n(S upcase=save / ESC=close) ? ");
-
-
 
     cursor_visible(true);
     clear_cursor();  // so we have the character
@@ -262,14 +285,14 @@ void display_help(){
   // reset_escape_sequence(); LOOKS not usefull from screen!
   clrscr();
   move_cursor_home(); // csr.x = 0; csr.y = 0;
-	debug_print( "display_help" );
   print_string("\r\n" );
 	print_string("       >>>>  PicoTerm Help <<<< \r\n");
   print_string("+-- Keyboard Shortcut ----------------+\r\n" );
-  print_string("| Shift+Ctrl+H : Help screen          |\r\n" ); // strip Nupetscii when not activated
+	print_string("| Shift+Ctrl+C: Command Line Interface|\r\n" ); // strip Nupetscii when not activated
+  print_string("| Shift+Ctrl+H: Help screen           |\r\n" ); // strip Nupetscii when not activated
   //print_string("| * Shift+Ctrl+L : Toggle ASCII/ANSI charset  |\r\n" );
-  print_string("| Shift+Ctrl+M : Configuration menu   |\r\n" );
-  print_string("| Shift+Ctrl+N : Display charset      |\r\n" );
+  print_string("| Shift+Ctrl+M: Configuration menu    |\r\n" );
+  print_string("| Shift+Ctrl+N: Display charset       |\r\n" );
   print_string("|                                     |\r\n" );
   print_string("+-------------------------------------+\r\n" );
 
@@ -277,7 +300,6 @@ void display_help(){
   cursor_visible(true);
   clear_cursor();  // so we have the character
   print_cursor();  // turns on
-		debug_print( "display_hel : donep" );
 }
 
 

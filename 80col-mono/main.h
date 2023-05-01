@@ -29,7 +29,6 @@
 #include "pico/multicore.h"
 #include "pico/sync.h"
 #include "font.h" // Looks in under comment for 40 columns version
-#include "hardware/uart.h"
 #include "hardware/irq.h"
 #include <stdint.h>
 
@@ -43,19 +42,11 @@
 #define _MAIN_H
 
 
-#define LED             25
-#define UART_ID         uart1   // also see hid_app.c
-#define UART_TX_PIN     20
-#define UART_RX_PIN     21
-
 #define MENU_CONFIG    0x01 // support several menu
 #define MENU_CHARSET   0x02 // display current charset
 #define MENU_HELP      0x03 // display the HELP menu
+#define MENU_COMMAND   0x04 // Key-in interpreter command
 
-#define USB_POWER_GPIO 26 // this GPIO can be used with a MOSFET to power-up USB
-#define USB_POWER_DELAY 5000 // ms
-
-#define BUZZER_GPIO 27 // active buzzer
 
 static uint32_t start_time;
 

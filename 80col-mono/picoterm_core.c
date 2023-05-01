@@ -19,6 +19,8 @@
 
 
 #include "picoterm_core.h"
+#include "main.h" // Build font
+#include "hardware/uart.h"
 #include "../common/pmhid.h" // keyboard definitions
 #include "../common/picoterm_config.h"
 #include "../common/picoterm_dec.h" // DEC lines
@@ -26,7 +28,7 @@
 #include "picoterm_screen.h" // display_x screen function
 #include "picoterm_conio.h" // basic input/output function for console
 //#include "tusb_option.h"
-#include "main.h" // UART_ID
+#include "../common/picoterm_harddef.h" // UART_ID
 #include "../common/picoterm_debug.h"
 
 
@@ -752,7 +754,7 @@ void handle_new_character(unsigned char asc){
           if(insert_mode) insert_chars(1);
 
           // --- Strict ASCII <0x7f or Extended NuPetSCII <= 0xFF ---
-          slip_character(asc-32,conio_config.cursor.pos.x,conio_config.cursor.pos.y);
+          put_char(asc-32,conio_config.cursor.pos.x,conio_config.cursor.pos.y);
           conio_config.cursor.pos.x++;
 
           if(!conio_config.wrap_text){

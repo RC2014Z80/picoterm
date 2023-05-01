@@ -6,6 +6,7 @@
 
 #include <stdbool.h>
 #include <string.h>
+#include "../common/picoterm_conio_config.h"
 #include "picoterm_conio.h"
 #include "picoterm_core.h" // scanline functions
 #include "../common/keybd.h"
@@ -13,13 +14,15 @@
 #include "stdlib.h"
 #include "pico/stdlib.h"
 #include "pico/scanvideo.h"
+#include "bsp/board.h" // board_millis()
 
 #include "../common/picoterm_debug.h"
 
-picoterm_conio_config_t conio_config  = { .rvs = false, .blk = false, .just_wrapped = false,
-    .wrap_text = true, .dec_mode = DEC_MODE_NONE, .cursor.pos.x = 0, .cursor.pos.y = 0,
-    .cursor.state.visible = true, .cursor.state.blink_state = false,
-    .cursor.state.blinking_mode = true, .cursor.symbol = 143 };
+/* picoterm_cursor.c */
+extern bool is_blinking;
+
+/* picoterm_conio_config.c */
+extern picoterm_conio_config_t conio_config;
 
 // Current color
 uint16_t foreground_colour;
@@ -58,17 +61,20 @@ void conio_init( uint16_t fg_color, uint16_t bg_color ){
 
 void conio_reset(){
   // Reset the terminal
-  conio_config.rvs = false;
+	conio_config_init();
+  /* conio_config.rvs = false;
   conio_config.blk = false;
   conio_config.wrap_text = true;
   conio_config.just_wrapped = false;
   conio_config.dec_mode = DEC_MODE_NONE; // single/double lines
+	*/
   // initialized @ init()
   // conio_config.ansi_font_id = FONT_NUPETSCII; // selected font_id for graphical operation
 
-  conio_config.cursor.state.visible = true;
+  /*conio_config.cursor.state.visible = true;
   conio_config.cursor.state.blink_state = false; // blinking cursor is in hidden state
   conio_config.cursor.state.blinking_mode = true;
+	*/
   conio_config.cursor.symbol = 143;
 
   clrscr();
@@ -82,14 +88,6 @@ char read_key(){
     return 0;
   return read_key_from_buffer();
 }
-
-
-void print_string(char str[]){
-  // Move it to CONIO
-  for(int i=0;i<strlen(str);i++)
-        handle_new_character(str[i]);
-}
-
 
 void print_element (int x,int scanlineNumber, uint8_t* custom_bitmap ){
   // Used to print a bitmap of custom bitmap as declared in picoterm_core.h
@@ -113,7 +111,7 @@ uint32_t * wordsForRow(int y){
     return (uint32_t * )&ptr[y]->pixels[0];
 }
 
-void slip_character(unsigned char ch,int x,int y){
+void put_char(unsigned char ch,int x,int y){
     // basically put character at chr position x,y
 
     // ch is 'screen code, or asc-32
@@ -593,6 +591,10 @@ void move_cursor_backward(int n){
 
 void cursor_visible(bool v){
     conio_config.cursor.state.visible=v;
+		if( v==true )
+			print_cursor();
+	  else
+			clear_cursor();
 }
 
 bool cursor_blink_state() {
@@ -616,4 +618,24 @@ void restore_cursor_position(){
 void reset_saved_cursor(){
   __saved_csr.x = conio_config.cursor.pos.x;
   __saved_csr.y = conio_config.cursor.pos.y;
+}
+
+//--------------------------------------------------------------------+
+//  ConIO Specific Tasks
+//--------------------------------------------------------------------+
+
+void csr_blinking_task() {
+  const uint32_t interval_ms_csr = 525;
+  static uint32_t start_ms_csr = 0;
+
+  // Blink every interval ms
+  if ( board_millis() - start_ms_csr > interval_ms_csr) {
+
+    start_ms_csr += interval_ms_csr;
+
+    is_blinking = !is_blinking;
+    set_cursor_blink_state( 1 - cursor_blink_state() );
+
+    refresh_cursor();
+  }
 }

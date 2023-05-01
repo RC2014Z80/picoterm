@@ -51,6 +51,7 @@
 #include "main.h"
 #include "picoterm_core.h"
 #include "picoterm_conio.h"
+#include "picoterm_screen.h"
 #include "../common/picoterm_config.h"
 #include "../common/picoterm_debug.h"
 #include "../common/picoterm_cursor.h"
@@ -59,14 +60,17 @@
 #include "../common/keybd.h"
 #include "../common/picoterm_i2c.h"
 #include "../common/pca9536.h"
-#include "picoterm_screen.h"
+#include "../common/pio_sd.h"
+#include "../cli/cli.h"
 //#include "hardware/structs/bus_ctrl.h"
 #include "bsp/board.h"
 #include "tusb.h"
 #include "hardware/i2c.h"
+#include "hardware/uart.h"
 
-#include "../common/pio_spi.h"
-#include "../pio_fatfs/ff.h"
+
+/* picoterm_cursor.c */
+extern bool is_blinking;
 
 /* picoterm_i2c.c */
 extern i2c_inst_t *i2c_bus;
@@ -77,7 +81,6 @@ extern bool i2c_bus_available; // gp26 & gp27 are used as I2C (otherwise as simp
 
 static bool is_menu = false;   // switch between Terminal mode and Menu mode
 static uint8_t id_menu = 0x00; // toggle with CTRL+SHIFT+M
-
 
 
 //CU_REGISTER_DEBUG_PINS(frame_gen)
@@ -108,7 +111,7 @@ int vspeed = 1 * 1;
 int hspeed = 1 << COORD_SHIFT;
 int hpos;
 int vpos;
-bool is_blinking = false;
+
 
 static const int input_pin0 = 22;
 
@@ -149,7 +152,6 @@ static int x_sprites = 1;
 
 void init_render_state(int core);
 void led_blinking_task();
-void csr_blinking_task();
 void usb_power_task();
 void bell_task();
 
@@ -585,77 +587,6 @@ void usb_serial_task(){
 // MAIN
 //--------------------------------------------------------------------+
 
-pio_spi_inst_t spi_sd = {
-				.pio = pio1, // pio0,
-				.sm = 1,     // 0,
-				.cs_pin = SPI_SD_CSN_PIN
-};
-
-
-void spi_sd_init( void ){
-	// initialize the PIO SPI bus attached to the SD card (see include pio_spi.h)
-	// We must also activates the pull-up on the RX, TX pin
-	// see example from https://github.com/raspberrypi/pico-examples/blob/master/pio/spi/spi_flash.c
-	gpio_init( SPI_SD_CSN_PIN );
-	gpio_put( SPI_SD_CSN_PIN, 1);
-	gpio_set_dir( SPI_SD_CSN_PIN, GPIO_OUT);
-	gpio_init( SPI_SD_RX_PIN );
-	gpio_pull_up( SPI_SD_RX_PIN );
-	gpio_init( SPI_SD_TX_PIN );
-	gpio_pull_up( SPI_SD_TX_PIN );
-	uint offset = pio_add_program(spi_sd.pio, &spi_cpha0_program);
-	// printf("spi_sd program loaded at %d\n", offset);
-	pio_spi_init(spi_sd.pio, spi_sd.sm, offset,
-							 8,       // 8 bits per SPI frame
-							 31.25f,  // 31.25 for 1 MHz @ 125 clk_sys
-							 false,   // CPHA = 0
-							 false,   // CPOL = 0
-							 SPI_SD_SCK_PIN,
-							 SPI_SD_TX_PIN,
-							 SPI_SD_RX_PIN
-	);
-	sleep_ms( 200 );
-}
-
-void spi_sd_test( void ){
-	FATFS fs;
-	FIL fil;
-	FRESULT fr;     /* FatFs return code */
-	UINT br;
-	UINT bw;
-
-	debug_print("=====================");
-	debug_print("== pio_fatfs_test  ==");
-	debug_print("=====================");
-
-	fr = f_mount(&fs, "", 1);
-  if (fr != FR_OK) { // see FRESULT in ff.h
-        sprintf( debug_msg, "mount error %d", fr);
-				debug_print( debug_msg );
-        return;
-  }
-  debug_print("mount ok");
-
-	switch (fs.fs_type) {
-			case FS_FAT12:
-					debug_print("Type is FAT12\n");
-					break;
-			case FS_FAT16:
-					debug_print("Type is FAT16\n");
-					break;
-			case FS_FAT32:
-					debug_print("Type is FAT32\n");
-					break;
-			case FS_EXFAT:
-					debug_print("Type is EXFAT\n");
-					break;
-			default:
-					debug_print("Type is unknown\n");
-					break;
-	}
-	sprintf( debug_msg, "Card size: %7.2f GB (GB = 1E9 bytes)\n\n", fs.csize * fs.n_fatent * 512E-9);
-	debug_print( debug_msg );
-}
 
 int main(void) {
   debug_init(); // GPIO 22 as rx @ 115200
@@ -725,10 +656,6 @@ int main(void) {
 	// AFTER   reading and writing
   stdio_init_all();
 
-	spi_sd_init();
-	spi_sd_test();
-
-
   // Checking GP26 & GP27 will be handled as GPIO or I2C bus (with PCA9536 see issue #21)
   // Then initialize the IO for USB_POWER &
   i2c_bus_available = false;
@@ -763,7 +690,6 @@ int main(void) {
 
   start_time = board_millis();
 
-
   uart_init(UART_ID, config.baudrate); // UART 1
   uart_set_hw_flow(UART_ID,false,false);
   uart_set_format(UART_ID, config.databits, config.stopbits, config.parity);
@@ -789,6 +715,9 @@ int main(void) {
   // Initialise keyboard module
   keybd_init( pico_key_down, pico_key_up );
   terminal_init();
+	cli_init();
+	spi_sd_init(); // Initialize pio_FatFS over PIO_SPI
+	spi_sd_test(); // perform a mount test at boot
 
   video_main();       // also build the font
   terminal_reset();
@@ -821,6 +750,9 @@ int main(void) {
         case MENU_HELP:
           display_help();
           break;
+				case MENU_COMMAND:
+					display_command();
+					break;
       };
       old_menu = is_menu;
     }
@@ -839,9 +771,13 @@ int main(void) {
           // Specialized handler manage keyboard input for menu
           _ch = handle_config_input();
           break;
+				case MENU_COMMAND:
+					// Specialized handler managing keyboard input for command
+					_ch = handle_command_input();
+					break;
         default:
           _ch = handle_default_input();
-      }
+      } // eof Switch
       if( _ch==ESC ){ // ESC will also close the menu
           is_menu = false;
           id_menu = 0x00;
@@ -892,21 +828,7 @@ void usb_power_task() {
   }
 }
 
-void csr_blinking_task() {
-  const uint32_t interval_ms_csr = 525;
-  static uint32_t start_ms_csr = 0;
 
-  // Blink every interval ms
-  if ( board_millis() - start_ms_csr > interval_ms_csr) {
-
-  start_ms_csr += interval_ms_csr;
-
-  is_blinking = !is_blinking;
-  set_cursor_blink_state( 1 - cursor_blink_state() );
-
-  refresh_cursor();
-  }
-}
 
 void bell_task() {
   const uint32_t interval_ms_bell = 100;
@@ -958,12 +880,20 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
         is_menu = !(is_menu);
         return; // do not add key to "Keyboard buffer"
       }
+
       if( (ch=='l') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
         // toggle between graphical font and ANSI font
         config.font_id = (config.font_id == 0 ? config.graph_id : 0);
         build_font( config.font_id );
         return; // do not add key to "Keyboard buffer"
       }
+
+			if( (ch=='c') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
+        id_menu = MENU_COMMAND;
+        is_menu = !(is_menu);
+        return; // do not add key to "Keyboard buffer"
+      }
+
       if( modifiers & WITH_SHIFT ){
           ch = keycode2ascii[scancode][1];
       }

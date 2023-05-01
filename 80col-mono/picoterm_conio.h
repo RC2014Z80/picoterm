@@ -1,9 +1,13 @@
 /* ==========================================================================
-        Manage the console interaction for the PicoTerm software
-              * printing string
-              * reading from keyboard, etc
-   ========================================================================== */
+    Manage the basic console interaction for the PicoTerm software
+          * put_char on the screen
+					* read_key from keyboard
+          * managing everything regarding the Console display (moving
+					  cursor, inverting content, etc)
 
+		Advanced interaction with the console (printing string, request input
+	  is provided by common/picoterm_stdlio.c)
+   ========================================================================== */
 
 #ifndef _PICOTERM_CONIO_H
 #define _PICOTERM_CONIO_H
@@ -11,21 +15,15 @@
 #include <stdint.h>
 #include "../common/picoterm_stddef.h"
 #include "../common/picoterm_cursor.h"
+#include "../common/picoterm_conio_config.h"
 
+/* Those are defined in the CMakeList !!!!
 #define COLUMNS     80
 #define ROWS        34
 #define VISIBLEROWS 30
+*/
 
-/* console IO configuration */
-typedef struct picoterm_conio_config {
-  bool rvs; // draw in reverse
-  bool blk; // draw in blinking
-  bool just_wrapped;
-  bool wrap_text;   // terminal configured to warp_text around
-  uint8_t dec_mode; // current DEC mode (ligne drawing single/double/none)
-  uint8_t ansi_font_id; // ID of the ANSI Graphical font to use
-  cursor_term_t cursor; // full definition of a terminal cursor
-} picoterm_conio_config_t;
+
 
 typedef struct row_of_text {
   unsigned char slot[COLUMNS];
@@ -39,12 +37,15 @@ typedef row_of_text_t *array_of_row_text_pointer[ROWS];
 void conio_init( uint8_t ansi_font_id ); // allocate required ressources
 void conio_reset( char default_cursor_symbol );
 
-void print_string(char str[]);
-void print_nupet(char str[], uint8_t font_id ); // Print a NupetSCII encoded string to terminal with current font_id
 
 // Read a key from input buffer (the keyboard or serial line). Return 0 if no
 // char available (this is used by the menu handling)
 char read_key();
+void put_char(unsigned char ch,int x,int y);
+//void print_string(char str[]); --> picoterm_stdio.C
+void print_nupet(char str[], uint8_t font_id ); // Print a NupetSCII encoded string to terminal with current font_id
+
+void csr_blinking_task();
 
 void clrscr(); // clear the primary screen
 void clear_primary_screen();
@@ -76,7 +77,6 @@ void erase_chars(int n);
 void insert_chars(int n);
 unsigned char inv_character(int x,int y);
 unsigned char blk_character(int x,int y);
-void slip_character(unsigned char ch,int x,int y);
 
 void clear_cursor();
 void print_cursor();

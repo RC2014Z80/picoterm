@@ -8,14 +8,18 @@
 #include "../common/pmhid.h" // keyboard definitions
 #include "../common/picoterm_config.h"
 #include "../common/picoterm_stddef.h"
+#include "../common/picoterm_harddef.h"
+#include "../common/picoterm_stdio.h"
 #include "picoterm_core.h" // handle_new_character
 #include "tusb_option.h"
 #include "picoterm_conio.h"
 #include "main.h" // UART_ID
 #include "hardware/watchdog.h"
 #include <stdio.h>
-
+#include "../cli/cli.h"
 #include "../common/picoterm_debug.h"
+
+
 
 /* Picoterm_i2c.c */
 extern bool i2c_bus_available; // gp26 & gp27 are used as I2C (otherwise as simple GPIO)
@@ -41,6 +45,37 @@ char handle_default_input(){
   return _ch;
 }
 
+/* --- COMMAND Interpreter ----------------------------------------------------
+   -
+   ---------------------------------------------------------------------------*/
+
+ void display_command(){
+   clrscr();
+   move_cursor_home();
+
+	 print_string( "---- Picoterm command interpreter ----\r\nUse: exit, list, <command> ?, <command> -h\r\n" );
+}
+
+
+char handle_command_input(){
+  // Ask user to enter command followed by RETURN key then execute it!
+  //
+	char _cmd[80];
+	while (strcmp( _cmd, "exit") != 0) {
+		print_string( "\r\n$ " );
+		cursor_visible( true );
+		get_string( _cmd, sizeof(_cmd) );
+		cursor_visible( false );
+		debug_print( "Invoke cli to execute:");
+		debug_print( _cmd );
+		print_string( "\r\n" );
+		cli_execute( _cmd, sizeof(_cmd) );
+	}
+
+	// Inform callee to close the screen
+	cursor_visible( true );
+	return ESC;
+}
 /* --- CHARSET ----------------------------------------------------------------
    -
    ---------------------------------------------------------------------------*/
@@ -288,6 +323,7 @@ void display_help(){
   move_cursor_home(); // csr.x = 0; csr.y = 0;
   print_nupet("\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6\x0A6 PicoTerm Help \x0A6\x0A6\r\n", config.font_id );
   print_nupet("\x0B0\x0C3 Keyboard Shortcut \x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0C3\x0AE\r\n", config.font_id );
+	print_nupet("\x0C2 \x083 Shift+Ctrl+C : Command Line Interface        \x0C2\r\n", config.font_id ); // strip Nupetscii when not activated
   print_nupet("\x0C2 \x083 Shift+Ctrl+H : Help screen                   \x0C2\r\n", config.font_id ); // strip Nupetscii when not activated
   print_nupet("\x0C2 \x083 Shift+Ctrl+L : Toggle ASCII/ANSI charset     \x0C2\r\n", config.font_id );
   print_nupet("\x0C2 \x083 Shift+Ctrl+M : Configuration menu            \x0C2\r\n", config.font_id );

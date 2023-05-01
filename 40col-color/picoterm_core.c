@@ -22,6 +22,7 @@
 #include "picoterm_conio.h"
 #include "../common/picoterm_debug.h"
 #include "../common/picoterm_config.h"
+#include "../common/picoterm_conio_config.h"
 #include "../common/picoterm_dec.h"
 #include "../common/picoterm_cursor.h"
 
@@ -813,7 +814,7 @@ void handle_new_character(unsigned char asc){
           if(insert_mode) insert_chars(1);
 
           // --- Strict ASCII <0x7f or Extended NuPetSCII <= 0xFF ---
-          slip_character(asc-32,conio_config.cursor.pos.x,conio_config.cursor.pos.y);
+          put_char(asc-32,conio_config.cursor.pos.x,conio_config.cursor.pos.y);
           conio_config.cursor.pos.x++;
 
           if(!conio_config.wrap_text){

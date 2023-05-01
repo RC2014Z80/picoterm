@@ -1,12 +1,18 @@
 /* ==========================================================================
-        Manage the console interaction for the PicoTerm software
-              * printing string
-              * reading key from keyboard, etc
+    Manage the basic console interaction for the PicoTerm software
+          * put_char on the screen
+					* read_key from keyboard
+          * managing everything regarding the Console display (moving
+					  cursor, inverting content, etc)
+
+		Advanced interaction with the console (printing string, request input
+	  is provided by common/picoterm_stdlio.c)
    ========================================================================== */
 
 #include <stdbool.h>
 #include <string.h>
 #include "picoterm_conio.h"
+#include "../common/picoterm_conio_config.h"
 #include "../common/picoterm_cursor.h"
 #include "../common/picoterm_dec.h"
 #include "../common/picoterm_stddef.h"
@@ -14,15 +20,16 @@
 #include "picoterm_core.h"
 #include "../common/picoterm_config.h"
 #include <stdlib.h>
+#include "bsp/board.h" // board_millis()
 
+/* picoterm_cursor.c */
+extern bool is_blinking;
 
 /* picoterm_config.c */
 extern picoterm_config_t config; // required to read config.font_id
 
-picoterm_conio_config_t conio_config  = { .rvs = false, .blk = false, .just_wrapped = false,
-    .wrap_text = true, .dec_mode = DEC_MODE_NONE, .cursor.pos.x = 0, .cursor.pos.y = 0,
-    .cursor.state.visible = true, .cursor.state.blink_state = false,
-    .cursor.state.blinking_mode = true, .cursor.symbol = 143 };
+/* picoterm_conio_config.c */
+extern picoterm_conio_config_t conio_config;
 
 array_of_row_text_pointer ptr;           // primary screen content
 array_of_row_text_pointer secondary_ptr; // secondary screen content
@@ -55,11 +62,12 @@ void conio_init( uint8_t ansi_font_id ){
 
 void conio_reset( char default_cursor_symbol ){
   // Reset the terminal
-  conio_config.rvs = false;
+  /*conio_config.rvs = false;
   conio_config.blk = false;
   conio_config.wrap_text = true;
   conio_config.just_wrapped = false;
-  conio_config.dec_mode = DEC_MODE_NONE; // single/double lines
+  conio_config.dec_mode = DEC_MODE_NONE; // single/double lines */
+	conio_config_init();
   // initialized @ init()
   // conio_config.ansi_font_id = FONT_NUPETSCII; // selected font_id for graphical operation
 
@@ -67,9 +75,9 @@ void conio_reset( char default_cursor_symbol ){
   __inv_under_csr = 0;
   __blk_under_csr = 0;
 
-  conio_config.cursor.state.visible = true;
+  /* conio_config.cursor.state.visible = true;
   conio_config.cursor.state.blink_state = false; // blinking cursor is in hidden state
-  conio_config.cursor.state.blinking_mode = true;
+  conio_config.cursor.state.blinking_mode = true; */
   conio_config.cursor.symbol = default_cursor_symbol;
 
   clrscr();
@@ -255,12 +263,6 @@ void print_nupet(char str[], uint8_t font_id ){
   }
 }
 
-void print_string(char str[] ){
-  //print_nupet( str, config.font_id ); // FONT_ASCII
-  for(int i=0;i<strlen(str);i++)
-    handle_new_character( str[i] );
-}
-
 char read_key(){
   // read a key from input buffer (the keyboard or serial line). This is used
   // for menu handling. Return 0 if no char available
@@ -341,7 +343,7 @@ void clear_screen_from_cursor(){
     clear_line_from_cursor();
     for(int r=conio_config.cursor.pos.y+1;r<ROWS;r++){
         for(int c=0;c<COLUMNS;c++){
-            slip_character(0,c,r);    // todo: should use the new method in clear_entire_screen
+            put_char(0,c,r);    // todo: should use the new method in clear_entire_screen
         }
     }
 }
@@ -350,7 +352,7 @@ void clear_screen_to_cursor(){
     clear_line_to_cursor();
     for(int r=0;r<conio_config.cursor.pos.y;r++){
         for(int c=0;c<COLUMNS;c++){
-            slip_character(0,c,r);  // todo: should use the new method in clear_entire_screen
+            put_char(0,c,r);  // todo: should use the new method in clear_entire_screen
         }
     }
 }
@@ -560,7 +562,7 @@ unsigned char blk_character(int x,int y){
     return ptr[y]->blk[x];
 }
 
-void slip_character(unsigned char ch,int x,int y){
+void put_char(unsigned char ch,int x,int y){
     if(conio_config.cursor.pos.x>=COLUMNS || conio_config.cursor.pos.y>=VISIBLEROWS){
         return;
     }
@@ -722,6 +724,10 @@ void move_cursor_home(){
 
 void cursor_visible(bool v){
     conio_config.cursor.state.visible=v;
+		if( v==true )
+			print_cursor();
+	  else
+			clear_cursor();
 }
 
 bool cursor_blink_state() {
@@ -745,4 +751,24 @@ void restore_cursor_position(){
 void reset_saved_cursor(){
   __saved_csr.x = conio_config.cursor.pos.x;
   __saved_csr.y = conio_config.cursor.pos.y;
+}
+
+//--------------------------------------------------------------------+
+//  ConIO Specific Tasks
+//--------------------------------------------------------------------+
+
+void csr_blinking_task() {
+  const uint32_t interval_ms_csr = 525;
+  static uint32_t start_ms_csr = 0;
+
+  // Blink every interval ms
+  if ( board_millis() - start_ms_csr > interval_ms_csr) {
+
+  start_ms_csr += interval_ms_csr;
+
+  is_blinking = !is_blinking;
+  set_cursor_blink_state( 1 - cursor_blink_state() );
+
+  refresh_cursor();
+  }
 }
