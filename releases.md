@@ -17,7 +17,7 @@ From version 1.2 any publication will includes all U2F firmware files for 40 & 8
 
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
 
-## Version 1.6.0.20 - (ongoing)
+## Version 1.6.0.30 - (ongoing)
 
 __New GPIO attribution for expansion connector__ for PicoTerm applying to "Pico Vga Terminal" and "RP2040 VGA Terminal".
 
@@ -38,6 +38,7 @@ __New GPIO attribution for expansion connector__ for PicoTerm applying to "Pico 
 ### Fix & Improvement
 * set_env.sh to quicly setup the environment. Call it with `source set_env.sh` .
 * rename conio slip_character() to put_char() - more conform with putc()
+* set PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64 when compiling as suggested by Spencer Owner.<br />On some boards/samples, the xosc can take longer to stabilize than is usual ([see this adafruit_itsybitsy_rp2040.h](https://github.com/raspberrypi/pico-sdk/blob/master/src/boards/include/boards/adafruit_itsybitsy_rp2040.h))
 
 
 

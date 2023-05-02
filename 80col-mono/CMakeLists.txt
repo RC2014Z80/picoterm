@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-set( PICOTERM_VERSION 1.6.0.20 )
+set( PICOTERM_VERSION 1.6.0.30 )
 set( PICOTERM_DESCR "Alpha" )
 
 
@@ -120,6 +120,7 @@ foreach( exec ${to_build_list} )
 		ROWS=34
 		VISIBLEROWS=30
 		${localise}=true
+		PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
 		CMAKE_PROJECT_VERSION="${CMAKE_PROJECT_VERSION}"
 		)
 

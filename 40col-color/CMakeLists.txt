@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-set( PICOTERM_VERSION 1.6.0.20)
+set( PICOTERM_VERSION 1.6.0.30)
 set( PICOTERM_DESCR "Alpha" )
 message("PicoTerm 40Col version = ${PICOTERM_VERSION} ${PICOTERM_DESCR}")
 
@@ -115,6 +115,7 @@ foreach( exec ${to_build} )
 		ROWS=256 # yes this is 16 more than the number of scanlines we have for scrolling to work we need 8 spare pointers
 		VISIBLEROWS=29 # (as defined in the 80col version)
 		${localise}=true
+		PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
 		CMAKE_PROJECT_VERSION="${CMAKE_PROJECT_VERSION}"
 		)
 
