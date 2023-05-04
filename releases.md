@@ -29,10 +29,10 @@ __New GPIO attribution for expansion connector__ for PicoTerm applying to "Pico 
  * PoorMan Debugger moved to GPIO 22 @ 115200 bds
 * __initial support of [fatfs](http://elm-chan.org/fsw/ff/00index_e.html) over PIO SPI__.<br />Read more about this from [pio_fatfs/readme.txt](pio_fatfs/readme.txt) file and [pure SPI pico_fatfs_test](https://github.com/elehobica/pico_fatfs_test) repository.
 * __initial support of CLI__: Command Line Interpreter activated with SHIFT+CTRL+C with [several commands](docs/cli.md).<br />The CLI is used to test SDCard interaction and future configurable features.<br />The CLI is extended via the `cli/user_funcs.c` file.
- * sd_info
- * dir
- * type
- * send_file
+ - sd_info
+ - dir
+ - type
+ - send_file
 * Adding [keyboard hotkey](docs/hotkey.md) (1.6.0.31)
 
 
