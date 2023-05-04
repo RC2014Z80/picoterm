@@ -33,6 +33,7 @@ __New GPIO attribution for expansion connector__ for PicoTerm applying to "Pico 
  * dir
  * type
  * send_file
+* Adding [keyboard hotkey](docs/hotkey.md) (1.6.0.31)
 
 
 ### Fix & Improvement

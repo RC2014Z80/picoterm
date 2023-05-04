@@ -16,6 +16,7 @@ PicoTerm offers the following features:
 * 80 columns over 30 lines (40 columns color version also available)
 * USB Keyboard support (via OTG cable)
 * Multiple keyboard layout (US,UK,BE,FR,DE,...)
+* [Keyboard Hotkey](docs/hotkey.md) support (using SDCard)
 * VT100 style escape codes terminal (listed below).
 * ASCII 7 bits mode (8th bit used for reverse video character like CP/M does).
 * ANSI 8 bits mode for semi-graphical charset. Activable with ESC sequence.
@@ -31,6 +32,7 @@ PicoTerm offers the following features:
  * Active Buzzer
  * Delayed USB power-up
  * [Poor man debug](docs/debug.md) output
+* CLI : [Command line interpreter](docs/cli.md) (mostly for SDCard usage)
 * Various helper screen (SHIFT+CTRL+<key>)
  * SHIFT+CTRL+H : Help screen (with all shortcut).
  * SHIFT+CTRL+M : Configuration screen with storage into flash.
@@ -224,8 +226,9 @@ The picoterm projet contains a wide variety of documentation and ressources abou
 
 | Document                    | Description                                              |
 |-----------------------------|----------------------------------------------------------|
-| [Release notes](releases.md)| History of changes                                        |
-| [CLI](docs/cli.md)          | Command Line Interpreter for Picoterm                     |       
+| [Release notes](releases.md)| History of changes                                       |
+| [Hotkey](docs/hotkey.md)    | Hot to define keyboard HotKey in Picoterm                |       
+| [CLI](docs/cli.md)          | Command Line Interpreter for Picoterm                    |       
 | [Firmware upgrade](docs/firmware-upgrade.md) | How to upload a new firmware on picoterm.|
 | [Graphical charset](font-suite/readme.md) | Discovering the NuppetScii & CP437 graphical charset (128 to 255) append behind ASCII charset. Discover Playscii software used to draw screen with NuPetScii. |
 | [Font-Face](font-suite/add-font-face.md) | Adding new font-face to picoterm. |

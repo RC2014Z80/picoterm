@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-set( PICOTERM_VERSION 1.6.0.30)
+set( PICOTERM_VERSION 1.6.0.31)
 set( PICOTERM_DESCR "Alpha" )
 message("PicoTerm 40Col version = ${PICOTERM_VERSION} ${PICOTERM_DESCR}")
 
