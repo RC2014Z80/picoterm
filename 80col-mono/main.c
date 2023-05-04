@@ -717,7 +717,7 @@ int main(void) {
   terminal_init();
 	cli_init();
 	spi_sd_init(); // Initialize pio_FatFS over PIO_SPI
-	spi_sd_test(); // perform a mount test at boot
+	sd_mount(); // perform a mount test at boot
 
   video_main();       // also build the font
   terminal_reset();
@@ -861,6 +861,16 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
     //printf("Key down, %i, %i, %i \r\n", scancode, keysym, modifiers);
 
   if( scancode_is_mod(scancode)==false ){
+			// hotkey - Shortcut
+			if( (scancode>=SCANCODE_F1) && (scancode<=SCANCODE_F12) && ((modifiers&WITH_SHIFT)==WITH_SHIFT) ){
+				debug_print("Hotkey captured!");
+				int f_key = (scancode-SCANCODE_F1)+1;
+				char fname[20];
+				sprintf( fname, "hotkey/f%d-%s.dat", f_key, ((modifiers|WITH_SHIFT)==WITH_SHIFT) ? "s" : "sc"  );
+				send_file_to_uart( fname );
+				return; // do not add key to "Keyboard buffer"
+			}
+
       // which char at that key?
       uint8_t ch = keycode2ascii[scancode][0];
       // Is there a modifier key under use while pressing the key?
