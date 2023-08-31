@@ -90,8 +90,8 @@ list( APPEND to_build picoterm picoterm_US picoterm_DE picoterm_FR picoterm_BE )
 # Common definition for all the executables
 foreach( exec ${to_build} )
   add_executable( ${exec} ${sources} )
-	pico_generate_pio_header( ${exec} ../../common/uart_tx.pio)
-	pico_generate_pio_header( ${exec} ../../common/spi.pio)
+	pico_generate_pio_header( ${exec} ${CMAKE_CURRENT_SOURCE_DIR}/../common/uart_tx.pio)
+	pico_generate_pio_header( ${exec} ${CMAKE_CURRENT_SOURCE_DIR}/../common/spi.pio)
 	pico_enable_stdio_usb( ${exec} 0)  # Redirect printf to USB-Serial. Conflict with TinyUSB!
 	pico_enable_stdio_uart( ${exec} 0) # Redirect printf to uart0. But no room to place UART0 on GPIO!
 
