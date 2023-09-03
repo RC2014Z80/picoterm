@@ -319,13 +319,13 @@ void esc_sequence_received(){
                 foreground_colour = palette[esc_parameters[0]-30];
             }
             if(esc_parameters[0]>=40 && esc_parameters[0]<=47){
-                foreground_colour = palette[esc_parameters[0]-40];
+                background_colour = palette[esc_parameters[0]-40];
             }
             if(esc_parameters[0]>=90 && esc_parameters[0]<=97){
                 foreground_colour = palette[esc_parameters[0]-82]; // 90 is palette[8]
             }
             if(esc_parameters[0]>=100 && esc_parameters[0]<=107){
-                foreground_colour = palette[esc_parameters[0]-92];  // 100 is palette[8]
+                background_colour = palette[esc_parameters[0]-92];  // 100 is palette[8]
             }
 
             //case 38:
