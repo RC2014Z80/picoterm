@@ -288,7 +288,7 @@
 
  #ifdef LOCALISE_DE
  #define KEYMAP "DE"
- #define KEYMAP_REV 1
+ #define KEYMAP_REV 2
  #define PM_KEYCODE_TO_ASCII    \
      {0     , 0     ,0 }, /* 0x00 */ \
      {0     , 0     ,0 }, /* 0x01 */ \
