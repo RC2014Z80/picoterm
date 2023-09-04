@@ -229,23 +229,24 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
     sprintf( debug_msg, "HID Interface Protocol = %s", protocol_str[itf_protocol] );
     debug_print( debug_msg );
 
-    if( itf_protocol == 1 ) // Did we attached a keyboard?
+    if( itf_protocol == 1 ) { // Did we attached a keyboard? Only pump report for keyboards
       keybd_dev_addr = dev_addr;
 
-   // printf("%d USB: device %d connected, protocol %s\n", time_us_32() - t0 , dev_addr, protocol_str[itf_protocol]);
+	   // printf("%d USB: device %d connected, protocol %s\n", time_us_32() - t0 , dev_addr, protocol_str[itf_protocol]);
 
-    // By default host stack will use activate boot protocol on supported interface.
-    // Therefore for this simple example, we only need to parse generic report descriptor (with built-in parser)
-    if ( itf_protocol == HID_ITF_PROTOCOL_NONE ) {
-        hid_info[instance].report_count = tuh_hid_parse_report_descriptor(hid_info[instance].report_info, MAX_REPORT, desc_report, desc_len);
-        sprintf( debug_msg, "HID has %u reports \r\n", hid_info[instance].report_count );
-       debug_print( debug_msg );
-    }
+	    // By default host stack will use activate boot protocol on supported interface.
+	    // Therefore for this simple example, we only need to parse generic report descriptor (with built-in parser)
+	    if ( itf_protocol == HID_ITF_PROTOCOL_NONE ) {
+	        hid_info[instance].report_count = tuh_hid_parse_report_descriptor(hid_info[instance].report_info, MAX_REPORT, desc_report, desc_len);
+	        sprintf( debug_msg, "HID has %u reports \r\n", hid_info[instance].report_count );
+	       debug_print( debug_msg );
+	    }
 
-    // request to receive report tuh_hid_report_received_cb() will be invoked when report is available
-    if ( !tuh_hid_receive_report(dev_addr, instance) ) {
-        debug_print("HID Error: cannot request to receive report");
-    }
+	    // request to receive report tuh_hid_report_received_cb() will be invoked when report is available
+	    if ( !tuh_hid_receive_report(dev_addr, instance) ) {
+	        debug_print("HID Error: cannot request to receive report");
+	    }
+		}
 }
 
 // Invoked when device with hid interface is un-mounted
