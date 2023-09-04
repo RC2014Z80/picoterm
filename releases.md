@@ -17,9 +17,9 @@ From version 1.2 any publication will includes all U2F firmware files for 40 & 8
 
 A thirds number in publication (eg: 1.1.1, 1.1.x) refers to an intermediate development version until it is finally published as a major version (say 1.2).
 
-## Version 1.6.0.30 - (ongoing)
+## Version 1.6.0.32 - (ongoing)
 
-__New GPIO attribution for expansion connector__ for PicoTerm applying to "Pico Vga Terminal" and "RP2040 VGA Terminal".
+__New GPIO attribution for expansion connector__ for applying to "Pico Vga Terminal" and "RP2040 VGA Terminal".
 
 ### Features
 * Documentation review (see [GPIO usage on expansion connector](docs/picoterm-conn.md)).
@@ -37,6 +37,10 @@ __New GPIO attribution for expansion connector__ for PicoTerm applying to "Pico 
 
 
 ### Fix & Improvement
+* keydb should pump message only for keyboard (not the mouse). See Issue #43 (Thanks Abaffa for suggestion)
+* German keyboard adding apostrophe on scancode 0x32 . See Issue #44 (Thanks Skaringa, >1.6.0.31, Keymap Rev 2)
+* Set background color (instead of foreground color) on [40m -> [47m and [100m -> [107m . See Issue #45 (Thanks Juzzas, >1.6.0.31)
+* Use CMAKE_CURRENT_SOURCE_DIR ro generate pio header file (see CMakeList.txt, Thanks Juzzas, >1.6.0.31)
 * set_env.sh to quicly setup the environment. Call it with `source set_env.sh` .
 * rename conio slip_character() to put_char() - more conform with putc()
 * set PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64 when compiling as suggested by Spencer Owner.<br />On some boards/samples, the xosc can take longer to stabilize than is usual ([see this adafruit_itsybitsy_rp2040.h](https://github.com/raspberrypi/pico-sdk/blob/master/src/boards/include/boards/adafruit_itsybitsy_rp2040.h))
