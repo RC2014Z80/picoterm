@@ -422,6 +422,25 @@ bool scancode_is_mod(int scancode) {
     return false;
 }
 
+signed char scancode_has_esc_seq(int scancode){
+    // Some ScanCode are converted to specific esccape sequence
+    // (like Key right, Key Left, etc).
+    // Return the index in the structure (or -1)
+    for( int i=0; i<PM_ESC_SEQ_COUNT; i++ )
+      if( keycode2escseq[i][0]==scancode )
+        return i;
+    return -1;
+}
+
+int scancode_esc_seq_len(uint8_t index){
+    // len of chars in the Escape Sequence
+    return keycode2escseq[index][1];
+}
+
+char scancode_esc_seq_item(uint8_t index, uint8_t pos ) {
+    // One of the char of the escape sequence
+    return keycode2escseq[index][2+pos];
+}
 
 
 static void default_key_down(int scancode, int keysym, int modifiers) {
@@ -442,7 +461,7 @@ static void default_key_down(int scancode, int keysym, int modifiers) {
           ch = keycode2ascii[scancode][2];
       }
       // Send it directly to the keyboard buffer
-      insert_key_into_buffer( ch );
+			insert_key_into_buffer( ch );
     }
 }
 

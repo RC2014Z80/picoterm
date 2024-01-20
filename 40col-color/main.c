@@ -452,7 +452,7 @@ int main(void) {
   terminal_init();
 	cli_init();
 	spi_sd_init(); // Initialize pio_FatFS over PIO_SPI
-	sd_mount(); // perform a mount test at boot	
+	sd_mount(); // perform a mount test at boot
   video_main();
   //terminal_reset();
   display_terminal(); // display terminal entry screen
@@ -630,13 +630,16 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
 	        is_menu = !(is_menu);
 	        return; // do not add key to "Keyboard buffer"
 	      }
-	      /*
-				if( (ch=='l') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
-	        // toggle between graphical font and ANSI font
-	        config.font_id = (config.font_id == 0 ? config.graph_id : 0);
-	        build_font( config.font_id );
-	        return; // do not add key to "Keyboard buffer"
-	      } */
+
+				// Is this a scancode with special Escape Sequence Attached
+	      signed char idx = scancode_has_esc_seq(scancode);
+	      if ( !(is_menu) && (idx>-1) ){
+	        // debug_print("has esc sequence!");
+	        for( char k=0; k < scancode_esc_seq_len(idx); k++)
+	          uart_putc( UART_ID, scancode_esc_seq_item(idx,k) );
+	        return;
+	      }
+				
 	      if( modifiers & WITH_SHIFT ){
 	          ch = keycode2ascii[scancode][1];
 	      }
@@ -653,7 +656,7 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
 	      else if(modifiers & WITH_ALTGR){
 	          ch = keycode2ascii[scancode][2];
 	      }
-	      //printf("Character: %c\r\n", ch);
+
 	      // foward key-pressed to UART (only when typing in the terminal)
 	      // otherwise, send it directly to the keyboard buffer
 	      if( is_menu )

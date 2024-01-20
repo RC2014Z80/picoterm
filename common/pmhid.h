@@ -43,6 +43,34 @@
 #define SCANCODE_F11 0x44
 #define SCANCODE_F12 0x45
 
+#define SCANCODE_CURSOR_LEFT  0x50
+#define SCANCODE_CURSOR_RIGHT 0x4F
+#define SCANCODE_CURSOR_UP    0x52
+#define SCANCODE_CURSOR_DOWN  0x51
+#define SCANCODE_PAGE_DOWN    0x4E
+#define SCANCODE_PAGE_UP      0x4B
+#define SCANCODE_HOME         0x4A
+#define SCANCODE_END          0x4D
+#define SCANCODE_DEL          0x4C
+#define SCANCODE_INS          0x49
+
+// Define esc sequence for some special key-code
+#define PM_ESC_SEQ_COUNT 10
+#define PM_ESC_SEQ_MAX_LEN 4 /* max len of ESC SEQ (structure make 2 byte more per entry) */
+/* Structure: scancode, len_of_sequence, sequence_bytes_(padded_with_NULL) */
+#define PM_KEYCODE_TO_ESC_SEQ \
+    { SCANCODE_CURSOR_LEFT  , 3, 0x1b,0x5b,0x44,0x00 } /* ESC[D */ , \
+		{ SCANCODE_CURSOR_RIGHT , 3, 0x1b,0x5b,0x43,0x00 }, \
+    { SCANCODE_CURSOR_UP    , 3, 0x1b,0x5b,0x41,0x00 }, \
+    { SCANCODE_CURSOR_DOWN  , 3, 0x1b,0x5b,0x42,0x00 }, \
+		{ SCANCODE_PAGE_DOWN    , 4, 0x1b,0x5b,0x36,0x7e } /* ESC[6~ */ , \
+    { SCANCODE_PAGE_UP      , 4, 0x1b,0x5b,0x35,0x7e } /* ESC[5~ */ , \
+		{ SCANCODE_HOME         , 4, 0x1b,0x5b,0x31,0x7e } /* ESC[1~ */ , \
+		{ SCANCODE_END          , 4, 0x1b,0x5b,0x34,0x7e } /* ESC[4~ */ , \
+		{ SCANCODE_DEL          , 4, 0x1b,0x5b,0x33,0x7e } /* ESC[3~ */ , \
+		{ SCANCODE_INS          , 4, 0x1b,0x5b,0x32,0x7e } /* ESC[2~ */
+
+
 //--------------------------------------------------------------------/
 // US keyboard
 //--------------------------------------------------------------------/
@@ -94,7 +122,7 @@
     {'0'   , ')'   ,0 }, /* 0x27 */ \
     {'\r'  , '\r'  ,0 }, /* 0x28 */ \
     {'\x1b', '\x1b',0 }, /* 0x29 */ \
-    {'\b'  , '\b'  ,0 }, /* 0x2a */ \
+    {'\b'  , '\b'  ,0 }, /* 0x2a Backspace */ \
     {'\t'  , '\t'  ,0 }, /* 0x2b */ \
     {' '   , ' '   ,0 }, /* 0x2c */ \
     {'-'   , '_'   ,0 }, /* 0x2d */ \
@@ -210,7 +238,7 @@
     {'0'   , ')'   ,0 }, /* 0x27 */ \
     {'\r'  , '\r'  ,0 }, /* 0x28 */ \
     {'\x1b', '\x1b',0 }, /* 0x29 */ \
-    {'\b'  , '\b'  ,0 }, /* 0x2a */ \
+    {'\b'  , '\b'  ,0 }, /* 0x2a Backspace */ \
     {'\t'  , '\t'  ,0 }, /* 0x2b */ \
     {' '   , ' '   ,0 }, /* 0x2c */ \
     {'-'   , '_'   ,0 }, /* 0x2d */ \
@@ -332,7 +360,7 @@
      {'0'   , '='   ,'}' }, /* 0x27 */ \
      {'\r'  , '\r'  ,0 }, /* 0x28 */ \
      {'\x1b', '\x1b',0 }, /* 0x29 */ \
-     {'\b'  , '\b'  ,0 }, /* 0x2a */ \
+     {'\b'  , '\b'  ,0 }, /* 0x2a  Backspace */ \
      {'\t'  , '\t'  ,0 }, /* 0x2b */ \
      {' '   , ' '   ,0 }, /* 0x2c */ \
      { 0    , '?'   ,'\\' }, /* 0x2d  ß */ \
@@ -454,7 +482,7 @@
      {'a'   , '0'   ,'@' }, /* 0x27 =à */ \
      {'\r'  , '\r'  ,0 }, /* 0x28 */ \
      {'\x1b', '\x1b',0 }, /* 0x29 */ \
-     {'\b'  , '\b'  ,0 }, /* 0x2a */ \
+     {'\b'  , '\b'  ,0 }, /* 0x2a Backspace */ \
      {'\t'  , '\t'  ,0 }, /* 0x2b */ \
      {' '   , ' '   ,0 }, /* 0x2c */ \
      {')'   , 0    ,']' }, /* 0x2d shift=° */ \
@@ -575,7 +603,7 @@
      {'a'   , '0'   ,'}' }, /* 0x27 =à */ \
      {'\r'  , '\r'  ,0 }, /* 0x28 */ \
      {'\x1b', '\x1b',0 }, /* 0x29 */ \
-     {'\b'  , '\b'  ,0 }, /* 0x2a */ \
+     {'\b'  , '\b'  ,0 }, /* 0x2a Backspace */ \
      {'\t'  , '\t'  ,0 }, /* 0x2b */ \
      {' '   , ' '   ,0 }, /* 0x2c */ \
      {')'   , 0     ,0 }, /* 0x2d shift=°(degree sign) */ \

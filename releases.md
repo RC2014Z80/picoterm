@@ -35,8 +35,8 @@ __New GPIO attribution for expansion connector__ for applying to "Pico Vga Termi
 	* send_file
 * Adding [keyboard hotkey](docs/hotkey.md) (1.6.0.31)
 
-
 ### Fix & Improvement
+* Sending escape sequences for keyboard strokes: SCANCODE_CURSOR_LEFT, SCANCODE_CURSOR_RIGHT, SCANCODE_CURSOR_UP, SCANCODE_CURSOR_DOWN, SCANCODE_PAGE_DOWN, SCANCODE_PAGE_UP, SCANCODE_HOME, SCANCODE_END, SCANCODE_DEL, SCANCODE_INS (see pmhid.h)
 * keydb should pump message only for keyboard (not the mouse). See Issue #43 (Thanks Abaffa for suggestion)
 * German keyboard adding apostrophe on scancode 0x32 . See Issue #44 (Thanks Skaringa, >1.6.0.31, Keymap Rev 2)
 * Set background color (instead of foreground color) on [40m -> [47m and [100m -> [107m . See Issue #45 (Thanks Juzzas, >1.6.0.31)

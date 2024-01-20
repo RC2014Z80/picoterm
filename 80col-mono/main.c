@@ -858,7 +858,8 @@ void bell_task() {
 //--------------------------------------------------------------------+
 
 static void pico_key_down(int scancode, int keysym, int modifiers) {
-    //printf("Key down, %i, %i, %i \r\n", scancode, keysym, modifiers);
+		// sprintf( debug_msg, "pico_key_down scancode=%d ,keysym=%d ,modifiers=%d \r\n", scancode, keysym, modifiers );
+		// debug_print( debug_msg );
 
   if( scancode_is_mod(scancode)==false ){
 			// hotkey - Shortcut
@@ -898,10 +899,19 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
         return; // do not add key to "Keyboard buffer"
       }
 
-			if( (ch=='c') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
+      if( (ch=='c') && (modifiers == (WITH_CTRL + WITH_SHIFT)) ){
         id_menu = MENU_COMMAND;
         is_menu = !(is_menu);
         return; // do not add key to "Keyboard buffer"
+      }
+
+      // Is this a scancode with special Escape Sequence Attached
+      signed char idx = scancode_has_esc_seq(scancode);
+      if ( !(is_menu) && (idx>-1) ){
+        // debug_print("has esc sequence!");
+        for( char k=0; k < scancode_esc_seq_len(idx); k++)
+          uart_putc( UART_ID, scancode_esc_seq_item(idx,k) );
+        return;
       }
 
       if( modifiers & WITH_SHIFT ){
@@ -911,10 +921,10 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
           ch = keycode2ascii[scancode][1];
       }
 
-    if((modifiers & WITH_CTRL) && ch>63 && ch<=95){
+      if((modifiers & WITH_CTRL) && ch>63 && ch<=95){ // A..Z  ord(A)=65
           ch=ch-64;
       }
-      else if((modifiers & WITH_CTRL) && ch>95){
+      else if((modifiers & WITH_CTRL) && ch>95){  // a..z  ord(a)=97
           ch=ch-96;
       }
       else if(modifiers & WITH_ALTGR){
@@ -925,8 +935,9 @@ static void pico_key_down(int scancode, int keysym, int modifiers) {
       // otherwise, send it directly to the keyboard buffer
       if( is_menu )
         insert_key_into_buffer( ch );
-      else
+      else {
          uart_putc (UART_ID, ch);
+      }
     }
 }
 

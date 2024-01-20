@@ -220,6 +220,25 @@ __Remarks:__
 | \ESC[38;5;*{n}*m | Set foreground colour to *{n}* (0-255)                              |
 | \ESC[48;5;*{n}*m | Set background colour to *{n}* (0-255)                              |
 
+## Keyboard Escape Sequence
+
+Some keyboard strokes are send back to host by using Escape Sequences.
+
+| Escape sequence             | Description           |
+|-----------------------------|-----------------------|
+| \ESC[D                      | SCANCODE_CURSOR_LEFT  |
+| \ESC[C                      | SCANCODE_CURSOR_RIGHT |
+| \ESC[A                      | SCANCODE_CURSOR_UP    |
+| \ESC[B                      | SCANCODE_CURSOR_DOWN  |
+| \ESC[6~                     | SCANCODE_PAGE_DOWN    |
+| \ESC[5~                     | SCANCODE_PAGE_UP      |
+| \ESC[1~                     | SCANCODE_HOME         |
+| \ESC[4~                     | SCANCODE_END          |
+| \ESC[3~                     | SCANCODE_DEL          |
+| \ESC[2~                     | SCANCODE_INS          |
+
+See definition of `PM_KEYCODE_TO_ESC_SEQ` in file `pmhid.h` .
+
 # PicoTerm documentation
 
 The picoterm projet contains a wide variety of documentation and ressources about the software.
